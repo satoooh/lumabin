@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/integration",
+    "rootDir": "src",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": [
+    "src/main/__integration__/storage-client.smoke.ts",
+    "src/main/storage-client.ts",
+    "src/main/dev-metrics.ts",
+    "src/shared/ipc.ts"
+  ]
+}

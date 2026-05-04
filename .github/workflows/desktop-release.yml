@@ -1,0 +1,201 @@
+name: Desktop Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  quality:
+    name: Lint / Typecheck / Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Smoke checks
+        run: npm run smoke:ci
+
+  release-macos:
+    name: Build and Publish macOS Release
+    runs-on: macos-latest
+    needs: quality
+    env:
+      LUMABIN_APP_BUNDLE_ID: ${{ vars.LUMABIN_APP_BUNDLE_ID || 'com.satoooh.lumabin' }}
+      LUMABIN_APPLE_SIGN_IDENTITY: ${{ secrets.LUMABIN_APPLE_SIGN_IDENTITY }}
+      LUMABIN_APPLE_ID: ${{ secrets.LUMABIN_APPLE_ID }}
+      LUMABIN_APPLE_ID_PASSWORD: ${{ secrets.LUMABIN_APPLE_ID_PASSWORD }}
+      LUMABIN_APPLE_TEAM_ID: ${{ secrets.LUMABIN_APPLE_TEAM_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag
+        id: meta
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          if [ -z "${TAG}" ]; then
+            echo "Release tag is empty" >&2
+            exit 1
+          fi
+          if ! printf '%s' "${TAG}" | grep -Eq '^v[0-9]'; then
+            echo "Release tag must start with v (e.g. v0.1.0)" >&2
+            exit 1
+          fi
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve signing mode
+        id: signing
+        run: |
+          set -euo pipefail
+
+          SIGN_ENABLED="${{ vars.LUMABIN_ENABLE_MAC_SIGN || '0' }}"
+          if [ "${SIGN_ENABLED}" != "1" ]; then
+            echo "LUMABIN_ENABLE_MAC_SIGN=0" >> "$GITHUB_ENV"
+            echo "mode=unsigned" >> "$GITHUB_OUTPUT"
+            echo "Signing is disabled (default). Building unsigned zip."
+            exit 0
+          fi
+
+          missing=0
+          for key in LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required secret for signing: ${key}" >&2
+              missing=1
+            fi
+          done
+          if [ "${missing}" -eq 1 ]; then
+            echo "Set repo variable LUMABIN_ENABLE_MAC_SIGN=0 to build unsigned releases." >&2
+            exit 1
+          fi
+
+          echo "LUMABIN_ENABLE_MAC_SIGN=1" >> "$GITHUB_ENV"
+          echo "mode=signed" >> "$GITHUB_OUTPUT"
+          echo "Signing is enabled."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/desktop
+        run: npm ci
+
+      - name: Verify macOS signing readiness
+        working-directory: apps/desktop
+        run: npm run verify:mac-signing-readiness
+
+      - name: Build macOS release artifact (zip)
+        working-directory: apps/desktop
+        run: npm run package:darwin
+
+      - name: Verify release artifact before publish
+        working-directory: apps/desktop
+        run: npm run verify:darwin-artifact
+
+      - name: Launch smoke release artifact before publish
+        working-directory: apps/desktop
+        run: npm run release:launch-smoke
+
+      - name: Generate checksums
+        id: checksums
+        run: |
+          set -euo pipefail
+
+          ASSET_ROOT="apps/desktop/out/make"
+          if [ ! -d "${ASSET_ROOT}" ]; then
+            echo "Asset directory not found: ${ASSET_ROOT}" >&2
+            exit 1
+          fi
+
+          ZIP_LIST_FILE="$(mktemp)"
+          find "${ASSET_ROOT}" -type f -name '*.zip' | sort > "${ZIP_LIST_FILE}"
+          if [ ! -s "${ZIP_LIST_FILE}" ]; then
+            echo "No zip artifacts found under ${ASSET_ROOT}" >&2
+            exit 1
+          fi
+
+          CHECKSUM_FILE="${ASSET_ROOT}/SHA256SUMS.txt"
+          : > "${CHECKSUM_FILE}"
+          while IFS= read -r file; do
+            shasum -a 256 "${file}" >> "${CHECKSUM_FILE}"
+          done < "${ZIP_LIST_FILE}"
+
+          echo "asset_root=${ASSET_ROOT}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+          ASSET_ROOT: ${{ steps.checksums.outputs.asset_root }}
+          SIGNING_MODE: ${{ steps.signing.outputs.mode }}
+        run: |
+          set -euo pipefail
+
+          ASSET_LIST_FILE="$(mktemp)"
+          find "${ASSET_ROOT}" -type f \( -name '*.zip' -o -name 'SHA256SUMS.txt' -o -name 'release-evidence.json' \) | sort > "${ASSET_LIST_FILE}"
+          if [ ! -s "${ASSET_LIST_FILE}" ]; then
+            echo "No release assets found" >&2
+            exit 1
+          fi
+
+          ASSETS=()
+          while IFS= read -r file; do
+            ASSETS+=("${file}")
+          done < "${ASSET_LIST_FILE}"
+          if [ "${#ASSETS[@]}" -eq 0 ]; then
+            echo "No release assets found" >&2
+            exit 1
+          fi
+
+          NOTES_FILE="$(mktemp)"
+          cat > "${NOTES_FILE}" <<'NOTES'
+          This release is automatically generated by GitHub Actions.
+
+          - Artifact: macOS arm64 zip
+          - Includes: SHA256SUMS.txt for integrity verification
+          - Includes: release-evidence.json for machine-readable release verification evidence
+          NOTES
+          printf '\n- Signing mode: %s\n' "${SIGNING_MODE}" >> "${NOTES_FILE}"
+          if [ "${SIGNING_MODE}" = "unsigned" ]; then
+            cat >> "${NOTES_FILE}" <<'UNSIGNED'
+
+          - This build is unsigned for Apple trust (no notarization)
+          - The app bundle is ad-hoc signed for integrity
+          - If macOS blocks launch with "damaged" warning, run:
+            xattr -dr com.apple.quarantine LumaBin.app
+            open LumaBin.app
+          UNSIGNED
+          fi
+
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release upload "${RELEASE_TAG}" "${ASSETS[@]}" --clobber
+          else
+            gh release create "${RELEASE_TAG}" "${ASSETS[@]}" \
+              --title "LumaBin ${RELEASE_TAG}" \
+              --notes-file "${NOTES_FILE}"
+          fi

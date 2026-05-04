@@ -1,0 +1,28 @@
+.DS_Store
+*.log
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dependency and build output
+node_modules/
+dist/
+/build/
+out/
+tmp/
+.tmp/
+test-results/
+playwright-report/
+
+# macOS packaging artifacts
+*.dmg
+*.zip
+*.asar
+*.pkg
+
+# Local editor state
+.idea/
+.vscode/

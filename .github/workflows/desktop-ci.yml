@@ -1,0 +1,77 @@
+name: Desktop CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'docs/**'
+      - '.github/workflows/desktop-ci.yml'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/desktop/**'
+      - 'docs/**'
+      - '.github/workflows/desktop-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint / Typecheck / Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Smoke checks
+        run: npm run smoke:ci
+
+  package-smoke:
+    name: Packaging smoke (macOS)
+    needs: quality
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify macOS signing readiness
+        run: npm run verify:mac-signing-readiness
+
+      - name: Build Darwin release artifact
+        run: npm run package:darwin
+
+      - name: Verify Darwin release artifact
+        run: npm run verify:darwin-artifact
