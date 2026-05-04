@@ -45,13 +45,13 @@ export const registerAssetDiscoveryRuntime = (
     ensureSearchIndexBootstrapped,
     getProfileSecretOrThrow,
     getSearchSnapshot: getSearchSnapshotCache,
-    isE2EFixtureProfile,
     listSavedViews,
     nowIso,
     nowMs: Date.now,
     persistState: dependencies.persistState,
     publishApplicationEvent,
-    queryFixtureAssets: queryE2EFixtureAssets,
+    querySearchOverride: (input) =>
+      isE2EFixtureProfile(input.profileId) ? queryE2EFixtureAssets(input) : undefined,
     recordSearchSnapshotHit: (): void => {
       recordCacheMetric('searchSnapshotHit');
     },
