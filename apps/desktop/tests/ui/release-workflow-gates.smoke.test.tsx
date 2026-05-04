@@ -29,6 +29,10 @@ describe('release workflow gates', () => {
       'utf8',
     );
     const artifactVerifier = readFileSync(join(process.cwd(), 'scripts/verify-darwin-artifact.mjs'), 'utf8');
+    const signingReadinessVerifier = readFileSync(
+      join(process.cwd(), 'scripts/verify-mac-signing-readiness.mjs'),
+      'utf8',
+    );
     const packageJson = readFileSync(join(process.cwd(), 'package.json'), 'utf8');
 
     expect(indexOfRequired(ciWorkflow, 'run: npm run verify:mac-signing-readiness')).toBeLessThan(
@@ -48,6 +52,12 @@ describe('release workflow gates', () => {
       indexOfRequired(releasePreflight, "run('npm', ['run', 'package:darwin']);"),
     );
     expect(releaseWorkflow).toContain('SIGNING_MODE: ${{ steps.signing.outputs.mode }}');
+    expect(releaseWorkflow).toContain(
+      'for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID; do',
+    );
+    expect(signingReadinessVerifier).toContain("'LUMABIN_APPLE_SIGN_IDENTITY'");
+    expect(signingReadinessVerifier).toContain("execFileSync('/usr/bin/security', ['find-identity', '-p', 'codesigning', '-v']");
+    expect(signingReadinessVerifier).toContain('Developer ID signing identity is available');
     expect(releaseWorkflow).toContain('Signing mode: %s');
     expect(releaseWorkflow).toContain('release-evidence.json');
     expect(releaseLaunchSmoke).toContain("import { createServer } from 'node:net';");

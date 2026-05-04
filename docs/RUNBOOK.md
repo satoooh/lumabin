@@ -248,7 +248,7 @@ Forge は以下環境変数を参照する。
 
 - `LUMABIN_ENABLE_MAC_SIGN=1`（既定は `0` / unsigned 配布）
 - `LUMABIN_APP_BUNDLE_ID`（既定: `com.satoooh.lumabin`）
-- `LUMABIN_APPLE_SIGN_IDENTITY`（任意）
+- `LUMABIN_APPLE_SIGN_IDENTITY`（署名有効時は必須。macOS runner の keychain に存在する Developer ID identity）
 - `LUMABIN_APPLE_ID`
 - `LUMABIN_APPLE_ID_PASSWORD`
 - `LUMABIN_APPLE_TEAM_ID`
@@ -257,7 +257,7 @@ Forge は以下環境変数を参照する。
 
 - 既定: unsigned ZIP を生成して GitHub Releases に公開
 - `LUMABIN_ENABLE_MAC_SIGN=1` を repo variable に設定した場合のみ署名/notarize を有効化
-- `npm run verify:mac-signing-readiness` で Electron 用 entitlements と signing/notarization 環境変数の不足を事前確認できる
+- `npm run verify:mac-signing-readiness` で Electron 用 entitlements、Developer ID identity、signing/notarization 環境変数の不足を事前確認できる
 - 署名有効時に必要 secret が不足している場合は workflow を失敗させる
 - 署名有効時は Forge の Developer ID 署名/notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
 - 現時点の運用では notarize は見送り、unsigned ZIP 配布を正式運用とする
