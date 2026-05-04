@@ -334,6 +334,8 @@ npm run release:launch-smoke
 - `Bucket not found`: bucket 名と account endpoint を確認
 - `Bucket endpoint mismatch`: provider の endpoint URL と region を確認
 - R2 は `region=auto` を確認
+- Generic S3 は provider が要求する region を指定し、HTTPS endpoint と path-style access に対応しているか確認
+- virtual-hosted-style のみを要求する provider、bucket 管理 API、ACL/policy/tagging/versioning など provider 固有機能は Beta の保証範囲外として扱う
 - それでも失敗する場合は、同じ profile で `Reload` せず `Test connection` から切り分ける
 
 ### 5.2 preview が表示されない

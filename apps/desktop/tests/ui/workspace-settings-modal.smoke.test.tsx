@@ -129,6 +129,7 @@ describe('WorkspaceSettingsModal', () => {
 
     await user.click(within(sectionNav).getByRole('tab', { name: /Dev metrics/i }));
     expect(within(dialog).getByRole('tabpanel', { name: 'Dev metrics' })).toBeTruthy();
+    expect(within(dialog).getByRole('heading', { name: 'Dev metrics (storage)' })).toBeTruthy();
     expect(within(dialog).getByRole('button', { name: 'Copy snapshot' })).toBeTruthy();
   });
 });
