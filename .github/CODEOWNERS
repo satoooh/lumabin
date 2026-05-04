@@ -1,0 +1,8 @@
+* @satoooh
+
+.github/ @satoooh
+.github/workflows/ @satoooh
+apps/desktop/package.json @satoooh
+apps/desktop/package-lock.json @satoooh
+apps/desktop/scripts/ @satoooh
+docs/adr/ @satoooh

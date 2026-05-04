@@ -164,6 +164,7 @@ Workflow:
   - `Lint / Typecheck / Audit`
   - `Build and Publish macOS Release`
   - package 前に `verify:mac-signing-readiness`、publish 前に `verify:darwin-artifact` と `release:launch-smoke` を必須実行
+  - `release` environment の承認後に GitHub Release へ publish する
 - 成果物:
   - `LumaBin-darwin-arm64-<version>.zip`（命名は maker 設定に準拠）
   - `SHA256SUMS.txt`
@@ -186,13 +187,48 @@ Workflow:
 `repository-hygiene`:
 
 - Trigger:
-  - `pull_request` / `push`（OSS文書、issue/PRテンプレート、public readiness audit 変更）
+  - `pull_request`
+  - `push`（main）
   - `workflow_dispatch`
 - Jobs:
   - `Public readiness audit`
   - `audit:public-history` で現在のtracked filesとGit historyを検査する
 
-### 4.2 Branch protection（推奨）
+### 4.2 Repository hardening
+
+public repository では、branch / release / dependency / workflow を供給網の保護境界として扱う。
+
+Repo内で管理するもの:
+
+- `.github/CODEOWNERS`: workflow、dependency lockfile、release scripts、ADR など高リスク変更のreview ownerを明示する
+- `.github/dependabot.yml`: npm と GitHub Actions の依存更新を定期PR化する
+- workflow permissions: 既定は `contents: read`。Release publish job のみ `contents: write` を付与する
+- `desktop-ci` と `repository-hygiene`: branch protection の required check として常に作成されるよう、`pull_request` / `main` push で実行する
+
+GitHub側で設定するもの:
+
+- `main` protection / ruleset:
+  - pull request 必須
+  - required status checks:
+    - `Lint / Typecheck / Audit`
+    - `Packaging smoke (macOS)`
+    - `Public readiness audit`
+  - conversation resolution 必須
+  - linear history 必須
+  - force push 禁止
+  - branch deletion 禁止
+- Actions:
+  - default workflow permission は read-only
+  - GitHub-owned actions だけを許可する
+  - first-time contributor workflow は maintainer approval を要求する
+- Security:
+  - secret scanning と push protection を有効化する
+  - Dependabot alerts と Dependabot security updates を有効化する
+- Release:
+  - `release` environment を作成し、publish 前に maintainer approval を要求する
+  - `v*` tag は repository ruleset で保護する
+
+### 4.3 Branch protection（確認観点）
 
 `main` で Required checks を設定:
 
@@ -201,10 +237,11 @@ Workflow:
 - `Public readiness audit`
 
 補足:
-- `Public readiness audit` は OSS文書やGitHubテンプレートの変更時に履歴を含む public readiness を確認する。
+- `Public readiness audit` は履歴を含む public readiness を確認する。
+- required check は workflow の path filter に依存させず、PR ごとに必ず生成される状態を維持する。
 - branch protection が未設定の場合も、`main` 直pushを避け PR マージを既定運用にする。
 
-### 4.3 署名 / notarize（任意有効化）
+### 4.4 署名 / notarize（任意有効化）
 
 Forge は以下環境変数を参照する。
 
@@ -224,7 +261,7 @@ Forge は以下環境変数を参照する。
 - 署名有効時は Forge の Developer ID 署名/notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
 - 現時点の運用では notarize は見送り、unsigned ZIP 配布を正式運用とする
 
-### 4.4 Release 実行手順（zip配布）
+### 4.5 Release 実行手順（zip配布）
 
 1. `main` に必要変更を反映し、`desktop-ci` 成功を確認する
 2. リリースタグを作成して push する
@@ -241,7 +278,7 @@ git push origin v0.1.0
 - 手動実行時は Actions の `Desktop Release` で対象のタグ ref を選んで実行する
 - 同一タグ再実行時はアセットを `--clobber` で上書きする
 
-### 4.5 Release 前の最終ゲート（推奨）
+### 4.6 Release 前の最終ゲート（推奨）
 
 1. ローカルで preflight を実行する
 
