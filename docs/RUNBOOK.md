@@ -242,7 +242,7 @@ GitHub側で設定するもの:
 - required check は workflow の path filter に依存させず、PR ごとに必ず生成される状態を維持する。
 - branch protection が未設定の場合も、`main` 直pushを避け PR マージを既定運用にする。
 
-### 4.4 署名 / notarize（任意有効化）
+### 4.4 署名 / notarization（任意有効化）
 
 Forge は以下環境変数を参照する。
 
@@ -258,13 +258,14 @@ Forge は以下環境変数を参照する。
 リリース workflow の挙動:
 
 - 既定: unsigned ZIP を生成して GitHub Releases に公開
-- `LUMABIN_ENABLE_MAC_SIGN=1` を repo variable に設定した場合のみ署名/notarize を有効化
+- `LUMABIN_ENABLE_MAC_SIGN=1` を repo variable に設定した場合のみ Developer ID signing / notarization を有効化
 - signed release では GitHub Actions の macOS runner 上に一時 keychain を作成し、`LUMABIN_APPLE_CERTIFICATE_BASE64` から Developer ID 証明書を import してから `verify:mac-signing-readiness` を実行する
 - release job 終了時は一時 keychain を削除する
-- `npm run verify:mac-signing-readiness` で Electron 用 entitlements、Developer ID identity、signing/notarization 環境変数の不足を事前確認できる
+- `npm run verify:mac-signing-readiness` で Electron 用 entitlements、Developer ID identity、証明書import入力、notarization 環境変数の不足を事前確認できる
 - 署名有効時に必要 secret が不足している場合は workflow を失敗させる
-- 署名有効時は Forge の Developer ID 署名/notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
-- 現時点の運用では notarize は見送り、unsigned ZIP 配布を正式運用とする
+- 署名有効時は Forge の Developer ID signing / notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
+- 署名有効時の `verify:darwin-artifact` は Developer ID authority、Team ID、Gatekeeper assessment、stapler validate を release publish 前に確認する
+- 現時点の既定運用は unsigned ZIP の public preview 配布。一般ユーザー向け配布へ進める場合は、上記 secrets / variable を設定し、signed/notarized release run が成功したことを確認する
 
 ### 4.5 Release 実行手順（zip配布）
 

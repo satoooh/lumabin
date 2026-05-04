@@ -1,6 +1,6 @@
 # LumaBin Roadmap
 
-- 最終更新日: 2026-05-04
+- 最終更新日: 2026-05-05
 - 対象: public OSS project としての今後の改善方針
 - 詳細な進行管理: [GitHub Issues](https://github.com/satoooh/lumabin/issues)
 
@@ -9,7 +9,7 @@
 LumaBin は public preview として利用可能な状態です。
 
 - 最新Release: [GitHub Releases](https://github.com/satoooh/lumabin/releases/latest)
-- 配布形式: unsigned macOS ZIP
+- 配布形式: unsigned macOS ZIP（既定） / Developer ID signed + notarized ZIP（secrets 設定時）
 - サポート対象: 最新Release と `main`
 - 品質ゲート: `Desktop CI`, `Repository Hygiene`, tag release 時の `Desktop Release`
 
@@ -37,11 +37,11 @@ LumaBin は public preview として利用可能な状態です。
 - 目的: nightly E2E や macOS packaging smoke の失敗を作業ログではなく issue で追跡する
 - 完了条件: 恒常フレークがあれば再現条件と修正方針が整理されている
 
-### 3. Developer ID signing / notarization の判断
+### 3. Developer ID signing / notarization の実運用化
 
 - Issue: [#3 Evaluate Developer ID signing and notarization](https://github.com/satoooh/lumabin/issues/3)
-- 目的: unsigned ZIP 継続か、signed / notarized 配布へ移行するかを判断する
-- 完了条件: 選択した配布方針、必要secret、検証手順が `docs/RUNBOOK.md` とRelease workflowに一致している
+- 目的: signed / notarized 配布に必要な Apple credentials を設定し、実リリースで検証する
+- 完了条件: `LUMABIN_ENABLE_MAC_SIGN=1` の release run が成功し、Release evidence で Developer ID authority / stapler validation が確認できる
 
 ### 4. Public performance benchmark
 
