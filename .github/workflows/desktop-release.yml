@@ -96,7 +96,7 @@ jobs:
           fi
 
           missing=0
-          for key in LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID; do
+          for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID; do
             if [ -z "${!key}" ]; then
               echo "Missing required secret for signing: ${key}" >&2
               missing=1

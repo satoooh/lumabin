@@ -16,6 +16,7 @@ const requiredEntitlements = [
   'com.apple.security.cs.disable-library-validation',
 ];
 const requiredSigningSecrets = [
+  'LUMABIN_APPLE_SIGN_IDENTITY',
   'LUMABIN_APPLE_ID',
   'LUMABIN_APPLE_ID_PASSWORD',
   'LUMABIN_APPLE_TEAM_ID',
@@ -54,6 +55,25 @@ if (missingSecrets.length > 0) {
   fail(`missing signing environment variables: ${missingSecrets.join(', ')}`);
 }
 
+if (process.platform !== 'darwin') {
+  fail('signed release mode requires macOS codesigning identity verification');
+}
+
+let codesigningIdentities;
+try {
+  codesigningIdentities = execFileSync('/usr/bin/security', ['find-identity', '-p', 'codesigning', '-v'], {
+    encoding: 'utf8',
+  });
+} catch {
+  fail('failed to inspect macOS codesigning identities');
+}
+
+const signingIdentity = process.env.LUMABIN_APPLE_SIGN_IDENTITY;
+if (!codesigningIdentities.includes(signingIdentity)) {
+  fail(`configured Developer ID signing identity is not available in the keychain: ${signingIdentity}`);
+}
+
 console.log('[verify-mac-signing-readiness] signed release mode');
+console.log('[verify-mac-signing-readiness] Developer ID signing identity is available');
 console.log('[verify-mac-signing-readiness] notarization credentials are configured');
 console.log('[verify-mac-signing-readiness] Electron entitlements file is present');
