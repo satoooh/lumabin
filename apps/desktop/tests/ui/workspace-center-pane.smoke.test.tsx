@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRef } from 'react';
 import {
@@ -129,11 +129,38 @@ describe('workspace center pane', () => {
     expect(screen.queryByRole('group', { name: 'View mode' })).toBeNull();
   });
 
-  it('shows an empty browser state when there are no visible items', () => {
+  it('prioritizes upload in the empty bucket state', () => {
     render(<WorkspaceCenterPane {...createBaseProps()} />);
 
-    expect(screen.getByText('No assets yet.')).not.toBeNull();
-    expect(screen.getByRole('button', { name: /Load/ })).not.toBeNull();
+    const emptyState = screen.getByRole('region', { name: 'Add assets to this bucket' });
+    const actions = within(emptyState).getAllByRole('button');
+
+    expect(within(emptyState).getByText('Upload files or drop them here.')).not.toBeNull();
+    expect(actions.map((action) => action.textContent)).toEqual(['Upload assets', 'Refresh bucket']);
+  });
+
+  it('keeps search recovery actions first in the no matches state', () => {
+    render(
+      <WorkspaceCenterPane
+        {...createBaseProps({
+          emptyState: {
+            ...createBaseProps().emptyState,
+            mode: 'no-matches',
+            canClearSearch: true,
+            canResetFilters: true,
+          },
+        })}
+      />,
+    );
+
+    const emptyState = screen.getByRole('region', { name: 'No matches found' });
+    const actions = within(emptyState).getAllByRole('button');
+
+    expect(actions.map((action) => action.textContent)).toEqual([
+      'Clear search',
+      'Reset filters',
+      'Upload',
+    ]);
   });
 
   it('routes visible items to the list pane when list mode is active', () => {
@@ -151,6 +178,6 @@ describe('workspace center pane', () => {
     );
 
     expect(screen.getByText('Name')).not.toBeNull();
-    expect(screen.queryByText('No assets yet.')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Add assets to this bucket' })).toBeNull();
   });
 });
