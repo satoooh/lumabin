@@ -1,8 +1,8 @@
 # LumaBin アーキテクチャ
 
 - 最終更新日: 2026-05-04
-- ステータス: Active（MVP実装済み / Beta hardening反映）
-- 参照: [SPEC.md](SPEC.md), [RUNBOOK.md](RUNBOOK.md)
+- ステータス: Public preview
+- 参照: [REQUIREMENTS.md](REQUIREMENTS.md), [RUNBOOK.md](RUNBOOK.md)
 
 ## 1. 目的
 

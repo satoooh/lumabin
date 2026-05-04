@@ -53,7 +53,7 @@ LumaBin は public preview として利用可能な状態です。
 
 - Issue: [#5 Clarify R2 and generic S3 compatibility boundaries](https://github.com/satoooh/lumabin/issues/5)
 - 目的: R2 first / S3 ready の対応範囲を、仕様・サポート・回復導線として明確にする
-- 完了条件: `docs/SPEC.md` と `docs/RUNBOOK.md` のprovider境界が現行実装と一致している
+- 完了条件: `docs/REQUIREMENTS.md` と `docs/RUNBOOK.md` のprovider境界が現行実装と一致している
 
 ## 完了済みマイルストーン
 
@@ -66,5 +66,5 @@ LumaBin は public preview として利用可能な状態です。
 ## 運用ルール
 
 - 細かいタスクは GitHub Issues に起こす
-- 完了済み作業ログは長期保存せず、必要な要点だけ README / RUNBOOK / ARCHITECTURE / SPEC に統合する
+- 完了済み作業ログは長期保存せず、必要な要点だけ README / RUNBOOK / ARCHITECTURE / REQUIREMENTS / ADR に統合する
 - ロードマップは「外部コントリビューターが判断に使える粒度」に保つ

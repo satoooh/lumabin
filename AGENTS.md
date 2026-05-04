@@ -64,12 +64,13 @@ lumabin/
 │
 ├── docs/                  # コードベース技術リファレンス
 │   ├── AGENTS.md          # docs AI開発者向けガイドライン
-│   ├── PRD.md             # プロダクト要求定義
-│   ├── SPEC.md            # 要件仕様
+│   ├── PRD.md             # プロダクト意図と固定判断
+│   ├── REQUIREMENTS.md    # 機能/非機能要件と受け入れ基準
 │   ├── ARCHITECTURE.md    # 実装構成
 │   ├── ROADMAP.md         # 現在地と今後の重点テーマ
 │   ├── RUNBOOK.md         # 運用手順
-│   └── PERFORMANCE.md     # 性能確認手順
+│   ├── PERFORMANCE.md     # 性能確認手順
+│   └── adr/               # 決定済みの設計判断
 ```
 
 ## AGENTS.md の記述方針
