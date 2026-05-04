@@ -34,7 +34,7 @@ export const QuickPreviewTopbar = ({
       <button
         type="button"
         className="icon-action-button"
-        aria-label="Previous photo"
+        aria-label="Previous asset"
         title="Previous asset (Left Arrow)"
         data-tooltip="Previous asset"
         onClick={() => onMoveSelection(-1)}
@@ -48,7 +48,7 @@ export const QuickPreviewTopbar = ({
       <button
         type="button"
         className="icon-action-button"
-        aria-label="Next photo"
+        aria-label="Next asset"
         title="Next asset (Right Arrow)"
         data-tooltip="Next asset"
         onClick={() => onMoveSelection(1)}
@@ -62,7 +62,7 @@ export const QuickPreviewTopbar = ({
       <button
         type="button"
         className={`icon-action-button ${isQuickPreviewInfoOpen ? 'icon-action-button--active' : ''}`}
-        aria-label={isQuickPreviewInfoOpen ? 'Hide photo details' : 'Show photo details'}
+        aria-label={isQuickPreviewInfoOpen ? 'Hide asset details' : 'Show asset details'}
         title={isQuickPreviewInfoOpen ? 'Hide asset details' : 'Show asset details'}
         data-tooltip={isQuickPreviewInfoOpen ? 'Hide asset details' : 'Show asset details'}
         aria-pressed={isQuickPreviewInfoOpen}

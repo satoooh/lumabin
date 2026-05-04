@@ -69,8 +69,8 @@ describe('quick preview media panel', () => {
     );
 
     expect(screen.getByRole('img', { name: selectedAsset.key })).toBeTruthy();
-    screen.getByRole('button', { name: 'Previous photo' }).click();
-    screen.getByRole('button', { name: 'Next photo' }).click();
+    screen.getByRole('button', { name: 'Previous asset' }).click();
+    screen.getByRole('button', { name: 'Next asset' }).click();
     expect(defaultProps.onMoveSelection).toHaveBeenCalledWith(-1);
     expect(defaultProps.onMoveSelection).toHaveBeenCalledWith(1);
   });

@@ -1,6 +1,6 @@
 # LumaBin Runbook
 
-- 最終更新日: 2026-05-04
+- 最終更新日: 2026-05-05
 - ステータス: Public preview
 - 対象: `apps/desktop`
 
@@ -324,8 +324,11 @@ npm run release:launch-smoke
 
 ### 5.1 接続テスト失敗
 
-- endpoint / bucket / key を確認
+- `Authorization failed`: access key / secret / bucket 権限 / R2/S3 endpoint を確認
+- `Bucket not found`: bucket 名と account endpoint を確認
+- `Bucket endpoint mismatch`: provider の endpoint URL と region を確認
 - R2 は `region=auto` を確認
+- それでも失敗する場合は、同じ profile で `Reload` せず `Test connection` から切り分ける
 
 ### 5.2 preview が表示されない
 
