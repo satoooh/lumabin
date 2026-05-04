@@ -82,6 +82,8 @@ const createBaseProps = (
     inferAssetKind: () => 'image',
     iconForKind: () => 'Image',
     basenameFromKey: (key) => key,
+    formatBytes: (value) => `${value} B`,
+    formatDate: (value) => value,
     toThumbnailCacheKey: (_, key) => key,
     setAssetItemRef: vi.fn(),
     onAssetFocus: vi.fn(),
