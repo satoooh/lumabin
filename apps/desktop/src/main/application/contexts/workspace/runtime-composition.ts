@@ -48,10 +48,10 @@ export const registerWorkspaceRuntime = (
   registerWorkspaceComposition(ipcMain, {
     clearProfileCaches: dependencies.clearProfileCaches,
     createProfileId: randomUUID,
+    deleteProfileOverride: (profileId) => isE2EFixtureProfile(profileId),
     getProfile: getWorkspaceProfile,
     getSettings: getWorkspaceSettings,
     hasProfileSecret,
-    isE2EFixtureProfile,
     listProfiles: listWorkspaceProfiles,
     normalizePublicBaseUrls,
     nowIso,
@@ -63,5 +63,13 @@ export const registerWorkspaceRuntime = (
     saveProfileSecret,
     saveSettings: saveWorkspaceSettings,
     testConnection,
+    testConnectionOverride: (profileId) =>
+      isE2EFixtureProfile(profileId)
+        ? {
+            ok: true,
+            message: 'E2E fixture connection is always ready.',
+            checkedAt: nowIso(),
+          }
+        : undefined,
   });
 };

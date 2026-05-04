@@ -32,7 +32,7 @@ export interface WorkspaceApplicationServiceDependencies {
   getProfile(profileId: string): StoredProfile | undefined;
   getSettings(): AppSettings;
   hasProfileSecret(profileId: string): boolean;
-  isE2EFixtureProfile(profileId: string): boolean;
+  deleteProfileOverride(profileId: string): boolean;
   listProfiles(): StoredProfile[];
   normalizePublicBaseUrls(value: unknown): Record<string, string>;
   nowIso(): string;
@@ -44,6 +44,7 @@ export interface WorkspaceApplicationServiceDependencies {
   saveProfileSecret(profileId: string, secret: ProfileSecret): void;
   saveSettings(settings: AppSettings): void;
   testConnection(profileId: string): Promise<TestConnectionResult>;
+  testConnectionOverride(profileId: string): TestConnectionResult | undefined;
 }
 
 const toProfileSummary = (
@@ -164,18 +165,15 @@ export const createWorkspaceApplicationService = (
   },
 
   testConnection: async (profileId) => {
-    if (dependencies.isE2EFixtureProfile(profileId)) {
-      return {
-        ok: true,
-        message: 'E2E fixture connection is always ready.',
-        checkedAt: dependencies.nowIso(),
-      };
+    const overrideResult = dependencies.testConnectionOverride(profileId);
+    if (overrideResult !== undefined) {
+      return overrideResult;
     }
     return dependencies.testConnection(profileId);
   },
 
   deleteProfile: (profileId) => {
-    if (dependencies.isE2EFixtureProfile(profileId)) {
+    if (dependencies.deleteProfileOverride(profileId)) {
       return;
     }
     dependencies.clearProfileCaches(profileId);
