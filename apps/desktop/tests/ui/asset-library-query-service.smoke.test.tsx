@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   createAssetLibraryQueryService,
   type AssetLibraryQueryServiceDependencies,
@@ -34,7 +36,6 @@ const createDependencies = (
   assertProfileExists: vi.fn(() => profile),
   deleteHeadInFlight: vi.fn(),
   deletePreviewInFlight: vi.fn(),
-  getFixtureAsset: vi.fn(),
   getHeadCache: vi.fn(),
   getHeadInFlight: vi.fn(),
   getProfileSecretOrThrow: vi.fn(() => secret),
@@ -42,8 +43,8 @@ const createDependencies = (
   getStorageObjectPreview: vi.fn(),
   headCacheTtlMs: 90_000,
   headStorageObject: vi.fn(),
-  isE2EFixtureProfile: vi.fn(() => false),
-  listFixtureAssets: vi.fn(),
+  headAssetOverride: vi.fn(() => undefined),
+  listAssetsOverride: vi.fn(() => undefined),
   listStorageObjects: vi.fn(async () => ({
     items: [item],
     prefixes: ['photos/'],
@@ -51,7 +52,7 @@ const createDependencies = (
   })),
   normalizePreviewMaxBytes: vi.fn((value) => value ?? 256_000),
   nowMs: vi.fn(() => 1_000),
-  previewFixtureAsset: vi.fn(),
+  previewAssetOverride: vi.fn(() => undefined),
   publishApplicationEvent: vi.fn(),
   readPreviewCache: vi.fn(async () => null),
   recordHeadHit: vi.fn(),
@@ -97,14 +98,13 @@ describe('asset library query service', () => {
     });
   });
 
-  it('keeps fixture lists local to the fixture adapter', async () => {
-    const fixtureResult = {
+  it('uses the runtime list override before storage access', async () => {
+    const overrideResult = {
       items: [item],
       prefixes: [],
     };
     const dependencies = createDependencies({
-      isE2EFixtureProfile: vi.fn(() => true),
-      listFixtureAssets: vi.fn(() => fixtureResult),
+      listAssetsOverride: vi.fn(() => overrideResult),
     });
     const service = createAssetLibraryQueryService(dependencies);
 
@@ -113,9 +113,63 @@ describe('asset library query service', () => {
         profileId: 'e2e-fixture',
         prefix: '',
       }),
-    ).resolves.toBe(fixtureResult);
+    ).resolves.toBe(overrideResult);
 
     expect(dependencies.listStorageObjects).not.toHaveBeenCalled();
     expect(dependencies.publishApplicationEvent).not.toHaveBeenCalled();
+  });
+
+  it('uses the runtime head override before profile or cache access', async () => {
+    const dependencies = createDependencies({
+      headAssetOverride: vi.fn(() => item),
+    });
+    const service = createAssetLibraryQueryService(dependencies);
+
+    await expect(
+      service.headAsset({
+        profileId: 'runtime-override',
+        key: item.key,
+      }),
+    ).resolves.toBe(item);
+
+    expect(dependencies.assertProfileExists).not.toHaveBeenCalled();
+    expect(dependencies.getHeadCache).not.toHaveBeenCalled();
+    expect(dependencies.headStorageObject).not.toHaveBeenCalled();
+  });
+
+  it('uses the runtime preview override before profile or cache access', async () => {
+    const overridePreview = {
+      dataUrl: 'data:image/png;base64,ZmFrZQ==',
+      contentType: 'image/png',
+      size: 4,
+    };
+    const dependencies = createDependencies({
+      previewAssetOverride: vi.fn(() => overridePreview),
+    });
+    const service = createAssetLibraryQueryService(dependencies);
+
+    await expect(
+      service.previewAsset({
+        profileId: 'runtime-override',
+        key: item.key,
+      }),
+    ).resolves.toBe(overridePreview);
+
+    expect(dependencies.assertProfileExists).not.toHaveBeenCalled();
+    expect(dependencies.readPreviewCache).not.toHaveBeenCalled();
+    expect(dependencies.getStorageObjectPreview).not.toHaveBeenCalled();
+  });
+
+  it('keeps runtime-specific query names out of the application service', () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        'src/main/application/contexts/asset-library/query-service.ts',
+      ),
+      'utf8',
+    );
+
+    expect(source).not.toContain('E2EFixture');
+    expect(source).not.toContain('Fixture');
   });
 });

@@ -36,7 +36,6 @@ export interface AssetLibraryQueryServiceDependencies {
   assertProfileExists(profileId: string): StoredProfile;
   deleteHeadInFlight(cacheKey: string): void;
   deletePreviewInFlight(inFlightKey: string): void;
-  getFixtureAsset(key: string): AssetMetadata | undefined;
   getHeadCache(cacheKey: string): { value: AssetMetadata; expiresAt: number } | undefined;
   getHeadInFlight(cacheKey: string): Promise<AssetMetadata> | undefined;
   getProfileSecretOrThrow(profileId: string): ProfileSecret;
@@ -52,8 +51,8 @@ export interface AssetLibraryQueryServiceDependencies {
     secret: ProfileSecret,
     key: string,
   ): Promise<AssetMetadata>;
-  isE2EFixtureProfile(profileId: string): boolean;
-  listFixtureAssets(input: ListAssetsInput): ListAssetsResult;
+  headAssetOverride(input: { profileId: string; key: string }): AssetMetadata | undefined;
+  listAssetsOverride(input: ListAssetsInput): ListAssetsResult | undefined;
   listStorageObjects(
     profile: StoredProfile,
     secret: ProfileSecret,
@@ -61,7 +60,6 @@ export interface AssetLibraryQueryServiceDependencies {
   ): Promise<ListAssetsResult>;
   normalizePreviewMaxBytes(value: number | undefined): number;
   nowMs(): number;
-  previewFixtureAsset(input: PreviewAssetInput): AssetPreview;
   readPreviewCache(input: PreviewCacheInput): Promise<AssetPreview | null>;
   recordHeadHit(): void;
   recordHeadInFlightHit(): void;
@@ -69,6 +67,7 @@ export interface AssetLibraryQueryServiceDependencies {
   recordPreviewHit(): void;
   recordPreviewInFlightHit(): void;
   recordPreviewMiss(): void;
+  previewAssetOverride(input: PreviewAssetInput): AssetPreview | undefined;
   setHeadCache(cacheKey: string, cache: { value: AssetMetadata; expiresAt: number }): void;
   setHeadInFlight(cacheKey: string, task: Promise<AssetMetadata>): void;
   setPreviewInFlight(inFlightKey: string, task: Promise<AssetPreview>): void;
@@ -78,23 +77,13 @@ export interface AssetLibraryQueryServiceDependencies {
   writePreviewCache(input: PreviewCacheInput, preview: AssetPreview): Promise<void>;
 }
 
-const assertFixtureAssetExists = (
-  input: { key: string },
-  dependencies: AssetLibraryQueryServiceDependencies,
-): AssetMetadata => {
-  const metadata = dependencies.getFixtureAsset(input.key);
-  if (!metadata) {
-    throw new Error(`Asset not found: ${input.key}`);
-  }
-  return metadata;
-};
-
 export const createAssetLibraryQueryService = (
   dependencies: AssetLibraryQueryServiceDependencies,
 ): AssetLibraryQueryService => ({
   listAssets: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      return dependencies.listFixtureAssets(input);
+    const overrideResult = dependencies.listAssetsOverride(input);
+    if (overrideResult !== undefined) {
+      return overrideResult;
     }
     const profile = dependencies.assertProfileExists(input.profileId);
     const secret = dependencies.getProfileSecretOrThrow(profile.id);
@@ -113,8 +102,9 @@ export const createAssetLibraryQueryService = (
   },
 
   headAsset: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      return assertFixtureAssetExists(input, dependencies);
+    const overrideResult = dependencies.headAssetOverride(input);
+    if (overrideResult !== undefined) {
+      return overrideResult;
     }
     const profile = dependencies.assertProfileExists(input.profileId);
     const cacheKey = dependencies.toAssetScopeKey(profile.id, input.key);
@@ -151,9 +141,9 @@ export const createAssetLibraryQueryService = (
   },
 
   previewAsset: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      assertFixtureAssetExists(input, dependencies);
-      return dependencies.previewFixtureAsset(input);
+    const overrideResult = dependencies.previewAssetOverride(input);
+    if (overrideResult !== undefined) {
+      return overrideResult;
     }
     const profile = dependencies.assertProfileExists(input.profileId);
     const maxBytes = dependencies.normalizePreviewMaxBytes(input.maxBytes);
