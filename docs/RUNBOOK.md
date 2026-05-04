@@ -1,7 +1,7 @@
 # LumaBin Runbook
 
-- 最終更新日: 2026-05-03
-- ステータス: M3（UX polish / reliability）
+- 最終更新日: 2026-05-04
+- ステータス: Public preview
 - 対象: `apps/desktop`
 
 ## 1. 目的
@@ -349,65 +349,26 @@ open LumaBin.app
 目的:
 - 大きなバケットや長時間セッションで体感劣化が起きていないことを確認する
 
-手順（手動、月次または大きなUI変更後）:
-1. 開発ビルドを起動し、対象 profile で一覧を開く
-2. 設定パネルの `Dev metrics (R2)` を `Reset` して計測を初期化
-3. 次を順に実行する
-   - 検索（3回以上）
-   - スクロール（dense state で高速スクロール）
-   - image/video/pdf の preview を各2回以上
-4. `Dev metrics (R2)` の `Refresh` を実行する
-5. `Dev metrics (R2)` の `Copy snapshot` を実行し、記録本文をコピーする
-6. 異常や継続調査が必要な場合は GitHub Issue に記録する
-
-ローカルで dense bucket を再現する場合:
+標準手順は [PERFORMANCE.md](PERFORMANCE.md) を正とします。Runbook では、リリース前や大きなUI変更後に使う最小導線だけを示します。
 
 ```bash
 cd apps/desktop
-LUMABIN_E2E_FIXTURE_ASSET_COUNT=1000 npm run dev:e2e
+npm run e2e:dense
 ```
 
-実 profile を読み取り専用で自動計測する場合:
+期待結果:
+- dense fixture E2E が成功する
+- Dev Metrics が表示される
+- `Failures = 0`
+- 検索、仮想スクロール、preview open / close がtimeoutしない
 
-1. 通常の開発アプリを CDP 付きで起動する
-
-```bash
-cd apps/desktop
-npx electron-forge start -- --remote-debugging-port=9334
-```
-
-2. 別ターミナルで attach 計測を実行する
-
-```bash
-cd apps/desktop
-npm run perf:real-profile:attach
-```
-
-3. `apps/desktop/test-results/real-profile-dev-metrics-snapshot.txt` を確認する
-
-補足:
-- `LUMABIN_E2E_FIXTURE_ASSET_COUNT` は E2E fixture profile の初期 asset 件数を増やすための開発用入力。未指定時は通常 E2E と同じ最小 fixture（3件）を使う
-- dense fixture は実R2のネットワーク特性を代替しない。UIスクロール・検索・preview cache の回帰確認に使い、リリース前の最終判定は実 profile でも確認する
-- `perf:real-profile:attach` は既存のローカル profile を使い、検索・スクロール・preview と少数の preview read probe だけを実行する。preview read probe はユーザーの preview cache を削除せず、実行ごとに `maxBytes` を調整して実R2のGET経路も確認する。upload / delete / rename / move / settings save は実行せず、`PUT calls` と `Uploaded bytes` が 0 であることを guard する
-
-確認観点:
-- `Failures` が増えていない
-- `Preview cache hit` が 2回目以降で上昇する
-- `Search cache hit` が連続検索で上昇する
-- 操作中にフリーズや著しいスクロール破綻がない
-- スクロール中にヘッダーや操作UIが重ならない
-
-記録先:
-- 通常は repo に逐次ログを残さない
-- 異常時や継続調査が必要な場合は GitHub Issue に再現条件、実行コマンド、匿名化済み snapshot を記録する
-- 公開リポジトリ向けの記録では、profile 名・bucket 名・object key に由来する検索語は必ず匿名化する
-- 公開fixture中心の標準手順は [PERFORMANCE.md](PERFORMANCE.md) を正とする
+異常や継続調査が必要な場合は、再現条件と匿名化済み snapshot を GitHub Issue に記録します。実profile計測の注意点は [PERFORMANCE.md](PERFORMANCE.md#実profile計測) に従います。
 
 ## 7. リリースチェック（最終確認）
 
 目的:
 - 公開済み Release アセットが「入手可能・整合性確認可能・起動可能」であることを確認する
-- public repository 化を検討する場合、tracked file に private profile / bucket / object key hint や典型的な secret 形式が残っていないことを確認する
+- public repository として、tracked file / docs / release metadata に公開不適切な情報が残っていないことを確認する
 
 公開前 hygiene:
 
@@ -421,58 +382,14 @@ npm run audit:github-public-readiness
 期待結果:
 - tracked file に `.env`、秘密鍵、証明書、ローカルDB、packaged artifact が含まれていない
 - public-facing docs / metadata に private profile 名、bucket 名、object key hint、個人ドメイン画像URL、個人メールが残っていない
-- full history をそのまま公開する場合、`audit:public-history` も通る。既存履歴に違反が残る場合は、値を露出せず commit / file / rule だけが報告される
+- repository history を公開対象として扱う場合、`audit:public-history` も通る。既存履歴に違反が残る場合は、値を露出せず commit / file / rule だけが報告される
 - existing GitHub repository を public にする場合、`audit:github-public-readiness` で active Actions artifacts と公開対象 Releases の残りを確認する
 
 補足:
 - `audit:public-readiness` は tracked file の軽量チェックで、通常の `smoke:ci` に含まれる
-- `audit:public-history` は full history public 化前の明示確認用。既存履歴に違反がある間は失敗するため、通常の `smoke:ci` には含めない
-- GitHub Actions artifacts、GitHub Releases、git author email の履歴 rewrite 要否は別途確認する
+- `audit:public-history` は履歴監査用。通常の `smoke:ci` には含めず、公開前後の maintainer 確認として明示実行する
+- GitHub Actions artifacts、GitHub Releases、git author email の扱いは maintainer が別途確認する
 - `audit:github-public-readiness` は read-only 監査で、削除・公開設定変更・workflow再実行は行わない
-
-public 化の判断:
-- `audit:public-readiness` が通り、`audit:public-history` が失敗する場合、current tree は公開可能でも full history の公開は不可として扱う
-- 推奨は、sanitized current tree を新しい公開用履歴として作ること。既存 private repository を full history のまま public に切り替えない
-- 既存 repository を public に切り替える必要がある場合は、事前に履歴 rewrite を実施し、`audit:public-history` が通ることを確認する。履歴 rewrite は破壊的なため、実施前に対象branch、tag、remote、復旧手順を確認する
-
-sanitized snapshot 公開の安全手順（推奨）:
-1. 現在の作業branchで `npm run smoke:ci` と `npm run audit:public-readiness` が通ることを確認する
-2. `npm run audit:public-history` が失敗する場合、履歴付き公開を中止し、squash merge または新規公開repositoryへの snapshot import を選ぶ
-3. 公開対象の履歴には、sanitized commit 以降の内容だけを含める
-4. GitHub Actions artifacts と古い test / rc release を削除・整理してから repository visibility を変更する
-5. visibility 変更後、branch protection、tag protection、fork pull request workflow approval、Actions permissions を再確認する
-
-sanitized snapshot archive を作る場合:
-
-```bash
-cd apps/desktop
-npm run release:public-snapshot
-npm run verify:public-snapshot-import
-```
-
-期待結果:
-- `out/public-snapshot/lumabin-public-snapshot-<commit>.tar.gz` が生成される
-- 同じディレクトリに manifest JSON が生成され、SHA256 と source commit が記録される
-- 生成物は `git archive` ベースのため `.git` と履歴を含まない
-- 最新 manifest の snapshot を一時ディレクトリへ展開し、`main` branch の初回 commit として import できる
-
-公開repository名が private codename と異なる場合:
-
-```bash
-cd apps/desktop
-npm run release:public-snapshot -- --slug <public-repo-slug>
-```
-
-期待結果:
-- `out/public-snapshot/<public-repo-slug>-public-snapshot-<commit>.tar.gz` が生成される
-- archive 展開root は `<public-repo-slug>-<commit>` になり、新規 public repository への初回 import に使える
-- manifest の `snapshot.slug` / `snapshot.rootDirectory` が公開repo名に対応する
-
-補足:
-- 既定では dirty worktree で失敗する。公開用snapshotはcommit済みのsanitized treeから作る
-- 生成前に `audit:public-readiness` を自動実行する
-- `--slug` は archive 名と展開rootだけを変える。アプリ表示名や package metadata の rename は別差分として扱う
-- `verify:public-snapshot-import` は一時checkoutを作って削除する。調査用に残す場合のみ `npm run verify:public-snapshot-import -- --keep` を使う
 
 手順:
 1. Release の対象タグを確認する（例: `v1.0.2`）
