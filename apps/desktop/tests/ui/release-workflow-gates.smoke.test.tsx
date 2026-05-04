@@ -33,6 +33,7 @@ describe('release workflow gates', () => {
       join(process.cwd(), 'scripts/verify-mac-signing-readiness.mjs'),
       'utf8',
     );
+    const forgeConfig = readFileSync(join(process.cwd(), 'forge.config.ts'), 'utf8');
     const packageJson = readFileSync(join(process.cwd(), 'package.json'), 'utf8');
 
     expect(indexOfRequired(ciWorkflow, 'run: npm run verify:mac-signing-readiness')).toBeLessThan(
@@ -65,8 +66,15 @@ describe('release workflow gates', () => {
     expect(releaseWorkflow).toContain('security set-key-partition-list');
     expect(releaseWorkflow).toContain('Clean up Apple signing keychain');
     expect(signingReadinessVerifier).toContain("'LUMABIN_APPLE_SIGN_IDENTITY'");
+    expect(signingReadinessVerifier).toContain("'LUMABIN_APPLE_CERTIFICATE_BASE64'");
+    expect(signingReadinessVerifier).toContain("'LUMABIN_APPLE_CERTIFICATE_PASSWORD'");
     expect(signingReadinessVerifier).toContain("execFileSync('/usr/bin/security', ['find-identity', '-p', 'codesigning', '-v']");
     expect(signingReadinessVerifier).toContain('Developer ID signing identity is available');
+    expect(signingReadinessVerifier).toContain('Developer ID certificate import inputs are configured');
+    expect(forgeConfig).toContain('const hasNotarizeCredentials = Boolean(appleId && appleIdPassword && appleTeamId);');
+    expect(forgeConfig).toContain('osxNotarize:');
+    expect(forgeConfig).toContain('enableMacSign && hasNotarizeCredentials');
+    expect(forgeConfig).toContain('teamId: appleTeamId');
     expect(releaseWorkflow).toContain('Signing mode: %s');
     expect(releaseWorkflow).toContain('release-evidence.json');
     expect(releaseLaunchSmoke).toContain("import { createServer } from 'node:net';");

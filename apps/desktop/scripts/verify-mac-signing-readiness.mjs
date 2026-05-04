@@ -17,6 +17,8 @@ const requiredEntitlements = [
 ];
 const requiredSigningSecrets = [
   'LUMABIN_APPLE_SIGN_IDENTITY',
+  'LUMABIN_APPLE_CERTIFICATE_BASE64',
+  'LUMABIN_APPLE_CERTIFICATE_PASSWORD',
   'LUMABIN_APPLE_ID',
   'LUMABIN_APPLE_ID_PASSWORD',
   'LUMABIN_APPLE_TEAM_ID',
@@ -75,5 +77,6 @@ if (!codesigningIdentities.includes(signingIdentity)) {
 
 console.log('[verify-mac-signing-readiness] signed release mode');
 console.log('[verify-mac-signing-readiness] Developer ID signing identity is available');
+console.log('[verify-mac-signing-readiness] Developer ID certificate import inputs are configured');
 console.log('[verify-mac-signing-readiness] notarization credentials are configured');
 console.log('[verify-mac-signing-readiness] Electron entitlements file is present');
