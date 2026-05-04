@@ -86,7 +86,7 @@ export const QuickPreviewMediaPanel = ({
         <button
           type="button"
           className="image-nav-button image-nav-button--prev"
-          aria-label="Previous photo"
+          aria-label="Previous asset"
           title="Previous asset (Left Arrow)"
           onClick={() => onMoveSelection(-1)}
           disabled={!hasPrevPreviewImage}
@@ -94,12 +94,12 @@ export const QuickPreviewMediaPanel = ({
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 6l-6 6 6 6" />
           </svg>
-          <span className="sr-only">Previous photo</span>
+          <span className="sr-only">Previous asset</span>
         </button>
         <button
           type="button"
           className="image-nav-button image-nav-button--next"
-          aria-label="Next photo"
+          aria-label="Next asset"
           title="Next asset (Right Arrow)"
           onClick={() => onMoveSelection(1)}
           disabled={!hasNextPreviewImage}
@@ -107,7 +107,7 @@ export const QuickPreviewMediaPanel = ({
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9 6l6 6-6 6" />
           </svg>
-          <span className="sr-only">Next photo</span>
+          <span className="sr-only">Next asset</span>
         </button>
       </>
     );

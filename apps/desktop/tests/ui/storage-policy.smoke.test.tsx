@@ -50,6 +50,30 @@ describe('storage policy', () => {
     expect(isNotFoundError(notFound)).toBe(true);
     expect(formatStorageError(notFound)).toBe('NoSuchKey (HTTP 404): missing');
 
+    const accessDenied = Object.assign(new Error('signature mismatch'), {
+      name: 'SignatureDoesNotMatch',
+      $metadata: { httpStatusCode: 403 },
+    });
+    expect(formatStorageError(accessDenied)).toBe(
+      'SignatureDoesNotMatch (HTTP 403): Authorization failed. Check the access key, secret, bucket permissions, and R2/S3 endpoint. signature mismatch',
+    );
+
+    const missingBucket = Object.assign(new Error('bucket does not exist'), {
+      name: 'NoSuchBucket',
+      $metadata: { httpStatusCode: 404 },
+    });
+    expect(formatStorageError(missingBucket)).toBe(
+      'NoSuchBucket (HTTP 404): Bucket not found. Check the bucket name and account endpoint. bucket does not exist',
+    );
+
+    const redirectedBucket = Object.assign(new Error('use a different endpoint'), {
+      name: 'PermanentRedirect',
+      $metadata: { httpStatusCode: 301 },
+    });
+    expect(formatStorageError(redirectedBucket)).toBe(
+      'PermanentRedirect (HTTP 301): Bucket endpoint mismatch. Check the endpoint URL and region for this provider. use a different endpoint',
+    );
+
     const timeout = Object.assign(new Error('timeout'), {
       name: 'RequestTimeout',
     });

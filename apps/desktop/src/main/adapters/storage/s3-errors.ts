@@ -10,6 +10,43 @@ export const toHttpStatusCode = (error: unknown): number | undefined => {
   return undefined;
 };
 
+const toStorageErrorName = (error: Error): string => error.name || 'StorageError';
+
+const providerRecoveryHint = (
+  errorName: string,
+  statusCode: number | undefined,
+): string | undefined => {
+  if (
+    statusCode === 401 ||
+    statusCode === 403 ||
+    [
+      'AccessDenied',
+      'InvalidAccessKeyId',
+      'SignatureDoesNotMatch',
+      'Unauthorized',
+    ].includes(errorName)
+  ) {
+    return 'Authorization failed. Check the access key, secret, bucket permissions, and R2/S3 endpoint.';
+  }
+
+  if (statusCode === 301 || errorName === 'PermanentRedirect') {
+    return 'Bucket endpoint mismatch. Check the endpoint URL and region for this provider.';
+  }
+
+  if (errorName === 'NoSuchBucket') {
+    return 'Bucket not found. Check the bucket name and account endpoint.';
+  }
+
+  if (
+    statusCode === 400 ||
+    ['AuthorizationHeaderMalformed', 'InvalidArgument', 'InvalidBucketName'].includes(errorName)
+  ) {
+    return 'Provider rejected the request. Check the endpoint, region, and bucket name.';
+  }
+
+  return undefined;
+};
+
 export const formatStorageError = (error: unknown): string => {
   if (!(error instanceof Error)) {
     return 'Unknown storage error';
@@ -17,7 +54,15 @@ export const formatStorageError = (error: unknown): string => {
 
   const statusCode = toHttpStatusCode(error);
   const status = statusCode ? ` (HTTP ${statusCode})` : '';
-  return `${error.name}${status}: ${error.message}`;
+  const errorName = toStorageErrorName(error);
+  const hint = providerRecoveryHint(errorName, statusCode);
+  const details = error.message ? ` ${error.message}` : '';
+
+  if (hint) {
+    return `${errorName}${status}: ${hint}${details}`;
+  }
+
+  return `${errorName}${status}:${details}`;
 };
 
 export const isNotFoundError = (error: unknown): boolean => {

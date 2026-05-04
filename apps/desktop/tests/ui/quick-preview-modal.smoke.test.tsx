@@ -119,9 +119,9 @@ describe('QuickPreviewModal', () => {
     render(<QuickPreviewModal {...props} />);
 
     expect(screen.getByText('2 / 3')).toBeTruthy();
-    screen.getByRole('button', { name: 'Previous photo' }).click();
-    screen.getByRole('button', { name: 'Next photo' }).click();
-    screen.getByRole('button', { name: 'Hide photo details' }).click();
+    screen.getByRole('button', { name: 'Previous asset' }).click();
+    screen.getByRole('button', { name: 'Next asset' }).click();
+    screen.getByRole('button', { name: 'Hide asset details' }).click();
     screen.getByRole('button', { name: 'Close preview' }).click();
 
     expect(props.navigation.onMoveSelection).toHaveBeenCalledWith(-1);
