@@ -32,13 +32,12 @@ export interface AssetDiscoveryApplicationServiceDependencies {
   ensureSearchIndexBootstrapped(profile: StoredProfile, secret: ProfileSecret): Promise<void>;
   getProfileSecretOrThrow(profileId: string): ProfileSecret;
   getSearchSnapshot(cacheKey: string): { result: SearchResult; expiresAt: number } | undefined;
-  isE2EFixtureProfile(profileId: string): boolean;
   listSavedViews(): SavedView[];
   nowIso(): string;
   nowMs(): number;
   persistState(): void;
   publishApplicationEvent(event: ApplicationEvent): void;
-  queryFixtureAssets(input: SearchInput): SearchResult;
+  querySearchOverride(input: SearchInput): SearchResult | undefined;
   recordSearchSnapshotHit(): void;
   recordSearchSnapshotMiss(): void;
   saveView(view: SavedView): void;
@@ -56,8 +55,9 @@ export const createAssetDiscoveryApplicationService = (
   dependencies: AssetDiscoveryApplicationServiceDependencies,
 ): AssetDiscoveryApplicationService => ({
   queryAssets: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      return dependencies.queryFixtureAssets(input);
+    const overrideResult = dependencies.querySearchOverride(input);
+    if (overrideResult) {
+      return overrideResult;
     }
 
     const profile = dependencies.assertProfileExists(input.profileId);
