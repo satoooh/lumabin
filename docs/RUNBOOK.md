@@ -143,6 +143,7 @@ Workflow:
 - `.github/workflows/desktop-ci.yml`
 - `.github/workflows/desktop-e2e.yml`
 - `.github/workflows/desktop-release.yml`
+- `.github/workflows/repository-hygiene.yml`
 
 `desktop-ci`:
 
@@ -164,7 +165,7 @@ Workflow:
   - `Build and Publish macOS Release`
   - package 前に `verify:mac-signing-readiness`、publish 前に `verify:darwin-artifact` と `release:launch-smoke` を必須実行
 - 成果物:
-  - `LumaBin-<version>-arm64.zip`（命名は maker 設定に準拠）
+  - `LumaBin-darwin-arm64-<version>.zip`（命名は maker 設定に準拠）
   - `SHA256SUMS.txt`
   - `release-evidence.json`（bundle metadata / signing mode / artifact SHA256 / verification checks の機械可読証跡）
   - GitHub Releases に自動アップロード
@@ -182,17 +183,26 @@ Workflow:
   - `apps/desktop/test-results`
   - `apps/desktop/playwright-report`
 
+`repository-hygiene`:
+
+- Trigger:
+  - `pull_request` / `push`（OSS文書、issue/PRテンプレート、public readiness audit 変更）
+  - `workflow_dispatch`
+- Jobs:
+  - `Public readiness audit`
+  - `audit:public-history` で現在のtracked filesとGit historyを検査する
+
 ### 4.2 Branch protection（推奨）
 
 `main` で Required checks を設定:
 
 - `Lint / Typecheck / Audit`
 - `Packaging smoke (macOS)`
+- `Public readiness audit`
 
 補足:
-- GitHub private repository のプラン制約により ruleset API が 403 になる場合、UI からの手動設定に切り替える。
-- プラン制約が解消するまで、`main` 直pushを避け PR マージを既定運用にする。
-- 現時点の運用では branch protection 自体の適用は見送り、`desktop-ci` 成功確認を代替ゲートとする。
+- `Public readiness audit` は OSS文書やGitHubテンプレートの変更時に履歴を含む public readiness を確認する。
+- branch protection が未設定の場合も、`main` 直pushを避け PR マージを既定運用にする。
 
 ### 4.3 署名 / notarize（任意有効化）
 

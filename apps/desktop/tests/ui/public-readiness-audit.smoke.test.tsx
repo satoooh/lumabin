@@ -58,6 +58,9 @@ describe('public readiness audit', () => {
     expect(issues).toEqual([
       '.gitignore: missing required public repository hygiene file',
       'SECURITY.md: missing required public repository hygiene file',
+      'CONTRIBUTING.md: missing required public repository hygiene file',
+      'CODE_OF_CONDUCT.md: missing required public repository hygiene file',
+      'SUPPORT.md: missing required public repository hygiene file',
     ]);
   });
 
@@ -71,7 +74,16 @@ describe('public readiness audit', () => {
 
     const issues = collectTrackedFileIssues({
       basePath: '/repo',
-      trackedFiles: ['.gitignore', 'LICENSE', 'SECURITY.md', textPath, imagePath],
+      trackedFiles: [
+        '.gitignore',
+        'LICENSE',
+        'SECURITY.md',
+        'CONTRIBUTING.md',
+        'CODE_OF_CONDUCT.md',
+        'SUPPORT.md',
+        textPath,
+        imagePath,
+      ],
       fileExists: () => true,
       readTextFile: (absolutePath) => textByPath.get(absolutePath.replace('/repo/', '')) ?? '',
       getFileStats: () => ({ size: 64 }),

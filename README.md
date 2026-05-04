@@ -2,16 +2,30 @@
 [![Desktop CI](https://github.com/satoooh/lumabin/actions/workflows/desktop-ci.yml/badge.svg)](https://github.com/satoooh/lumabin/actions/workflows/desktop-ci.yml)
 [![Desktop E2E](https://github.com/satoooh/lumabin/actions/workflows/desktop-e2e.yml/badge.svg)](https://github.com/satoooh/lumabin/actions/workflows/desktop-e2e.yml)
 [![Desktop Release](https://github.com/satoooh/lumabin/actions/workflows/desktop-release.yml/badge.svg)](https://github.com/satoooh/lumabin/actions/workflows/desktop-release.yml)
+[![Repository Hygiene](https://github.com/satoooh/lumabin/actions/workflows/repository-hygiene.yml/badge.svg)](https://github.com/satoooh/lumabin/actions/workflows/repository-hygiene.yml)
 
 LumaBin は、Cloudflare R2 上の画像・動画・PDF・CSV を gallery-first で扱う macOS 向けデスクトップアプリです。
 
 - 形態: Electron デスクトップアプリ
 - 技術方針: TypeScript 統一（Renderer / Main / Preload）
 - ストレージ方針: Cloudflare R2 first, S3 ready
+- ライセンス: MIT
+
+LumaBin は OSS として公開されています。バグ報告、再現手順、ドキュメント改善、小さなUX改善の提案を歓迎します。参加方法は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
 ## 製品画像
 
 ![LumaBin Product Screenshot](docs/assets/lumabin-sanitized-screenshot.png)
+
+## 最新版を試す
+
+macOS 向けの配布 zip は GitHub Releases で公開しています。
+
+- 最新リリース: [LumaBin Releases](https://github.com/satoooh/lumabin/releases/latest)
+- 配布形式: unsigned macOS ZIP
+- 検証ファイル: `SHA256SUMS.txt` と `release-evidence.json`
+
+初回起動時に Gatekeeper の警告が出る場合があります。現時点では notarize 済みアプリではなく、OSS preview として unsigned ZIP を配布しています。
 
 ## 現在地
 
@@ -31,7 +45,7 @@ LumaBin は、Cloudflare R2 上の画像・動画・PDF・CSV を gallery-first 
 ### セットアップ
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/satoooh/lumabin.git
 cd lumabin/apps/desktop
 npm install
 ```
@@ -117,6 +131,17 @@ npm run release:launch-smoke
 `package:darwin` は zip 生成後に Electron 用 entitlement 付きで ad-hoc 再署名し、配布 zip を再生成します。
 
 branch protection の推奨設定は [docs/RUNBOOK.md](docs/RUNBOOK.md) を参照してください。
+
+## OSSとして参加する
+
+- バグ報告: [Bug report](https://github.com/satoooh/lumabin/issues/new?template=bug_report.yml)
+- 機能提案: [Feature request](https://github.com/satoooh/lumabin/issues/new?template=feature_request.yml)
+- 貢献ガイド: [CONTRIBUTING.md](CONTRIBUTING.md)
+- 行動規範: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- サポート範囲: [SUPPORT.md](SUPPORT.md)
+- セキュリティ報告: [SECURITY.md](SECURITY.md)
+
+公開issueやPRには、access key、secret key、private bucket 名、object key、署名済みURL、個人データを含むスクリーンショットを貼らないでください。
 
 ## ドキュメント
 

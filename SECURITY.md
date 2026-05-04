@@ -18,5 +18,13 @@ profile data を含めないでください。
 
 ## サポート対象
 
-最初の stable release までは、最新の release candidate と main branch のみを
-security fix の対象とします。
+security fix は、最新の GitHub Release と `main` branch を対象にします。
+古いRelease、fork固有変更、private bucket や実ユーザーデータを必要とする調査は
+原則として対象外です。
+
+## maintainer の対応方針
+
+- 報告内容を確認し、影響範囲と再現性を整理します。
+- 修正が必要な場合は、公開issueに詳細な悪用手順やsecretを出さずに修正します。
+- Release が必要な場合は、GitHub Releases に修正版を公開し、`SHA256SUMS.txt` と
+  `release-evidence.json` を添付します。

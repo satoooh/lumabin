@@ -12,8 +12,19 @@
 - キャッシュ・索引・アップロード失敗耐性の hardening は一巡完了
 - 次は「体感品質の詰め」と「保守しやすい分割」の2軸で改善を進める
 - release readiness の要求別証跡と未完了事項は [RELEASE_READINESS_AUDIT.md](RELEASE_READINESS_AUDIT.md) に分離して管理する
+- OSS公開後の入口整備として、貢献ガイド、行動規範、サポート範囲、issue/PRテンプレート、repository hygiene workflow を追加した
 
-## 2. 直近で完了したこと（2026-03-04）
+## 2. 直近で完了したこと（2026-05-04）
+
+### OSS公開
+
+- README に最新Release、OSS参加導線、セキュリティ注意、Repository Hygiene badge を追加
+- `CONTRIBUTING.md` / `CODE_OF_CONDUCT.md` / `SUPPORT.md` を追加し、外部協力者向けの入口を整理
+- GitHub issue template / PR template を追加し、再現手順・検証・機密情報チェックを標準化
+- `repository-hygiene` workflow を追加し、OSS文書とテンプレート変更時に `audit:public-history` を実行するようにした
+- public readiness audit の必須ファイルに OSS基本文書を追加した
+
+## 3. これまでに完了したこと（2026-03-04）
 
 ### UX
 

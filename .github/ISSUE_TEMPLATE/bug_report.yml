@@ -1,0 +1,76 @@
+name: Bug report
+description: 再現可能な不具合を報告する
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        報告ありがとうございます。access key、secret key、private bucket 名、object key、署名済みURL、個人データを含むスクリーンショットやログは貼らないでください。
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 何が起きたかを短く説明してください。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: 再現手順を番号付きで書いてください。fixtureやダミーデータで再現できる場合はその条件も書いてください。
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: 期待した動作を書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: 実際の動作、エラーメッセージ、画面状態を書いてください。ログは機密情報を除去してから貼ってください。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: LumaBin version
+      description: Release版ならtag、開発版ならcommit SHAを書いてください。
+      placeholder: v1.0.2
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 15.x
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Storage provider
+      options:
+        - Cloudflare R2
+        - Generic S3
+        - E2E fixture
+        - Other
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: 実行したコマンド、確認したこと、未確認のことを書いてください。
+      placeholder: |
+        - npm run smoke:ci
+        - npm run e2e
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: このissueにsecret、private bucket 名、private object key、署名済みURL、個人データを含めていません。
+          required: true

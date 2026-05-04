@@ -43,7 +43,14 @@ const runGitAllowNoMatch = (args) => {
   return result.stdout;
 };
 
-export const requiredFiles = ['.gitignore', 'LICENSE', 'SECURITY.md'];
+export const requiredFiles = [
+  '.gitignore',
+  'LICENSE',
+  'SECURITY.md',
+  'CONTRIBUTING.md',
+  'CODE_OF_CONDUCT.md',
+  'SUPPORT.md',
+];
 export const binaryExtensions = new Set([
   '.avif',
   '.gif',

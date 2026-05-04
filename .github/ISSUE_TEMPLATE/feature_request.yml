@@ -1,0 +1,49 @@
+name: Feature request
+description: 改善案や新機能を提案する
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提案ありがとうございます。LumaBin は gallery-first なR2/S3 asset workspace を目指しています。大きな仕様変更や依存追加は、実装前にこのissueで方向性を確認します。
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: どの作業が難しいか、どの導線で困っているかを書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: 望ましい体験や仕様を書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: 検討した代替案や、現状の回避策があれば書いてください。
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Gallery / browse
+        - Preview
+        - Upload
+        - Sharing
+        - Workspace settings
+        - Performance
+        - Release / packaging
+        - Documentation
+        - Other
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: このissueにsecret、private bucket 名、private object key、署名済みURL、個人データを含めていません。
+          required: true
