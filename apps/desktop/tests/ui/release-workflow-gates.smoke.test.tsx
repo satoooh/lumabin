@@ -37,6 +37,13 @@ describe('release workflow gates', () => {
     expect(indexOfRequired(releaseWorkflow, 'run: npm run verify:mac-signing-readiness')).toBeLessThan(
       indexOfRequired(releaseWorkflow, 'run: npm run package:darwin'),
     );
+    expect(releaseWorkflow).toContain('fetch-depth: 0');
+    expect(releaseWorkflow).toContain('Verify release ref provenance');
+    expect(releaseWorkflow).toContain('git fetch --no-tags origin main:refs/remotes/origin/main');
+    expect(releaseWorkflow).toContain('git merge-base --is-ancestor "${GITHUB_SHA}" origin/main');
+    expect(indexOfRequired(releaseWorkflow, 'Verify release ref provenance')).toBeLessThan(
+      indexOfRequired(releaseWorkflow, 'run: npm run smoke:ci'),
+    );
     expect(indexOfRequired(releasePreflight, "run('npm', ['run', 'verify:mac-signing-readiness']);")).toBeLessThan(
       indexOfRequired(releasePreflight, "run('npm', ['run', 'package:darwin']);"),
     );

@@ -163,6 +163,7 @@ Workflow:
 - Jobs:
   - `Lint / Typecheck / Audit`
   - `Build and Publish macOS Release`
+  - tag release は `origin/main` に含まれる commit から作成された場合のみ続行する
   - package 前に `verify:mac-signing-readiness`、publish 前に `verify:darwin-artifact` と `release:launch-smoke` を必須実行
   - `release` environment の承認後に GitHub Release へ publish する
 - 成果物:
