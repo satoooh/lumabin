@@ -34,6 +34,8 @@ interface GalleryPaneProps {
   inferAssetKind: (item: AssetItem) => AssetKind;
   iconForKind: (kind: AssetKind) => string;
   basenameFromKey: (key: string) => string;
+  formatBytes: (value: number) => string;
+  formatDate: (value: string) => string;
   toThumbnailCacheKey: (profileId: string, key: string) => string;
   setAssetItemRef: (key: string, node: HTMLButtonElement | null) => void;
   onAssetFocus: (key: string) => void;
@@ -65,6 +67,8 @@ export const GalleryPane = ({
   inferAssetKind,
   iconForKind,
   basenameFromKey,
+  formatBytes,
+  formatDate,
   toThumbnailCacheKey,
   setAssetItemRef,
   onAssetFocus,
@@ -96,6 +100,10 @@ export const GalleryPane = ({
               >
                 {section.items.map((item, itemIndex) => {
                   const kind = inferAssetKind(item);
+                  const basename = basenameFromKey(item.key);
+                  const kindLabel = iconForKind(kind);
+                  const sizeLabel = formatBytes(item.size);
+                  const modifiedLabel = formatDate(item.lastModified);
                   const isSelected = isSelectionMode
                     ? selectedAssetKeySet.has(item.key)
                     : item.key === selectedAssetKey;
@@ -113,12 +121,13 @@ export const GalleryPane = ({
                     ? '…'
                     : kind === 'image' || kind === 'video'
                       ? ''
-                      : iconForKind(kind);
+                      : kindLabel;
 
                   return (
                     <button
                       type="button"
                       key={item.key}
+                      aria-label={`${basename}, ${kind}, ${sizeLabel}`}
                       ref={(node) => setAssetItemRef(item.key, node)}
                       className={`gallery-card ${isSelected ? 'gallery-card--selected' : ''} ${
                         isQuickPreviewOpen && item.key === selectedAssetKey
@@ -143,7 +152,7 @@ export const GalleryPane = ({
                           <img
                             className="gallery-card-image"
                             src={thumbnailUrl}
-                            alt={basenameFromKey(item.key)}
+                            alt=""
                             loading={sectionIndex === 0 && itemIndex < 6 ? 'eager' : 'lazy'}
                             decoding="async"
                             draggable={false}
@@ -182,6 +191,18 @@ export const GalleryPane = ({
                             </svg>
                           </span>
                         ) : null}
+                        <span className="asset-kind-badge gallery-card-kind" aria-hidden="true">
+                          {kindLabel}
+                        </span>
+                        <span className="gallery-card-overlay" aria-hidden="true">
+                          <span className="gallery-card-title" title={item.key}>
+                            {basename}
+                          </span>
+                          <span className="gallery-card-meta">
+                            <span>{sizeLabel}</span>
+                            <span>{modifiedLabel}</span>
+                          </span>
+                        </span>
                       </div>
                     </button>
                   );

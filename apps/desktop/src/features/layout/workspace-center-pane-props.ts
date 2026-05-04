@@ -18,8 +18,8 @@ interface WorkspaceCenterPanePropsInput {
   };
   display: {
     basenameFromKey: GalleryPaneProps['basenameFromKey'];
-    formatBytes: AssetListPaneProps['formatBytes'];
-    formatDate: AssetListPaneProps['formatDate'];
+    formatBytes: GalleryPaneProps['formatBytes'];
+    formatDate: GalleryPaneProps['formatDate'];
     iconForKind: GalleryPaneProps['iconForKind'];
     inferAssetKind: GalleryPaneProps['inferAssetKind'];
     thumbnailCacheKey: GalleryPaneProps['toThumbnailCacheKey'];
@@ -209,6 +209,8 @@ export const createWorkspaceCenterPaneProps = ({
     inferAssetKind: display.inferAssetKind,
     iconForKind: display.iconForKind,
     basenameFromKey: display.basenameFromKey,
+    formatBytes: display.formatBytes,
+    formatDate: display.formatDate,
     toThumbnailCacheKey: display.thumbnailCacheKey,
     setAssetItemRef: interaction.setAssetItemRef,
     onAssetFocus: interaction.setSelectedAssetKey,
