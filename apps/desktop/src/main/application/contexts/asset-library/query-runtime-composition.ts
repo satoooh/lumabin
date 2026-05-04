@@ -39,12 +39,19 @@ import { recordCacheMetric } from '../../../dev-metrics';
 
 const HEAD_CACHE_TTL_MS = 90 * 1000;
 
+const getFixtureAssetOrThrow = (key: string) => {
+  const metadata = getE2EFixtureAsset(key);
+  if (!metadata) {
+    throw new Error(`Asset not found: ${key}`);
+  }
+  return metadata;
+};
+
 export const createAssetLibraryQueryRuntimeDependencies =
   (): AssetLibraryQueryServiceDependencies => ({
     assertProfileExists,
     deleteHeadInFlight: deleteHeadAssetInFlight,
     deletePreviewInFlight,
-    getFixtureAsset: getE2EFixtureAsset,
     getHeadCache: getHeadAssetCache,
     getHeadInFlight: getHeadAssetInFlight,
     getProfileSecretOrThrow,
@@ -52,13 +59,22 @@ export const createAssetLibraryQueryRuntimeDependencies =
     getStorageObjectPreview,
     headCacheTtlMs: HEAD_CACHE_TTL_MS,
     headStorageObject,
-    isE2EFixtureProfile,
-    listFixtureAssets: (input) =>
-      listE2EFixtureAssets(input, normalizeDestinationPrefix),
+    headAssetOverride: (input) =>
+      isE2EFixtureProfile(input.profileId) ? getFixtureAssetOrThrow(input.key) : undefined,
+    listAssetsOverride: (input) =>
+      isE2EFixtureProfile(input.profileId)
+        ? listE2EFixtureAssets(input, normalizeDestinationPrefix)
+        : undefined,
     listStorageObjects,
     normalizePreviewMaxBytes,
     nowMs: Date.now,
-    previewFixtureAsset: previewE2EFixtureAsset,
+    previewAssetOverride: (input) => {
+      if (!isE2EFixtureProfile(input.profileId)) {
+        return undefined;
+      }
+      getFixtureAssetOrThrow(input.key);
+      return previewE2EFixtureAsset(input);
+    },
     readPreviewCache,
     recordHeadHit: (): void => {
       recordCacheMetric('headHit');
