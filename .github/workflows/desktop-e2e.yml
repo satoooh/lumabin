@@ -43,6 +43,9 @@ jobs:
       - name: Run dense fixture E2E tests
         run: npm run e2e:dense
 
+      - name: Verify dense metrics snapshots
+        run: npm run verify:dev-metrics-snapshot
+
       - name: Upload dense metrics snapshots
         if: always()
         uses: actions/upload-artifact@v7

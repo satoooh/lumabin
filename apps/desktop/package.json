@@ -27,6 +27,7 @@
     "verify:darwin-artifact": "node ./scripts/verify-darwin-artifact.mjs",
     "verify:mac-signing-readiness": "node ./scripts/verify-mac-signing-readiness.mjs",
     "release:launch-smoke": "node ./scripts/release-launch-smoke.mjs",
+    "verify:dev-metrics-snapshot": "node ./scripts/verify-dev-metrics-snapshot.mjs",
     "release:preflight": "node ./scripts/release-preflight.mjs",
     "release:preflight:verify-only": "node ./scripts/release-preflight.mjs --verify-only",
     "release:public-snapshot": "node ./scripts/create-public-snapshot.mjs",

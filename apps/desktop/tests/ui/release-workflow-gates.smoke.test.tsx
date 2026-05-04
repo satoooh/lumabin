@@ -29,6 +29,10 @@ describe('release workflow gates', () => {
       'utf8',
     );
     const artifactVerifier = readFileSync(join(process.cwd(), 'scripts/verify-darwin-artifact.mjs'), 'utf8');
+    const devMetricsSnapshotVerifier = readFileSync(
+      join(process.cwd(), 'scripts/verify-dev-metrics-snapshot.mjs'),
+      'utf8',
+    );
     const signingReadinessVerifier = readFileSync(
       join(process.cwd(), 'scripts/verify-mac-signing-readiness.mjs'),
       'utf8',
@@ -83,6 +87,7 @@ describe('release workflow gates', () => {
     expect(releaseLaunchSmoke).toContain('LUMABIN_E2E_CDP_PORT: String(cdpPort)');
     expect(packageJson).toContain('"e2e": "npm run package:darwin && node ./scripts/release-launch-smoke.mjs --app"');
     expect(packageJson).toContain('"e2e:dense": "npm run package:darwin && LUMABIN_E2E_DENSE=1');
+    expect(packageJson).toContain('"verify:dev-metrics-snapshot": "node ./scripts/verify-dev-metrics-snapshot.mjs"');
     expect(packageJson).toContain('"e2e:prelaunch": "npm run package:darwin && open out/LumaBin-darwin-arm64/LumaBin.app');
     expect(packageJson).toContain('"release:public-snapshot": "node ./scripts/create-public-snapshot.mjs"');
     expect(packageJson).toContain('"verify:public-snapshot-import": "node ./scripts/verify-public-snapshot-import.mjs"');
@@ -102,7 +107,12 @@ describe('release workflow gates', () => {
     expect(artifactVerifier).toContain("path.join(projectRoot, 'out', 'make', 'release-evidence.json')");
     expect(artifactVerifier).toContain('artifact: {');
     expect(artifactVerifier).toContain('verification,');
+    expect(devMetricsSnapshotVerifier).toContain('List calls must be greater than 0');
+    expect(devMetricsSnapshotVerifier).toContain('Failures must be 0');
     expect(indexOfRequired(e2eWorkflow, 'run: npm run e2e:dense')).toBeLessThan(
+      indexOfRequired(e2eWorkflow, 'run: npm run verify:dev-metrics-snapshot'),
+    );
+    expect(indexOfRequired(e2eWorkflow, 'run: npm run verify:dev-metrics-snapshot')).toBeLessThan(
       indexOfRequired(e2eWorkflow, 'path: apps/desktop/test-results/**/dev-metrics-snapshot.txt'),
     );
     expect(e2eWorkflow).toContain('name: desktop-e2e-metrics-${{ github.run_id }}');

@@ -1,6 +1,6 @@
 # LumaBin Performance
 
-- 最終更新日: 2026-05-04
+- 最終更新日: 2026-05-05
 - 目的: public repo で再現できる性能確認手順と判断基準を定義する
 - 関連Issue: [#4 Define public performance benchmark routine](https://github.com/satoooh/lumabin/issues/4)
 
@@ -35,7 +35,10 @@ npm run e2e:dense
 
 ```bash
 find apps/desktop/test-results -name dev-metrics-snapshot.txt -print
+npm run verify:dev-metrics-snapshot
 ```
+
+`desktop-e2e` workflow では dense fixture E2E の直後に `verify:dev-metrics-snapshot` を実行し、snapshot の欠落、`List calls = 0`、`Failures > 0` を release-ready ではない状態として失敗させます。
 
 ## 手動スポットチェック
 
