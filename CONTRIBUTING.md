@@ -39,7 +39,8 @@ npm run dev
 - 要件と受け入れ基準: [docs/SPEC.md](docs/SPEC.md)
 - アーキテクチャ: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 開発/検証/リリース手順: [docs/RUNBOOK.md](docs/RUNBOOK.md)
-- 現在地と既知リスク: [docs/STATUS.md](docs/STATUS.md)
+- 現在地と今後の重点テーマ: [docs/ROADMAP.md](docs/ROADMAP.md)
+- 性能確認手順: [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
 
 ## 変更の考え方
 

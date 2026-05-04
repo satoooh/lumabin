@@ -91,4 +91,31 @@ describe('public readiness audit', () => {
 
     expect(issues).toEqual([]);
   });
+
+  it('skips tracked files that are deleted in the working tree', () => {
+    let stattedDeletedFile = false;
+    const issues = collectTrackedFileIssues({
+      basePath: '/repo',
+      trackedFiles: [
+        '.gitignore',
+        'LICENSE',
+        'SECURITY.md',
+        'CONTRIBUTING.md',
+        'CODE_OF_CONDUCT.md',
+        'SUPPORT.md',
+        'docs/STATUS.md',
+      ],
+      fileExists: (absolutePath) => !absolutePath.endsWith('docs/STATUS.md'),
+      readTextFile: () => 'clean public copy',
+      getFileStats: (absolutePath) => {
+        if (absolutePath.endsWith('docs/STATUS.md')) {
+          stattedDeletedFile = true;
+        }
+        return { size: 64 };
+      },
+    });
+
+    expect(issues).toEqual([]);
+    expect(stattedDeletedFile).toBe(false);
+  });
 });

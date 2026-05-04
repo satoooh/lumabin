@@ -178,6 +178,9 @@ export const collectTrackedFileIssues = ({ basePath, trackedFiles, fileExists, r
     if (binaryExtensions.has(extension)) {
       continue;
     }
+    if (!fileExists(absolutePath)) {
+      continue;
+    }
 
     const fileStats = getFileStats(absolutePath);
     if (fileStats.size > 1_000_000) {

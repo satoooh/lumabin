@@ -358,7 +358,7 @@ open LumaBin.app
    - image/video/pdf の preview を各2回以上
 4. `Dev metrics (R2)` の `Refresh` を実行する
 5. `Dev metrics (R2)` の `Copy snapshot` を実行し、記録本文をコピーする
-6. `docs/PERF_LOG.md` にレコードを追加する
+6. 異常や継続調査が必要な場合は GitHub Issue に記録する
 
 ローカルで dense bucket を再現する場合:
 
@@ -383,7 +383,7 @@ cd apps/desktop
 npm run perf:real-profile:attach
 ```
 
-3. `apps/desktop/test-results/real-profile-dev-metrics-snapshot.txt` を確認し、`docs/PERF_LOG.md` へ転記する
+3. `apps/desktop/test-results/real-profile-dev-metrics-snapshot.txt` を確認する
 
 補足:
 - `LUMABIN_E2E_FIXTURE_ASSET_COUNT` は E2E fixture profile の初期 asset 件数を増やすための開発用入力。未指定時は通常 E2E と同じ最小 fixture（3件）を使う
@@ -398,9 +398,10 @@ npm run perf:real-profile:attach
 - スクロール中にヘッダーや操作UIが重ならない
 
 記録先:
-- `docs/PERF_LOG.md` に計測本文（snapshot）を追記する。公開リポジトリ向けの記録では、profile 名・bucket 名・object key に由来する検索語は匿名化する
-- `docs/STATUS.md` の「品質ゲートの現状」に計測実施と判定を簡潔に追記
-- 異常時は `docs/PLAN.md` のリスク欄へ対策を追加
+- 通常は repo に逐次ログを残さない
+- 異常時や継続調査が必要な場合は GitHub Issue に再現条件、実行コマンド、匿名化済み snapshot を記録する
+- 公開リポジトリ向けの記録では、profile 名・bucket 名・object key に由来する検索語は必ず匿名化する
+- 公開fixture中心の標準手順は [PERFORMANCE.md](PERFORMANCE.md) を正とする
 
 ## 7. リリースチェック（最終確認）
 
@@ -474,7 +475,7 @@ npm run release:public-snapshot -- --slug <public-repo-slug>
 - `verify:public-snapshot-import` は一時checkoutを作って削除する。調査用に残す場合のみ `npm run verify:public-snapshot-import -- --keep` を使う
 
 手順:
-1. Release の対象タグを確認する（例: `v0.1.0-rc.1`）
+1. Release の対象タグを確認する（例: `v1.0.2`）
 2. GitHub Release ページで次を確認する
    - zip アセットがある
    - `SHA256SUMS.txt` がある
@@ -493,8 +494,8 @@ cat SHA256SUMS.txt
    - 小さな upload 1件
 - `release:launch-smoke` を使う場合は、fixture profile で app shell / settings / quick preview / delete undo / upload の自動確認まで完了していること
 - `npm run e2e:dense` を使う場合は、fixture profile で Dev metrics が表示され、`List calls > 0` と `Failures = 0` が自動確認されていること
-- dense E2E の Dev Metrics snapshot は `apps/desktop/test-results/**/dev-metrics-snapshot.txt` に保存されるため、`docs/PERF_LOG.md` へ転記できること
-6. 結果を `docs/STATUS.md` に追記する
+- dense E2E の Dev Metrics snapshot は `apps/desktop/test-results/**/dev-metrics-snapshot.txt` に保存される
+6. 異常や継続調査が必要な場合は GitHub Issue に記録する
 
 期待結果:
 - チェックサム一致
@@ -504,7 +505,6 @@ cat SHA256SUMS.txt
 補足:
 - `release:launch-smoke` が `No assets yet.` で quick preview 導線に到達できない場合、公開アセットが現在の E2E fixture 前提より古い可能性がある。対象タグとアプリ画面の profile 名を確認し、現行コードで新しい候補タグを作成して再検証する。
 - Codex などのサンドボックス環境では、GUI app の LaunchServices 起動確認は権限付き実行で行う。権限なしで `kLSNoExecutableErr` が出た場合は、zip内の実行ファイル、`Info.plist` の `CFBundleExecutable`、codesign、権限付き `release:launch-smoke` の結果を突き合わせて配布物起因か検証環境起因かを切り分ける。
-- 2026-05-03 時点では `v0.1.0-rc.4` の公開 zip で checksum 照合と `release:launch-smoke` が成功しているため、rc.4 を unsigned zip 配布の最新検証済み候補として扱う。
 
 ## 8. ロールバック方針
 

@@ -67,16 +67,9 @@ lumabin/
 │   ├── PRD.md             # プロダクト要求定義
 │   ├── SPEC.md            # 要件仕様
 │   ├── ARCHITECTURE.md    # 実装構成
-│   ├── PLAN.md            # 開発計画
-│   ├── MVP_ISSUES.md      # MVP issue分解
+│   ├── ROADMAP.md         # 現在地と今後の重点テーマ
 │   ├── RUNBOOK.md         # 運用手順
-│   ├── PERF_LOG.md        # 定例パフォーマンス計測ログ
-│   ├── STATUS.md          # 現在地
-│   └── RELEASE_READINESS_AUDIT.md # macOS release readiness 監査ログ
-│
-└── infra/                 # インフラ
-    ├── README.md          # セットアップ手順
-    └── AGENTS.md          # インフラ固有のルール・ディレクトリ構造
+│   └── PERFORMANCE.md     # 性能確認手順
 ```
 
 ## AGENTS.md の記述方針
