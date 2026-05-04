@@ -2,8 +2,10 @@
 
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const repository = process.env.LUMABIN_GITHUB_REPOSITORY || 'satoooh/lumabin';
+const PUBLIC_DEFAULT_BRANCH = 'main';
 
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, {
@@ -81,37 +83,62 @@ const summarizeVariables = () =>
     .filter(Boolean)
     .map((line) => line.split(/\s+/)[0]);
 
-try {
-  const repo = parseJson(
-    run('gh', ['repo', 'view', repository, '--json', 'nameWithOwner,visibility,isPrivate,defaultBranchRef']),
-    {},
-  );
-  const releases = summarizeReleases();
-  const activeArtifacts = summarizeArtifacts();
-  const secretNames = summarizeSecrets();
-  const variableNames = summarizeVariables();
+export const parseAuditMode = (args) => {
+  if (args.includes('--pre-public')) {
+    return 'pre-public';
+  }
+  return 'post-public';
+};
+
+export const createGithubPublicReadinessReport = ({
+  repo,
+  releases,
+  activeArtifacts,
+  secretNames,
+  variableNames,
+  mode,
+}) => {
   const issues = [];
-
-  if (repo.visibility !== 'PRIVATE' || repo.isPrivate !== true) {
-    issues.push(`repository is already ${repo.visibility}`);
-  }
-  if (activeArtifacts.length > 0) {
-    issues.push(`${activeArtifacts.length} active GitHub Actions artifacts remain`);
-  }
+  const observations = [];
   const nonDraftReleases = releases.filter((release) => !release.isDraft);
-  if (nonDraftReleases.length > 0) {
-    issues.push(`${nonDraftReleases.length} non-draft GitHub releases remain`);
+  const defaultBranch = repo.defaultBranchRef?.name ?? null;
+
+  if (mode === 'pre-public') {
+    if (repo.visibility !== 'PRIVATE' || repo.isPrivate !== true) {
+      issues.push(`repository is already ${repo.visibility}`);
+    }
+    if (activeArtifacts.length > 0) {
+      issues.push(`${activeArtifacts.length} active GitHub Actions artifacts remain`);
+    }
+    if (nonDraftReleases.length > 0) {
+      issues.push(`${nonDraftReleases.length} non-draft GitHub releases remain`);
+    }
+  } else {
+    if (repo.visibility !== 'PUBLIC' || repo.isPrivate !== false) {
+      issues.push(`repository is not public: ${repo.visibility}`);
+    }
+    if (defaultBranch !== PUBLIC_DEFAULT_BRANCH) {
+      issues.push(`default branch is not ${PUBLIC_DEFAULT_BRANCH}: ${defaultBranch ?? '-'}`);
+    }
+    if (activeArtifacts.length > 0) {
+      observations.push(`${activeArtifacts.length} active GitHub Actions artifacts are retained`);
+    }
+    if (nonDraftReleases.length > 0) {
+      observations.push(`${nonDraftReleases.length} published GitHub releases are available`);
+    }
   }
 
-  const report = {
+  return {
     repository: {
       nameWithOwner: repo.nameWithOwner,
       visibility: repo.visibility,
       isPrivate: repo.isPrivate,
-      defaultBranch: repo.defaultBranchRef?.name ?? null,
+      defaultBranch,
     },
+    mode,
     publicReadiness: issues.length === 0 ? 'passed' : 'blocked',
     issues,
+    observations,
     releases: {
       total: releases.length,
       nonDraft: nonDraftReleases.map((release) => ({
@@ -133,13 +160,50 @@ try {
       names: variableNames,
     },
   };
+};
 
-  console.log(JSON.stringify(report, null, 2));
+const isDirectCli = () => {
+  const invokedPath = process.argv[1] ? pathToFileURL(process.argv[1]).href : '';
+  return import.meta.url === invokedPath;
+};
 
-  if (issues.length > 0) {
+const main = () => {
+  try {
+    const repo = parseJson(
+      run('gh', [
+        'repo',
+        'view',
+        repository,
+        '--json',
+        'nameWithOwner,visibility,isPrivate,defaultBranchRef',
+      ]),
+      {},
+    );
+    const releases = summarizeReleases();
+    const activeArtifacts = summarizeArtifacts();
+    const secretNames = summarizeSecrets();
+    const variableNames = summarizeVariables();
+    const mode = parseAuditMode(process.argv.slice(2));
+    const report = createGithubPublicReadinessReport({
+      repo,
+      releases,
+      activeArtifacts,
+      secretNames,
+      variableNames,
+      mode,
+    });
+
+    console.log(JSON.stringify(report, null, 2));
+
+    if (report.issues.length > 0) {
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error(`[audit-github-public-readiness] ${error.message}`);
     process.exit(1);
   }
-} catch (error) {
-  console.error(`[audit-github-public-readiness] ${error.message}`);
-  process.exit(1);
+};
+
+if (isDirectCli()) {
+  main();
 }

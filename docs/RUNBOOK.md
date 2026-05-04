@@ -417,20 +417,21 @@ npm run e2e:dense
 cd apps/desktop
 npm run audit:public-readiness
 npm run audit:public-history
-npm run audit:github-public-readiness
+npm run audit:github-prepublic-readiness
 ```
 
 期待結果:
 - tracked file に `.env`、秘密鍵、証明書、ローカルDB、packaged artifact が含まれていない
 - public-facing docs / metadata に private profile 名、bucket 名、object key hint、個人ドメイン画像URL、個人メールが残っていない
 - repository history を公開対象として扱う場合、`audit:public-history` も通る。既存履歴に違反が残る場合は、値を露出せず commit / file / rule だけが報告される
-- existing GitHub repository を public にする場合、`audit:github-public-readiness` で active Actions artifacts と公開対象 Releases の残りを確認する
+- existing GitHub repository を public にする場合、`audit:github-prepublic-readiness` で active Actions artifacts と公開対象 Releases の残りを blocker として確認する
 
 補足:
 - `audit:public-readiness` は tracked file の軽量チェックで、通常の `smoke:ci` に含まれる
 - `audit:public-history` は履歴監査用。通常の `smoke:ci` には含めず、公開前後の maintainer 確認として明示実行する
 - GitHub Actions artifacts、GitHub Releases、git author email の扱いは maintainer が別途確認する
-- `audit:github-public-readiness` は read-only 監査で、削除・公開設定変更・workflow再実行は行わない
+- `audit:github-public-readiness` は public 化後の read-only ヘルスチェックとして、公開済み release と保持中 artifact を observation として報告する
+- `audit:github-prepublic-readiness` と `audit:github-public-readiness` は削除・公開設定変更・workflow再実行を行わない
 
 手順:
 1. Release の対象タグを確認する（例: `v1.0.2`）
