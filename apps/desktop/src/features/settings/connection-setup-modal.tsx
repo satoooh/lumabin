@@ -59,6 +59,12 @@ export const ConnectionSetupModal = ({
     return null;
   }
 
+  const isR2Profile = profileForm.provider === 'r2';
+  const profileNamePlaceholder = isR2Profile ? 'My R2 Profile…' : 'My S3 Profile…';
+  const endpointPlaceholder = isR2Profile
+    ? 'https://example-account.r2.cloudflarestorage.com'
+    : 'https://s3.example.com';
+
   return (
     <div
       className="modal-overlay"
@@ -114,7 +120,7 @@ export const ConnectionSetupModal = ({
                 ref={profileNameInputRef}
                 name="profile_name"
                 autoComplete="nickname"
-                placeholder="My R2 Profile…"
+                placeholder={profileNamePlaceholder}
                 value={profileForm.name}
                 onChange={(event) =>
                   setProfileForm((current) => ({ ...current, name: event.target.value }))
@@ -149,7 +155,7 @@ export const ConnectionSetupModal = ({
                 autoComplete="off"
                 placeholder="R2 account ID…"
                 value={r2AccountId}
-                disabled={profileForm.provider !== 'r2'}
+                disabled={!isR2Profile}
                 onChange={(event) => onChangeR2AccountId(event.target.value)}
               />
             </label>
@@ -162,7 +168,7 @@ export const ConnectionSetupModal = ({
                 inputMode="url"
                 spellCheck={false}
                 autoComplete="url"
-                placeholder="https://example-account.r2.cloudflarestorage.com"
+                placeholder={endpointPlaceholder}
                 value={profileForm.endpoint}
                 onChange={(event) =>
                   setProfileForm((current) => ({ ...current, endpoint: event.target.value }))

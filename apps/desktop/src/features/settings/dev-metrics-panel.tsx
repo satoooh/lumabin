@@ -30,7 +30,7 @@ export const DevMetricsPanel = ({
   return (
     <article className="panel">
       <div className="panel-header-row">
-        <h3>Dev metrics (R2)</h3>
+        <h3>Dev metrics (storage)</h3>
         <span className="pill">{isBusy ? 'Loading…' : 'Live'}</span>
       </div>
       <p className="minor">
