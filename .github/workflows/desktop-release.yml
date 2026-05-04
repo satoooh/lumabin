@@ -57,6 +57,8 @@ jobs:
     env:
       LUMABIN_APP_BUNDLE_ID: ${{ vars.LUMABIN_APP_BUNDLE_ID || 'com.satoooh.lumabin' }}
       LUMABIN_APPLE_SIGN_IDENTITY: ${{ secrets.LUMABIN_APPLE_SIGN_IDENTITY }}
+      LUMABIN_APPLE_CERTIFICATE_BASE64: ${{ secrets.LUMABIN_APPLE_CERTIFICATE_BASE64 }}
+      LUMABIN_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.LUMABIN_APPLE_CERTIFICATE_PASSWORD }}
       LUMABIN_APPLE_ID: ${{ secrets.LUMABIN_APPLE_ID }}
       LUMABIN_APPLE_ID_PASSWORD: ${{ secrets.LUMABIN_APPLE_ID_PASSWORD }}
       LUMABIN_APPLE_TEAM_ID: ${{ secrets.LUMABIN_APPLE_TEAM_ID }}
@@ -96,7 +98,7 @@ jobs:
           fi
 
           missing=0
-          for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID; do
+          for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID LUMABIN_APPLE_CERTIFICATE_BASE64 LUMABIN_APPLE_CERTIFICATE_PASSWORD; do
             if [ -z "${!key}" ]; then
               echo "Missing required secret for signing: ${key}" >&2
               missing=1
@@ -110,6 +112,38 @@ jobs:
           echo "LUMABIN_ENABLE_MAC_SIGN=1" >> "$GITHUB_ENV"
           echo "mode=signed" >> "$GITHUB_OUTPUT"
           echo "Signing is enabled."
+
+      - name: Import Apple Developer ID certificate
+        if: steps.signing.outputs.mode == 'signed'
+        env:
+          LUMABIN_APPLE_CERTIFICATE_BASE64: ${{ secrets.LUMABIN_APPLE_CERTIFICATE_BASE64 }}
+          LUMABIN_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.LUMABIN_APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          CERTIFICATE_PATH="${RUNNER_TEMP}/lumabin-developer-id.p12"
+          KEYCHAIN_PATH="${RUNNER_TEMP}/lumabin-signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+
+          printf '%s' "${LUMABIN_APPLE_CERTIFICATE_BASE64}" | base64 --decode > "${CERTIFICATE_PATH}"
+          security create-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security set-keychain-settings -lut 21600 "${KEYCHAIN_PATH}"
+          security unlock-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security import "${CERTIFICATE_PATH}" \
+            -P "${LUMABIN_APPLE_CERTIFICATE_PASSWORD}" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "${KEYCHAIN_PATH}"
+          security list-keychains -d user -s "${KEYCHAIN_PATH}"
+          security default-keychain -d user -s "${KEYCHAIN_PATH}"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "${KEYCHAIN_PASSWORD}" \
+            "${KEYCHAIN_PATH}"
+
+          echo "LUMABIN_SIGNING_KEYCHAIN_PATH=${KEYCHAIN_PATH}" >> "$GITHUB_ENV"
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -215,4 +249,13 @@ jobs:
             gh release create "${RELEASE_TAG}" "${ASSETS[@]}" \
               --title "LumaBin ${RELEASE_TAG}" \
               --notes-file "${NOTES_FILE}"
+          fi
+
+      - name: Clean up Apple signing keychain
+        if: always() && steps.signing.outputs.mode == 'signed'
+        run: |
+          set -euo pipefail
+
+          if [ -n "${LUMABIN_SIGNING_KEYCHAIN_PATH:-}" ] && [ -f "${LUMABIN_SIGNING_KEYCHAIN_PATH}" ]; then
+            security delete-keychain "${LUMABIN_SIGNING_KEYCHAIN_PATH}"
           fi
