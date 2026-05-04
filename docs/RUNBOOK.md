@@ -25,6 +25,7 @@ npm run e2e:headed
 npm run smoke:ci
 npm run verify:darwin-artifact
 npm run verify:mac-signing-readiness
+npm run verify:dev-metrics-snapshot
 npm run release:launch-smoke
 npm run release:preflight
 npm run release:preflight:verify-only
