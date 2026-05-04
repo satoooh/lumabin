@@ -461,7 +461,7 @@ cat SHA256SUMS.txt
 - 主要導線（接続/一覧/preview/upload）に致命的エラーがない
 
 補足:
-- `release:launch-smoke` が `No assets yet.` で quick preview 導線に到達できない場合、公開アセットが現在の E2E fixture 前提より古い可能性がある。対象タグとアプリ画面の profile 名を確認し、現行コードで新しい候補タグを作成して再検証する。
+- `release:launch-smoke` が `Add assets to this bucket` の空状態で quick preview 導線に到達できない場合、公開アセットが現在の E2E fixture 前提より古い可能性がある。対象タグとアプリ画面の profile 名を確認し、現行コードで新しい候補タグを作成して再検証する。
 - Codex などのサンドボックス環境では、GUI app の LaunchServices 起動確認は権限付き実行で行う。権限なしで `kLSNoExecutableErr` が出た場合は、zip内の実行ファイル、`Info.plist` の `CFBundleExecutable`、codesign、権限付き `release:launch-smoke` の結果を突き合わせて配布物起因か検証環境起因かを切り分ける。
 
 ## 8. ロールバック方針

@@ -622,18 +622,12 @@ describe('App UI smoke', () => {
     const searchInput = await screen.findByPlaceholderText('Search in this bucket… (Cmd/Ctrl+K)');
     await user.type(searchInput, 'not-found-query{enter}');
 
-    const noMatchesText = await screen.findByText('No matches found.');
-    expect(noMatchesText).toBeTruthy();
-
-    const emptyState = noMatchesText.closest('.empty-state');
-    if (!emptyState) {
-      throw new Error('Expected no-matches empty-state container');
-    }
+    const emptyState = await screen.findByRole('region', { name: 'No matches found' });
 
     await user.click(within(emptyState).getByRole('button', { name: 'Clear search' }));
 
     await waitFor(() => {
-      expect(screen.queryByText('No matches found.')).toBeNull();
+      expect(screen.queryByRole('region', { name: 'No matches found' })).toBeNull();
     });
     expect(await waitForKindAllFilter()).toBeTruthy();
   });
