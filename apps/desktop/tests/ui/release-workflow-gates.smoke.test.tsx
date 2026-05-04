@@ -53,8 +53,17 @@ describe('release workflow gates', () => {
     );
     expect(releaseWorkflow).toContain('SIGNING_MODE: ${{ steps.signing.outputs.mode }}');
     expect(releaseWorkflow).toContain(
-      'for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID; do',
+      'for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID LUMABIN_APPLE_CERTIFICATE_BASE64 LUMABIN_APPLE_CERTIFICATE_PASSWORD; do',
     );
+    expect(indexOfRequired(releaseWorkflow, 'Import Apple Developer ID certificate')).toBeLessThan(
+      indexOfRequired(releaseWorkflow, 'run: npm run verify:mac-signing-readiness'),
+    );
+    expect(releaseWorkflow).toContain('LUMABIN_APPLE_CERTIFICATE_BASE64: ${{ secrets.LUMABIN_APPLE_CERTIFICATE_BASE64 }}');
+    expect(releaseWorkflow).toContain('LUMABIN_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.LUMABIN_APPLE_CERTIFICATE_PASSWORD }}');
+    expect(releaseWorkflow).toContain('base64 --decode > "${CERTIFICATE_PATH}"');
+    expect(releaseWorkflow).toContain('security import "${CERTIFICATE_PATH}"');
+    expect(releaseWorkflow).toContain('security set-key-partition-list');
+    expect(releaseWorkflow).toContain('Clean up Apple signing keychain');
     expect(signingReadinessVerifier).toContain("'LUMABIN_APPLE_SIGN_IDENTITY'");
     expect(signingReadinessVerifier).toContain("execFileSync('/usr/bin/security', ['find-identity', '-p', 'codesigning', '-v']");
     expect(signingReadinessVerifier).toContain('Developer ID signing identity is available');
