@@ -3,7 +3,6 @@ import {
   type ApplicationEvent,
 } from '../../events/event-bus';
 import type {
-  AssetMetadata,
   DeleteAssetsInput,
   DeleteResult,
   MoveAssetInput,
@@ -33,19 +32,16 @@ export interface AssetLibraryCommandServiceDependencies {
     secret: ProfileSecret,
     input: { fromKey: string; toKey: string },
   ): Promise<void>;
-  createEtagSuffix(): string;
-  deleteFixtureAsset(key: string): boolean;
+  deleteAssetsOverride(input: DeleteAssetsInput): Promise<DeleteResult | undefined>;
   deleteStorageObjects(
     profile: StoredProfile,
     secret: ProfileSecret,
     input: { keys: string[] },
   ): Promise<DeleteResult>;
-  getFixtureAsset(key: string): AssetMetadata | undefined;
   getProfileSecretOrThrow(profileId: string): ProfileSecret;
-  isE2EFixtureProfile(profileId: string): boolean;
-  nowIso(): string;
+  moveAssetOverride(input: MoveAssetInput): Promise<MoveResult | undefined>;
   publishApplicationEvent(event: ApplicationEvent): void;
-  saveFixtureAsset(key: string, metadata: AssetMetadata): void;
+  renameAssetOverride(input: RenameAssetInput): Promise<RenameResult | undefined>;
 }
 
 const toMutationResult = (
@@ -55,26 +51,6 @@ const toMutationResult = (
   fromKey: input.fromKey,
   toKey: input.toKey,
 });
-
-const mutateFixtureAsset = (
-  input: RenameAssetInput | MoveAssetInput,
-  options: { etagPrefix: string },
-  dependencies: AssetLibraryCommandServiceDependencies,
-): void => {
-  const source = dependencies.getFixtureAsset(input.fromKey);
-  if (!source) {
-    throw new Error(`Asset not found: ${input.fromKey}`);
-  }
-
-  const next: AssetMetadata = {
-    ...source,
-    key: input.toKey,
-    lastModified: dependencies.nowIso(),
-    etag: `"${options.etagPrefix}-${dependencies.createEtagSuffix()}"`,
-  };
-  dependencies.saveFixtureAsset(input.toKey, next);
-  dependencies.deleteFixtureAsset(input.fromKey);
-};
 
 const copyThenRemoveOriginal = async (
   input: RenameAssetInput | MoveAssetInput,
@@ -100,8 +76,8 @@ export const createAssetLibraryCommandService = (
   dependencies: AssetLibraryCommandServiceDependencies,
 ): AssetLibraryCommandService => ({
   renameAsset: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      mutateFixtureAsset(input, { etagPrefix: 'e2e-rename' }, dependencies);
+    const overrideResult = await dependencies.renameAssetOverride(input);
+    if (overrideResult !== undefined) {
       dependencies.publishApplicationEvent(
         createApplicationEvent({
           type: 'asset-library.asset.renamed',
@@ -112,7 +88,7 @@ export const createAssetLibraryCommandService = (
           },
         }),
       );
-      return toMutationResult(input);
+      return overrideResult;
     }
 
     const profile = await copyThenRemoveOriginal(
@@ -135,8 +111,8 @@ export const createAssetLibraryCommandService = (
   },
 
   moveAsset: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      mutateFixtureAsset(input, { etagPrefix: 'e2e-move' }, dependencies);
+    const overrideResult = await dependencies.moveAssetOverride(input);
+    if (overrideResult !== undefined) {
       dependencies.publishApplicationEvent(
         createApplicationEvent({
           type: 'asset-library.asset.moved',
@@ -147,7 +123,7 @@ export const createAssetLibraryCommandService = (
           },
         }),
       );
-      return toMutationResult(input);
+      return overrideResult;
     }
 
     const profile = await copyThenRemoveOriginal(
@@ -170,28 +146,20 @@ export const createAssetLibraryCommandService = (
   },
 
   deleteAssets: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      const deleted: string[] = [];
-      const skipped: string[] = [];
-      for (const key of input.keys) {
-        if (dependencies.deleteFixtureAsset(key)) {
-          deleted.push(key);
-        } else {
-          skipped.push(key);
-        }
-      }
+    const overrideResult = await dependencies.deleteAssetsOverride(input);
+    if (overrideResult !== undefined) {
       dependencies.publishApplicationEvent(
         createApplicationEvent({
           type: 'asset-library.assets.deleted',
           payload: {
             profileId: input.profileId,
-            keys: deleted,
-            deletedCount: deleted.length,
-            skippedCount: skipped.length,
+            keys: overrideResult.deleted,
+            deletedCount: overrideResult.deleted.length,
+            skippedCount: overrideResult.skipped.length,
           },
         }),
       );
-      return { deleted, skipped };
+      return overrideResult;
     }
 
     const profile = dependencies.assertProfileExists(input.profileId);
