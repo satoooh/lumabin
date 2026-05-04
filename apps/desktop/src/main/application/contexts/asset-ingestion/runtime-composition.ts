@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { IpcMain } from 'electron';
 import { randomUUID } from 'node:crypto';
 import {
@@ -51,6 +52,12 @@ import {
   publishApplicationEvent,
 } from '../../events/event-bus';
 import { registerAssetIngestionComposition } from './composition';
+import type {
+  CheckUploadConflictsInput,
+  CheckUploadConflictsResult,
+  StartUploadInput,
+  UploadJobStatus,
+} from '../../../../shared/ipc';
 
 interface AssetIngestionRuntimeDependencies {
   clearObjectMutation(profileId: string, key: string): void;
@@ -59,6 +66,9 @@ interface AssetIngestionRuntimeDependencies {
 export interface AssetIngestionRuntime {
   dispose(): void;
 }
+
+const normalizeConflictPreviewLimit = (limit: number | undefined): number =>
+  Math.max(1, Math.min(100, limit ?? 8));
 
 export const registerAssetIngestionRuntime = (
   ipcMain: IpcMain,
@@ -73,6 +83,94 @@ export const registerAssetIngestionRuntime = (
     );
   });
 
+  const createUploadJob = (input: StartUploadInput): UploadJobStatus =>
+    createUploadJobStatus(input, {
+      createUploadJobId: randomUUID,
+      getDefaultConflictPolicy: () => getWorkspaceSettings().defaultConflictPolicy,
+      normalizeDestinationPrefix,
+      nowIso,
+    });
+
+  const markUploadJobFailed = (
+    jobId: string,
+    normalizedInput: StartUploadInput,
+    error: unknown,
+  ): void => {
+    updateUploadJob(jobId, (current) => ({
+      ...current,
+      status: 'failed',
+      failedItems: Math.max(current.failedItems, current.totalItems),
+      failedSources:
+        current.failedSources.length > 0
+          ? current.failedSources
+          : [...normalizedInput.sources],
+      lastError: toUploadErrorMessage(error),
+      updatedAt: nowIso(),
+    }));
+  };
+
+  const checkUploadConflictsOverride = (
+    input: CheckUploadConflictsInput,
+  ): CheckUploadConflictsResult | undefined => {
+    if (!isE2EFixtureProfile(input.profileId)) {
+      return undefined;
+    }
+
+    const limit = normalizeConflictPreviewLimit(
+      input.limit ?? UPLOAD_CONFLICT_PREVIEW_DEFAULT_LIMIT,
+    );
+    const conflicts: CheckUploadConflictsResult['conflicts'] = [];
+    let totalConflicts = 0;
+    const seen = new Set<string>();
+    const normalizedPrefix = normalizeDestinationPrefix(input.destinationPrefix);
+    for (const source of input.sources) {
+      const relativePath = sourceRelativePathOrFileName(source);
+      const key = `${normalizedPrefix}${relativePath}`;
+      const hasConflict = seen.has(key) || hasE2EFixtureAsset(key);
+      seen.add(key);
+      if (!hasConflict) {
+        continue;
+      }
+      totalConflicts += 1;
+      if (conflicts.length < limit) {
+        conflicts.push({
+          sourcePath: source.path,
+          fileName: basename(relativePath),
+          key,
+        });
+      }
+    }
+    return { conflicts, totalConflicts };
+  };
+
+  const startUploadOverride = (input: StartUploadInput): string | undefined => {
+    if (!isE2EFixtureProfile(input.profileId)) {
+      return undefined;
+    }
+    if (input.sources.length === 0) {
+      throw new Error('At least one source file is required');
+    }
+    const normalizedInput: StartUploadInput = {
+      ...input,
+      sources: dedupeUploadSources(input.sources),
+    };
+    const job = createUploadJob(normalizedInput);
+    saveUploadJob(job);
+    void runE2EFixtureUploadJob(job.id, normalizedInput, {
+      createEtagSuffix: () => randomUUID().slice(0, 8),
+      getDefaultConflictPolicy: () => getWorkspaceSettings().defaultConflictPolicy,
+      inferContentTypeFromKey,
+      normalizeDestinationPrefix,
+      nowIso,
+      sourceRelativePathOrFileName,
+      splitFileName,
+      updateUploadJob,
+    }).catch((error) => {
+      markUploadJobFailed(job.id, normalizedInput, error);
+    });
+    return job.id;
+  };
+
   registerAssetIngestionComposition(ipcMain, {
     abortUploadJob,
     assertProfileExists,
@@ -83,47 +181,15 @@ export const registerAssetIngestionRuntime = (
         input,
         UPLOAD_CONFLICT_PREVIEW_DEFAULT_LIMIT,
       ),
-    createUploadJob: (input) =>
-      createUploadJobStatus(input, {
-        createUploadJobId: randomUUID,
-        getDefaultConflictPolicy: () => getWorkspaceSettings().defaultConflictPolicy,
-        normalizeDestinationPrefix,
-        nowIso,
-      }),
-    dedupeUploadSources,
+    checkUploadConflictsOverride,
+    createUploadJob,
     expandUploadSources,
-    fixtureAssetExists: hasE2EFixtureAsset,
     getProfileSecretOrThrow,
     getUploadJob,
-    isE2EFixtureProfile,
-    markUploadJobFailed: (jobId, normalizedInput, error): void => {
-      updateUploadJob(jobId, (current) => ({
-        ...current,
-        status: 'failed',
-        failedItems: Math.max(current.failedItems, current.totalItems),
-        failedSources:
-          current.failedSources.length > 0
-            ? current.failedSources
-            : [...normalizedInput.sources],
-        lastError: toUploadErrorMessage(error),
-        updatedAt: nowIso(),
-      }));
-    },
+    markUploadJobFailed,
     normalizeClipboardFileName,
-    normalizeDestinationPrefix,
     persistClipboardBytes,
     readSystemClipboardPng,
-    runE2EFixtureUploadJob: (jobId, input): Promise<void> =>
-      runE2EFixtureUploadJob(jobId, input, {
-        createEtagSuffix: () => randomUUID().slice(0, 8),
-        getDefaultConflictPolicy: () => getWorkspaceSettings().defaultConflictPolicy,
-        inferContentTypeFromKey,
-        normalizeDestinationPrefix,
-        nowIso,
-        sourceRelativePathOrFileName,
-        splitFileName,
-        updateUploadJob,
-      }),
     runUploadJob: (jobId, input): Promise<void> =>
       runStorageUploadJob(jobId, input, {
         assertProfileExists,
@@ -163,9 +229,8 @@ export const registerAssetIngestionRuntime = (
       }),
     saveUploadJob,
     saveUploadJobStatus,
-    sourceRelativePathOrFileName,
+    startUploadOverride,
     toClipboardBytes,
-    uploadConflictPreviewDefaultLimit: UPLOAD_CONFLICT_PREVIEW_DEFAULT_LIMIT,
   });
 
   return {

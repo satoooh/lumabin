@@ -1,4 +1,3 @@
-import { basename } from 'node:path';
 import type {
   CheckUploadConflictsInput,
   CheckUploadConflictsResult,
@@ -37,28 +36,22 @@ export interface AssetIngestionApplicationServiceDependencies {
     input: CheckUploadConflictsInput,
   ): Promise<CheckUploadConflictsResult>;
   createUploadJob(input: StartUploadInput): UploadJobStatus;
-  dedupeUploadSources(sources: UploadSource[]): UploadSource[];
   expandUploadSources(sources: UploadSource[]): Promise<UploadSource[]>;
-  fixtureAssetExists(key: string): boolean;
   getProfileSecretOrThrow(profileId: string): ProfileSecret;
   getUploadJob(jobId: string): UploadJobStatus | undefined;
-  isE2EFixtureProfile(profileId: string): boolean;
+  checkUploadConflictsOverride(
+    input: CheckUploadConflictsInput,
+  ): Promise<CheckUploadConflictsResult | undefined> | CheckUploadConflictsResult | undefined;
   markUploadJobFailed(jobId: string, input: StartUploadInput, error: unknown): void;
   normalizeClipboardFileName(fileName: string | undefined, mimeType: string | undefined): string;
-  normalizeDestinationPrefix(destinationPrefix: string): string;
   persistClipboardBytes(fileName: string, bytes: Buffer): Promise<string>;
   readSystemClipboardPng(): Buffer | null;
-  runE2EFixtureUploadJob(jobId: string, input: StartUploadInput): Promise<void>;
+  startUploadOverride(input: StartUploadInput): Promise<string | undefined> | string | undefined;
   runUploadJob(jobId: string, input: StartUploadInput): Promise<void>;
   saveUploadJob(job: UploadJobStatus): void;
   saveUploadJobStatus(jobId: string, job: UploadJobStatus): void;
-  sourceRelativePathOrFileName(source: UploadSource): string;
   toClipboardBytes(input: Uint8Array | undefined): Uint8Array | null;
-  uploadConflictPreviewDefaultLimit: number;
 }
-
-const normalizeConflictPreviewLimit = (limit: number | undefined): number =>
-  Math.max(1, Math.min(100, limit ?? 8));
 
 export const createAssetIngestionApplicationService = (
   dependencies: AssetIngestionApplicationServiceDependencies,
@@ -93,34 +86,9 @@ export const createAssetIngestionApplicationService = (
   },
 
   checkUploadConflicts: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      const limit = normalizeConflictPreviewLimit(
-        input.limit ?? dependencies.uploadConflictPreviewDefaultLimit,
-      );
-      const conflicts: CheckUploadConflictsResult['conflicts'] = [];
-      let totalConflicts = 0;
-      const seen = new Set<string>();
-      const normalizedPrefix = dependencies.normalizeDestinationPrefix(
-        input.destinationPrefix,
-      );
-      for (const source of input.sources) {
-        const relativePath = dependencies.sourceRelativePathOrFileName(source);
-        const key = `${normalizedPrefix}${relativePath}`;
-        const hasConflict = seen.has(key) || dependencies.fixtureAssetExists(key);
-        seen.add(key);
-        if (!hasConflict) {
-          continue;
-        }
-        totalConflicts += 1;
-        if (conflicts.length < limit) {
-          conflicts.push({
-            sourcePath: source.path,
-            fileName: basename(relativePath),
-            key,
-          });
-        }
-      }
-      return { conflicts, totalConflicts };
+    const overrideResult = await dependencies.checkUploadConflictsOverride(input);
+    if (overrideResult !== undefined) {
+      return overrideResult;
     }
 
     const profile = dependencies.assertProfileExists(input.profileId);
@@ -139,20 +107,9 @@ export const createAssetIngestionApplicationService = (
   },
 
   startUpload: async (input) => {
-    if (dependencies.isE2EFixtureProfile(input.profileId)) {
-      if (input.sources.length === 0) {
-        throw new Error('At least one source file is required');
-      }
-      const normalizedInput: StartUploadInput = {
-        ...input,
-        sources: dependencies.dedupeUploadSources(input.sources),
-      };
-      const job = dependencies.createUploadJob(normalizedInput);
-      dependencies.saveUploadJob(job);
-      void dependencies.runE2EFixtureUploadJob(job.id, normalizedInput).catch((error) => {
-        dependencies.markUploadJobFailed(job.id, normalizedInput, error);
-      });
-      return job.id;
+    const overrideJobId = await dependencies.startUploadOverride(input);
+    if (overrideJobId !== undefined) {
+      return overrideJobId;
     }
 
     dependencies.assertProfileExists(input.profileId);
