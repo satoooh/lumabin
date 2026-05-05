@@ -3,18 +3,17 @@ import { createDesktopWorkbenchCenterPaneCoordinationInput } from './desktop-wor
 import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';
 import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';
 import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';
-import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
 import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';
 import { createDesktopWorkbenchShellCoordinationInput } from './desktop-workbench-shell-handoffs';
 import { useAssetCommandFlowWorkbench } from './use-asset-command-flow-workbench';
+import { useDesktopWorkbenchPreviewSurface } from './use-desktop-workbench-preview-surface';
 import { useDesktopWorkbenchWorkspaceSettingsSurface } from './use-desktop-workbench-workspace-settings-surface';
 import { useDesktopWorkbenchShellResources } from './use-desktop-workbench-shell-resources';
 import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';
 import { useDiagnosticsWorkbench } from './use-diagnostics-workbench';
 import { useGalleryBrowsingWorkbench } from './use-gallery-browsing-workbench';
 import { useGallerySessionWorkbench } from './use-gallery-session-workbench';
-import { usePreviewWorkbench } from './use-preview-workbench';
 import { useWorkspaceCommandsWorkbench } from './use-workspace-commands-workbench';
 import { useWorkspaceGalleryLifecycleWorkbench } from './use-workspace-gallery-lifecycle-workbench';
 import { useWorkspaceRuntimeStateWorkbench } from './use-workspace-runtime-state-workbench';
@@ -31,6 +30,7 @@ export const useDesktopWorkbench = ({
   isDevEnv,
   logoSrc,
 }: UseDesktopWorkbenchOptions) => {
+  const shellResources = useDesktopWorkbenchShellResources();
   const {
     domRefs: {
       appShellRef,
@@ -44,17 +44,15 @@ export const useDesktopWorkbench = ({
       uploadToastRef,
     },
     feedback: {
-      copiedLabel,
       dismissStatusLine,
       inlineFeedback,
-      markCopied,
       pushInlineFeedback,
       setStatusLine,
       status,
       statusTone,
     },
     isTooltipWarm,
-  } = useDesktopWorkbenchShellResources();
+  } = shellResources;
 
   const workspaceState = useWorkspaceStateWorkbench();
   const {
@@ -86,7 +84,6 @@ export const useDesktopWorkbench = ({
     selectedProfile,
     selectedProfileId,
     selectedProfileLabel,
-    selectedPublicBaseUrl,
     setIsConnectionSetupOpen,
     setIsCreatingProfile,
     setIsProfileBusy,
@@ -154,9 +151,7 @@ export const useDesktopWorkbench = ({
     listVirtualItems,
     listVirtualRange,
     loadAssetsPage,
-    markAssetAsRecentlyViewed,
     nextAssetsContinuationToken,
-    previewMediaItems,
     queueGalleryScrollStateUpdate,
     queueListScrollStateUpdate,
     reloadCurrentItems,
@@ -167,14 +162,12 @@ export const useDesktopWorkbench = ({
     resetSearchState,
     resolvePersistedUiStateForProfile,
     scheduleGalleryTileMinWidthCommit,
-    scrollToAssetInCurrentView,
     searchInput,
     selectedAsset,
     selectedAssetCount,
     selectedAssetKey,
     selectedAssetKeys,
     selectedAssetKeySet,
-    selectedPreviewItemIndex,
     setActiveSearchQuery,
     setAssetItemRef,
     setAssetsPrefix,
@@ -205,41 +198,12 @@ export const useDesktopWorkbench = ({
     openQuickPreviewForItem,
     quickPreviewOverlayInput,
     setIsQuickPreviewOpen,
-  } = usePreviewWorkbench(
-    createDesktopWorkbenchPreviewCoordinationInput({
-      api: {
-        assetPreviewApi: desktopApi.assetLibrary,
-        sharingApi: desktopApi.assetSharing,
-      },
-      feedback: {
-        copiedLabel,
-        markCopied,
-        pushInlineFeedback,
-        setStatusLine,
-      },
-      gallery: {
-        assetItemRefs,
-        focusAssetItemByKey,
-        isPreviewableKind,
-        markAssetAsRecentlyViewed,
-        previewMediaItems,
-        scrollToAssetInCurrentView,
-        selectedPreviewItemIndex,
-        setSelectedAssetKey,
-      },
-      previewState: {
-        isConnectionSetupOpen,
-        isSelectionMode,
-        selectedAsset,
-        selectedAssetKey,
-      },
-      profile: {
-        presignedUrlTTLSeconds: settings.presignedUrlTTLSeconds,
-        selectedAssetMetadataPublicBaseUrl: selectedPublicBaseUrl,
-        selectedProfileId,
-      },
-    }),
-  );
+  } = useDesktopWorkbenchPreviewSurface({
+    desktopApi,
+    feedback: shellResources.feedback,
+    galleryBrowsing,
+    workspaceState,
+  });
 
   const {
     handleProfileDeleted,

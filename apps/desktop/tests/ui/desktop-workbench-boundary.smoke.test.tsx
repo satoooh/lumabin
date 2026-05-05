@@ -23,6 +23,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-preview-coordination.ts'),
       'utf8',
     );
+    const desktopWorkbenchPreviewSurfaceSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/use-desktop-workbench-preview-surface.ts'),
+      'utf8',
+    );
     const desktopWorkbenchMainPresentersSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-main-presenters.ts'),
       'utf8',
@@ -147,8 +151,11 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).toContain(
       "import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';",
     );
-    expect(workbenchSource).toContain(
+    expect(workbenchSource).not.toContain(
       "import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';",
+    );
+    expect(workbenchSource).toContain(
+      "import { useDesktopWorkbenchPreviewSurface } from './use-desktop-workbench-preview-surface';",
     );
     expect(desktopWorkbenchOverlayCoordinationSource).toContain("from './desktop-workbench-overlays';");
     expect(desktopWorkbenchOverlayCoordinationSource).toContain(
@@ -336,7 +343,13 @@ describe('desktop workbench boundary', () => {
       expect(workbenchSource).not.toContain(directShellHandoff);
     });
     expect(workbenchSource).not.toContain('showStatusStrip,\n    canClearSearch');
-    expect(workbenchSource).toContain("import { usePreviewWorkbench } from './use-preview-workbench';");
+    expect(workbenchSource).not.toContain("import { usePreviewWorkbench } from './use-preview-workbench';");
+    expect(desktopWorkbenchPreviewSurfaceSource).toContain(
+      "import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';",
+    );
+    expect(desktopWorkbenchPreviewSurfaceSource).toContain(
+      "import { usePreviewWorkbench } from './use-preview-workbench';",
+    );
     expect(desktopWorkbenchPreviewCoordinationSource).toContain(
       "import type { PreviewWorkbenchOptions } from './use-preview-workbench';",
     );
