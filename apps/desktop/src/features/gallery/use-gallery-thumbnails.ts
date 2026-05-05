@@ -4,26 +4,18 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  ensureImageDataUrlDecodable,
-  extractVideoFrameThumbnail,
-  withTimeout,
-} from '../shared/media-preview';
 import type { AssetItem } from '../../shared/ipc';
 import type { AssetThumbnailApi } from '../shared/desktop-api-gateway';
 import {
   GALLERY_THUMBNAIL_CONCURRENCY,
   GALLERY_THUMBNAIL_MAX_ATTEMPTS,
   THUMBNAIL_LOADING_STALE_MS,
-  THUMBNAIL_PREVIEW_TIMEOUT_MS,
-  VIDEO_THUMBNAIL_SEEK_SECONDS,
-  VIDEO_THUMBNAIL_TIMEOUT_MS,
   resolvePendingThumbnailItems,
-  thumbnailPreviewMaxBytesForAttempt,
   thumbnailRetryDelayMs,
   type GalleryThumbnailSection,
   type ThumbnailAssetKind,
 } from './gallery-thumbnail-policy';
+import { loadGalleryThumbnailDataUrl } from './gallery-thumbnail-loader';
 import type { ViewMode } from './use-gallery-view-model';
 
 interface UseGalleryThumbnailsOptions {
@@ -296,63 +288,24 @@ export const useGalleryThumbnails = ({
             const cacheKey = toThumbnailCacheKey(selectedProfileId, item.key);
             let hasThumbnail = false;
             try {
-              const itemKind = inferAssetKind(item);
               const attempts = galleryThumbnailAttemptsRef.current[cacheKey] ?? 0;
-              const maxBytes =
-                itemKind === 'video'
-                  ? thumbnailPreviewMaxBytesForAttempt('video', attempts)
-                  : thumbnailPreviewMaxBytesForAttempt('image', attempts);
-              const preview = await withTimeout(
-                assetPreviewApi.previewAsset({
-                  profileId: selectedProfileId,
-                  key: item.key,
-                  etag: item.etag || undefined,
-                  maxBytes,
-                }),
-                THUMBNAIL_PREVIEW_TIMEOUT_MS,
-                'Thumbnail preview timed out',
-              );
+              const thumbnailDataUrl = await loadGalleryThumbnailDataUrl({
+                assetPreviewApi,
+                attempts,
+                inferAssetKind,
+                item,
+                profileId: selectedProfileId,
+              });
 
               if (activeProfileIdRef.current !== selectedProfileId) {
                 return;
               }
 
-              if (preview.kind === 'image' && preview.dataBase64) {
-                const dataUrl = `data:${preview.contentType};base64,${preview.dataBase64}`;
-                await withTimeout(
-                  ensureImageDataUrlDecodable(dataUrl),
-                  2_600,
-                  'Image thumbnail decode timed out',
-                );
+              if (thumbnailDataUrl) {
                 if (!galleryThumbnailsRef.current[cacheKey]) {
                   const nextThumbnails = {
                     ...galleryThumbnailsRef.current,
-                    [cacheKey]: dataUrl,
-                  };
-                  galleryThumbnailsRef.current = nextThumbnails;
-                  setGalleryThumbnails(nextThumbnails);
-                }
-                hasThumbnail = true;
-              }
-
-              if (preview.kind === 'video' && preview.dataBase64) {
-                const videoDataUrl = `data:${preview.contentType};base64,${preview.dataBase64}`;
-                const frameDataUrl = await withTimeout(
-                  extractVideoFrameThumbnail(videoDataUrl, {
-                    seekSeconds: VIDEO_THUMBNAIL_SEEK_SECONDS,
-                    timeoutMs: VIDEO_THUMBNAIL_TIMEOUT_MS,
-                  }),
-                  VIDEO_THUMBNAIL_TIMEOUT_MS + 1_000,
-                  'Video thumbnail extraction timed out',
-                );
-                if (activeProfileIdRef.current !== selectedProfileId) {
-                  return;
-                }
-
-                if (!galleryThumbnailsRef.current[cacheKey]) {
-                  const nextThumbnails = {
-                    ...galleryThumbnailsRef.current,
-                    [cacheKey]: frameDataUrl,
+                    [cacheKey]: thumbnailDataUrl,
                   };
                   galleryThumbnailsRef.current = nextThumbnails;
                   setGalleryThumbnails(nextThumbnails);

@@ -46,6 +46,7 @@ apps/desktop/src/
 │   │   ├── delete-undo-toast.tsx
 │   │   ├── empty-browser-state.tsx
 │   │   ├── gallery-layout-policy.ts
+│   │   ├── gallery-thumbnail-loader.ts
 │   │   ├── gallery-thumbnail-policy.ts
 │   │   ├── filter-bars.tsx
 │   │   ├── gallery-filter-options.ts
