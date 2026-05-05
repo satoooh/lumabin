@@ -39,6 +39,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-center-pane-coordination.ts'),
       'utf8',
     );
+    const desktopWorkbenchCenterPaneHandoffsSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/desktop-workbench-center-pane-handoffs.ts'),
+      'utf8',
+    );
     const desktopWorkbenchWorkspaceSettingsCoordinationSource = readFileSync(
       join(
         SOURCE_ROOT,
@@ -190,6 +194,15 @@ describe('desktop workbench boundary', () => {
       "import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';",
     );
     expect(workbenchSource).toContain(
+      "import { createDesktopWorkbenchCenterPaneCoordinationInput } from './desktop-workbench-center-pane-handoffs';",
+    );
+    expect(desktopWorkbenchCenterPaneHandoffsSource).toContain(
+      "import type { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';",
+    );
+    expect(desktopWorkbenchCenterPaneHandoffsSource).toContain(
+      'createDesktopWorkbenchCenterPaneCoordinationInput',
+    );
+    expect(workbenchSource).toContain(
       "import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';",
     );
     expect(workbenchSource).toContain(
@@ -221,6 +234,20 @@ describe('desktop workbench boundary', () => {
     );
     expect(workbenchSource).not.toContain('createDesktopWorkbenchCenterPaneAssetList');
     expect(workbenchSource).not.toContain('createDesktopWorkbenchCenterPaneProps');
+    [
+      'assetList: {\n      listBottomSpacerHeight',
+      'emptyState: {\n      canClearSearch',
+      'filters: {\n      activeKindLabel',
+      'gallery: {\n      galleryColumnCount',
+      'guidedStart: {\n      handleSelectProfile',
+      'interaction: {\n      handleAssetItemClick',
+      'selection: {\n      handleOpenBulkDeleteDialog',
+      'sizing: {\n      applyGalleryTileMinWidth',
+      'state: {\n      isQuickPreviewOpen',
+      'viewModeCommands: {\n      setViewMode',
+    ].forEach((directCenterPaneHandoff) => {
+      expect(workbenchSource).not.toContain(directCenterPaneHandoff);
+    });
     expect(desktopWorkbenchWorkspaceSettingsCoordinationSource).toContain(
       "import type { WorkspaceSettingsWorkbenchOptions } from './use-workspace-settings-workbench';",
     );

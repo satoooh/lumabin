@@ -149,6 +149,7 @@ apps/desktop/src/
 │       └── use-upload-toast-lifecycle.ts
 │   └── workbench/
 │       ├── desktop-workbench-center-pane-coordination.ts
+│       ├── desktop-workbench-center-pane-handoffs.ts
 │       ├── desktop-workbench-main-presenters.ts
 │       ├── desktop-workbench-overlay-coordination.ts
 │       ├── desktop-workbench-overlay-handoffs.ts
