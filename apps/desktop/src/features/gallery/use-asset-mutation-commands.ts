@@ -2,6 +2,7 @@ import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { AssetItem } from '../../shared/ipc';
 import type { AssetActionDialogState, BulkMoveDialogState } from './action-modals';
 import type { AssetMutationApi } from '../shared/desktop-api-gateway';
+import { executeBulkAssetMovePlan } from './asset-mutation-command-runner';
 import {
   planAssetActionDialog,
   planAssetMove,
@@ -292,33 +293,25 @@ export const useAssetMutationCommands = ({
 
     setIsAssetActionBusy(true);
     try {
-      let movedCount = 0;
-      const failedKeys: string[] = [];
-
-      for (const item of plan.moves) {
-        try {
-          await assetMutationApi.moveAsset({
-            profileId: selectedProfileId,
-            fromKey: item.sourceKey,
-            toKey: item.destinationKey,
-          });
-          movedCount += 1;
-        } catch {
-          failedKeys.push(item.sourceKey);
-        }
-      }
+      const executionResult = await executeBulkAssetMovePlan({
+        moveAsset: assetMutationApi.moveAsset,
+        moves: plan.moves,
+        profileId: selectedProfileId,
+      });
 
       await reloadCurrentItems();
       setBulkMoveDialog(null);
       setIsQuickPreviewOpen(false);
 
-      const completionPlan = planBulkAssetMoveCompletion({ failedKeys });
+      const completionPlan = planBulkAssetMoveCompletion({
+        failedKeys: executionResult.failedKeys,
+      });
       setSelectedAssetKeys(completionPlan.selectedAssetKeys);
       setIsSelectionMode(completionPlan.isSelectionMode);
 
       const summary = summarizeBulkAssetMoveResult({
-        failedCount: failedKeys.length,
-        movedCount,
+        failedCount: executionResult.failedKeys.length,
+        movedCount: executionResult.movedCount,
         skippedCount: plan.skippedCount,
       });
       setStatusLine(summary.statusLine, summary.statusTone);
