@@ -168,6 +168,10 @@ jobs:
         working-directory: apps/desktop
         run: npm run verify:darwin-artifact
 
+      - name: Validate release evidence before publish
+        working-directory: apps/desktop
+        run: npm run verify:release-evidence
+
       - name: Launch smoke release artifact before publish
         working-directory: apps/desktop
         run: npm run release:launch-smoke

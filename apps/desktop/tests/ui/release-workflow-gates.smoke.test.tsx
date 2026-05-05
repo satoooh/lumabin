@@ -29,6 +29,14 @@ describe('release workflow gates', () => {
       'utf8',
     );
     const artifactVerifier = readFileSync(join(process.cwd(), 'scripts/verify-darwin-artifact.mjs'), 'utf8');
+    const releaseEvidenceValidator = readFileSync(
+      join(process.cwd(), 'scripts/validate-release-evidence.mjs'),
+      'utf8',
+    );
+    const releaseEvidencePolicy = readFileSync(
+      join(process.cwd(), 'scripts/release-evidence-policy.mjs'),
+      'utf8',
+    );
     const devMetricsSnapshotVerifier = readFileSync(
       join(process.cwd(), 'scripts/verify-dev-metrics-snapshot.mjs'),
       'utf8',
@@ -112,6 +120,24 @@ describe('release workflow gates', () => {
     expect(artifactVerifier).toContain('teamIdentifier: signingMetadata.teamIdentifier');
     expect(artifactVerifier).toContain('hardenedRuntime: signingMetadata.hardenedRuntime');
     expect(artifactVerifier).toContain('verification,');
+    expect(artifactVerifier).toContain('validateReleaseEvidence(evidence);');
+    expect(artifactVerifier).toContain('validateReleaseEvidenceArtifact({ evidence, projectRoot });');
+    expect(releaseEvidenceValidator).toContain("path.join(projectRoot, 'out', 'make', 'release-evidence.json')");
+    expect(releaseEvidenceValidator).toContain('validateReleaseEvidence(evidence);');
+    expect(releaseEvidenceValidator).toContain('validateReleaseEvidenceArtifact({ evidence, projectRoot });');
+    expect(releaseEvidencePolicy).toContain("evidence.signing.mode === 'signed'");
+    expect(releaseEvidencePolicy).toContain('verification.${key} must be true for signed releases');
+    expect(releaseEvidencePolicy).toContain('verification.${key} must be not-required for unsigned releases');
+    expect(packageJson).toContain('"verify:release-evidence": "node ./scripts/validate-release-evidence.mjs"');
+    expect(indexOfRequired(ciWorkflow, 'run: npm run verify:darwin-artifact')).toBeLessThan(
+      indexOfRequired(ciWorkflow, 'run: npm run verify:release-evidence'),
+    );
+    expect(indexOfRequired(releaseWorkflow, 'run: npm run verify:darwin-artifact')).toBeLessThan(
+      indexOfRequired(releaseWorkflow, 'run: npm run verify:release-evidence'),
+    );
+    expect(indexOfRequired(releaseWorkflow, 'run: npm run verify:release-evidence')).toBeLessThan(
+      indexOfRequired(releaseWorkflow, 'run: npm run release:launch-smoke'),
+    );
     expect(devMetricsSnapshotVerifier).toContain('List calls must be greater than 0');
     expect(devMetricsSnapshotVerifier).toContain('Failures must be 0');
     expect(indexOfRequired(e2eWorkflow, 'run: npm run e2e:dense')).toBeLessThan(

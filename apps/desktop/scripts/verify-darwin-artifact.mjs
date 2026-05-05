@@ -16,6 +16,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import {
+  validateReleaseEvidence,
+  validateReleaseEvidenceArtifact,
+} from './release-evidence-policy.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDir, '..');
@@ -221,6 +225,8 @@ const evidence = {
 };
 mkdirSync(path.dirname(evidencePath), { recursive: true });
 writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
+validateReleaseEvidence(evidence);
+validateReleaseEvidenceArtifact({ evidence, projectRoot });
 
 console.log('');
 console.log('Artifact verification passed.');
