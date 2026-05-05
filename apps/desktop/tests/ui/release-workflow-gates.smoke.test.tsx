@@ -106,6 +106,11 @@ describe('release workflow gates', () => {
     expect(publicSnapshotImportVerifier).toContain("run('git', ['rev-list', '--count', 'HEAD']");
     expect(artifactVerifier).toContain("path.join(projectRoot, 'out', 'make', 'release-evidence.json')");
     expect(artifactVerifier).toContain('artifact: {');
+    expect(artifactVerifier).toContain('signed release artifact is missing hardened runtime');
+    expect(artifactVerifier).toContain('hardenedRuntime: enableMacSign ? false :');
+    expect(artifactVerifier).toContain('authority: signingMetadata.authority');
+    expect(artifactVerifier).toContain('teamIdentifier: signingMetadata.teamIdentifier');
+    expect(artifactVerifier).toContain('hardenedRuntime: signingMetadata.hardenedRuntime');
     expect(artifactVerifier).toContain('verification,');
     expect(devMetricsSnapshotVerifier).toContain('List calls must be greater than 0');
     expect(devMetricsSnapshotVerifier).toContain('Failures must be 0');

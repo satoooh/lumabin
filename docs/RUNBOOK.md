@@ -265,7 +265,7 @@ Forge は以下環境変数を参照する。
 - `npm run verify:mac-signing-readiness` で Electron 用 entitlements、Developer ID identity、証明書import入力、notarization 環境変数の不足を事前確認できる
 - 署名有効時に必要 secret が不足している場合は workflow を失敗させる
 - 署名有効時は Forge の Developer ID signing / notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
-- 署名有効時の `verify:darwin-artifact` は Developer ID authority、Team ID、Gatekeeper assessment、stapler validate を release publish 前に確認する
+- 署名有効時の `verify:darwin-artifact` は Developer ID authority、hardened runtime、Team ID、Gatekeeper assessment、stapler validate を release publish 前に確認し、非secretの署名メタデータを `release-evidence.json` に記録する
 - 現時点の既定運用は unsigned ZIP の public preview 配布。一般ユーザー向け配布へ進める場合は、上記 secrets / variable を設定し、signed/notarized release run が成功したことを確認する
 
 ### 4.5 Release 実行手順（zip配布）

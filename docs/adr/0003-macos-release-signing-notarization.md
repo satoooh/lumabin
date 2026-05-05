@@ -26,7 +26,7 @@ signed/notarized 経路では以下の GitHub secrets を必須とする。
 - `LUMABIN_APPLE_ID_PASSWORD`
 - `LUMABIN_APPLE_TEAM_ID`
 
-release verifier は signed mode を unsigned mode より厳しく扱い、Release publish 前に Developer ID authority、Team ID、Gatekeeper assessment、stapler validation を確認する。
+release verifier は signed mode を unsigned mode より厳しく扱い、Release publish 前に Developer ID authority、hardened runtime、Team ID、Gatekeeper assessment、stapler validation を確認する。
 
 ## Consequences
 
