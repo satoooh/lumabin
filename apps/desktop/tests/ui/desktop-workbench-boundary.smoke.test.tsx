@@ -50,6 +50,13 @@ describe('desktop workbench boundary', () => {
       ),
       'utf8',
     );
+    const desktopWorkbenchWorkspaceSettingsSurfaceSource = readFileSync(
+      join(
+        SOURCE_ROOT,
+        'features/workbench/use-desktop-workbench-workspace-settings-surface.ts',
+      ),
+      'utf8',
+    );
     const desktopWorkbenchShellInputsSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-shell-inputs.ts'),
       'utf8',
@@ -207,6 +214,9 @@ describe('desktop workbench boundary', () => {
       'createDesktopWorkbenchCenterPaneCoordinationInput',
     );
     expect(workbenchSource).toContain(
+      "import { useDesktopWorkbenchWorkspaceSettingsSurface } from './use-desktop-workbench-workspace-settings-surface';",
+    );
+    expect(workbenchSource).not.toContain(
       "import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';",
     );
     expect(workbenchSource).toContain(
@@ -257,6 +267,15 @@ describe('desktop workbench boundary', () => {
     );
     expect(desktopWorkbenchWorkspaceSettingsCoordinationSource).toContain(
       'createDesktopWorkbenchWorkspaceSettingsCoordinationInput',
+    );
+    expect(desktopWorkbenchWorkspaceSettingsSurfaceSource).toContain(
+      "import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';",
+    );
+    expect(desktopWorkbenchWorkspaceSettingsSurfaceSource).toContain(
+      "import { useGallerySettingsWorkbench } from './use-gallery-settings-workbench';",
+    );
+    expect(desktopWorkbenchWorkspaceSettingsSurfaceSource).toContain(
+      "import { useWorkspaceSettingsWorkbench } from './use-workspace-settings-workbench';",
     );
     expect(workbenchSource).not.toContain(
       'useWorkspaceSettingsWorkbench({',
@@ -342,10 +361,10 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).not.toContain("import { useDesktopWorkbenchShell } from './use-desktop-workbench-shell';");
     expect(workbenchSource).toContain("import { useDiagnosticsWorkbench } from './use-diagnostics-workbench';");
     expect(workbenchSource).toContain("import { useGalleryBrowsingWorkbench } from './use-gallery-browsing-workbench';");
-    expect(workbenchSource).toContain("import { useGallerySettingsWorkbench } from './use-gallery-settings-workbench';");
+    expect(workbenchSource).not.toContain("import { useGallerySettingsWorkbench } from './use-gallery-settings-workbench';");
     expect(workbenchSource).toContain("import { useGallerySessionWorkbench } from './use-gallery-session-workbench';");
     expect(workbenchSource).toContain("import { useWorkspaceCommandsWorkbench } from './use-workspace-commands-workbench';");
-    expect(workbenchSource).toContain("import { useWorkspaceSettingsWorkbench } from './use-workspace-settings-workbench';");
+    expect(workbenchSource).not.toContain("import { useWorkspaceSettingsWorkbench } from './use-workspace-settings-workbench';");
     expect(workbenchSource).toContain("import { useWorkspaceStateWorkbench } from './use-workspace-state-workbench';");
     expect(workbenchSource).toContain(
       "import { useWorkspaceRuntimeStateWorkbench } from './use-workspace-runtime-state-workbench';",
