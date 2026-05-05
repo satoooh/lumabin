@@ -4,6 +4,7 @@ import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbe
 import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';
 import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
+import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';
 import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';
 import { useAssetActionsWorkbench } from './use-asset-actions-workbench';
 import { useDesktopWorkbenchShellResources } from './use-desktop-workbench-shell-resources';
@@ -731,23 +732,26 @@ export const useDesktopWorkbench = ({
       workspaceSettingsOverlayProps,
     }),
   );
-  const appTopbarProps = createDesktopWorkbenchTopbarCoordinationProps({
-    assets: {
-      logoSrc,
-    },
-    feedback: {
-      inlineFeedback,
-    },
-    files: {
+  const appTopbarProps = createDesktopWorkbenchTopbarCoordinationProps(
+    createDesktopWorkbenchTopbarCoordinationInput({
+      activeSearchQuery,
+      closeProfileMenu,
       fileInputRef,
       handleFilePickerChange,
       handleOpenFilePicker,
-      isUploadBusy,
-    },
-    profileMenu: {
-      closeProfileMenu,
       handleProfileMenuSelect,
+      handleSearchClear,
+      handleSearchSubmit,
+      handleToggleShortcutHelp,
+      handleToggleWorkspaceSettings,
+      inlineFeedback,
+      isDropActive,
       isProfileMenuOpen,
+      isSearchBusy,
+      isShortcutHelpOpen,
+      isUploadBusy,
+      isWorkspaceSettingsOpen,
+      logoSrc,
       manageProfileOptionValue,
       moveProfileMenuActiveIndex,
       newProfileOptionValue,
@@ -756,30 +760,15 @@ export const useDesktopWorkbench = ({
       profileMenuButtonRef,
       profileMenuListRef,
       profileMenuOptions,
+      searchInput,
+      searchInputRef,
       selectedProfileId,
       selectedProfileLabel,
       setProfileMenuActiveIndex,
-    },
-    search: {
-      activeSearchQuery,
-      handleSearchClear,
-      handleSearchSubmit,
-      isSearchBusy,
-      searchInput,
-      searchInputRef,
       setSearchInput,
-    },
-    state: {
-      isDropActive,
       showGuidedStart,
-    },
-    workspaceActions: {
-      handleToggleShortcutHelp,
-      handleToggleWorkspaceSettings,
-      isShortcutHelpOpen,
-      isWorkspaceSettingsOpen,
-    },
-  });
+    }),
+  );
   const workspaceCenterPaneProps = createDesktopWorkbenchCenterPaneCoordinationProps({
     assetList: {
       listBottomSpacerHeight: listVirtualRange.bottomSpacerHeight,
