@@ -90,6 +90,7 @@ apps/desktop/src/
 │   ├── onboarding/
 │   │   └── guided-start.tsx
 │   ├── preview/
+│   │   ├── asset-preview-loading-policy.ts
 │   │   ├── quick-preview-animation-policy.ts
 │   │   ├── quick-preview-action-button.tsx
 │   │   ├── quick-preview-info-panel.tsx
