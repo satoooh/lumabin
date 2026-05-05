@@ -165,9 +165,54 @@ export const collectContentIssues = (relativePath, content) => {
   return issues;
 };
 
+export const collectAdrIssues = ({ basePath, trackedFiles, fileExists, readTextFile }) => {
+  const issues = [];
+  const adrNumberByPath = new Map();
+
+  for (const relativePath of trackedFiles) {
+    const fileNameMatch = relativePath.match(/^docs\/adr\/(\d{4})-[^/]+\.md$/);
+    if (!fileNameMatch) {
+      continue;
+    }
+
+    const absolutePath = path.join(basePath, relativePath);
+    if (!fileExists(absolutePath)) {
+      continue;
+    }
+
+    const [, adrNumber] = fileNameMatch;
+    const existingPath = adrNumberByPath.get(adrNumber);
+    if (existingPath) {
+      issues.push(`${relativePath}: duplicate ADR number ${adrNumber} already used by ${existingPath}`);
+    } else {
+      adrNumberByPath.set(adrNumber, relativePath);
+    }
+
+    let content;
+    try {
+      content = readTextFile(absolutePath, 'utf8');
+    } catch {
+      continue;
+    }
+
+    const headingMatch = content.match(/^# ADR (\d{4}): /m);
+    if (!headingMatch) {
+      issues.push(`${relativePath}: missing ADR heading`);
+      continue;
+    }
+
+    if (headingMatch[1] !== adrNumber) {
+      issues.push(`${relativePath}: ADR heading number ${headingMatch[1]} does not match filename number ${adrNumber}`);
+    }
+  }
+
+  return issues;
+};
+
 export const collectTrackedFileIssues = ({ basePath, trackedFiles, fileExists, readTextFile, getFileStats }) => {
   const issues = [
     ...collectRequiredFileIssues((requiredFile) => fileExists(path.join(basePath, requiredFile))),
+    ...collectAdrIssues({ basePath, trackedFiles, fileExists, readTextFile }),
   ];
 
   for (const relativePath of trackedFiles) {

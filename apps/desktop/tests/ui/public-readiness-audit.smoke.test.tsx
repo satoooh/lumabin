@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  collectAdrIssues,
   collectContentIssues,
   collectRequiredFileIssues,
   collectTrackedFileIssues,
@@ -117,5 +118,27 @@ describe('public readiness audit', () => {
 
     expect(issues).toEqual([]);
     expect(stattedDeletedFile).toBe(false);
+  });
+
+  it('requires unique ADR numbers with matching headings', () => {
+    const textByPath = new Map([
+      ['docs/adr/0001-first-decision.md', '# ADR 0001: First Decision\n'],
+      ['docs/adr/0001-duplicate-decision.md', '# ADR 0001: Duplicate Decision\n'],
+      ['docs/adr/0003-number-drift.md', '# ADR 0002: Number Drift\n'],
+      ['docs/adr/0004-missing-heading.md', '# Not an ADR\n'],
+    ]);
+
+    const issues = collectAdrIssues({
+      basePath: '/repo',
+      trackedFiles: [...textByPath.keys(), 'docs/adr/README.md'],
+      fileExists: () => true,
+      readTextFile: (absolutePath) => textByPath.get(absolutePath.replace('/repo/', '')) ?? '',
+    });
+
+    expect(issues).toEqual([
+      'docs/adr/0001-duplicate-decision.md: duplicate ADR number 0001 already used by docs/adr/0001-first-decision.md',
+      'docs/adr/0003-number-drift.md: ADR heading number 0002 does not match filename number 0003',
+      'docs/adr/0004-missing-heading.md: missing ADR heading',
+    ]);
   });
 });

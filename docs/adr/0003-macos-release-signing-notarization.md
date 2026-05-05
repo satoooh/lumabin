@@ -1,4 +1,4 @@
-# ADR 0002: macOS Release Signing and Notarization
+# ADR 0003: macOS Release Signing and Notarization
 
 - Status: Accepted
 - Date: 2026-05-05
