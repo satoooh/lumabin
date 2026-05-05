@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-
-type UploadJobStatus = 'queued' | 'running' | 'done' | 'failed' | 'canceled';
-
-interface UploadToastLifecycleJob {
-  id: string;
-  status: UploadJobStatus;
-}
+import {
+  resolveUploadToastLifecycleTransition,
+  UPLOAD_TOAST_DONE_AUTO_DISMISS_MS,
+  UPLOAD_TOAST_DONE_EXPAND_MS,
+  type UploadToastLifecycleJob,
+  type UploadToastTrackedJob,
+} from './upload-toast-lifecycle-policy';
 
 interface UseUploadToastLifecycleOptions {
   onClearFinishedUploads: () => void;
   showUploadToast: boolean;
   uploadSummaryJob: UploadToastLifecycleJob | null;
 }
-
-const UPLOAD_TOAST_DONE_EXPAND_MS = 3200;
-const UPLOAD_TOAST_DONE_AUTO_DISMISS_MS = 10000;
 
 export const useUploadToastLifecycle = ({
   onClearFinishedUploads,
@@ -24,10 +21,7 @@ export const useUploadToastLifecycle = ({
   const [isUploadToastExpanded, setIsUploadToastExpanded] = useState<boolean>(false);
   const uploadToastCollapseTimerRef = useRef<number | null>(null);
   const uploadToastDismissTimerRef = useRef<number | null>(null);
-  const uploadToastTrackedJobRef = useRef<{
-    id: string;
-    status: UploadJobStatus;
-  } | null>(null);
+  const uploadToastTrackedJobRef = useRef<UploadToastTrackedJob | null>(null);
 
   useEffect(() => {
     return () => {
@@ -41,78 +35,45 @@ export const useUploadToastLifecycle = ({
   }, []);
 
   useEffect(() => {
-    if (!showUploadToast || !uploadSummaryJob) {
-      uploadToastTrackedJobRef.current = null;
+    const transition = resolveUploadToastLifecycleTransition({
+      previousTrackedJob: uploadToastTrackedJobRef.current,
+      showUploadToast,
+      uploadSummaryJob,
+    });
+
+    uploadToastTrackedJobRef.current = transition.nextTrackedJob;
+
+    if (transition.collapseTimer === 'clear') {
       if (uploadToastCollapseTimerRef.current !== null) {
         window.clearTimeout(uploadToastCollapseTimerRef.current);
         uploadToastCollapseTimerRef.current = null;
       }
-      if (uploadToastDismissTimerRef.current !== null) {
-        window.clearTimeout(uploadToastDismissTimerRef.current);
-        uploadToastDismissTimerRef.current = null;
-      }
-      setIsUploadToastExpanded(false);
-      return;
-    }
-
-    const previousTrackedJob = uploadToastTrackedJobRef.current;
-    const isNewTrackedJob = previousTrackedJob?.id !== uploadSummaryJob.id;
-    const previousStatus =
-      previousTrackedJob?.id === uploadSummaryJob.id ? previousTrackedJob.status : null;
-    const status = uploadSummaryJob.status;
-    const isActiveStatus = status === 'queued' || status === 'running';
-
-    uploadToastTrackedJobRef.current = { id: uploadSummaryJob.id, status };
-
-    if (isActiveStatus) {
+    } else if (transition.collapseTimer === 'schedule') {
       if (uploadToastCollapseTimerRef.current !== null) {
         window.clearTimeout(uploadToastCollapseTimerRef.current);
-        uploadToastCollapseTimerRef.current = null;
       }
+      uploadToastCollapseTimerRef.current = window.setTimeout(() => {
+        uploadToastCollapseTimerRef.current = null;
+        setIsUploadToastExpanded(false);
+      }, UPLOAD_TOAST_DONE_EXPAND_MS);
+    }
+
+    if (transition.dismissTimer === 'clear') {
       if (uploadToastDismissTimerRef.current !== null) {
         window.clearTimeout(uploadToastDismissTimerRef.current);
         uploadToastDismissTimerRef.current = null;
       }
-      setIsUploadToastExpanded(false);
-      return;
-    }
-
-    if (status === 'failed' || status === 'canceled') {
-      if (uploadToastCollapseTimerRef.current !== null) {
-        window.clearTimeout(uploadToastCollapseTimerRef.current);
-        uploadToastCollapseTimerRef.current = null;
-      }
+    } else if (transition.dismissTimer === 'schedule') {
       if (uploadToastDismissTimerRef.current !== null) {
         window.clearTimeout(uploadToastDismissTimerRef.current);
-        uploadToastDismissTimerRef.current = null;
       }
-      setIsUploadToastExpanded(true);
-      return;
+      uploadToastDismissTimerRef.current = window.setTimeout(() => {
+        uploadToastDismissTimerRef.current = null;
+        onClearFinishedUploads();
+      }, UPLOAD_TOAST_DONE_AUTO_DISMISS_MS);
     }
 
-    if (status === 'done') {
-      if (isNewTrackedJob || previousStatus !== 'done') {
-        if (uploadToastDismissTimerRef.current !== null) {
-          window.clearTimeout(uploadToastDismissTimerRef.current);
-        }
-        uploadToastDismissTimerRef.current = window.setTimeout(() => {
-          uploadToastDismissTimerRef.current = null;
-          onClearFinishedUploads();
-        }, UPLOAD_TOAST_DONE_AUTO_DISMISS_MS);
-      }
-      if (previousStatus && previousStatus !== 'done') {
-        setIsUploadToastExpanded(true);
-        if (uploadToastCollapseTimerRef.current !== null) {
-          window.clearTimeout(uploadToastCollapseTimerRef.current);
-        }
-        uploadToastCollapseTimerRef.current = window.setTimeout(() => {
-          uploadToastCollapseTimerRef.current = null;
-          setIsUploadToastExpanded(false);
-        }, UPLOAD_TOAST_DONE_EXPAND_MS);
-        return;
-      }
-      setIsUploadToastExpanded(false);
-    }
+    setIsUploadToastExpanded(transition.isExpanded);
   }, [onClearFinishedUploads, showUploadToast, uploadSummaryJob]);
 
   return isUploadToastExpanded;
