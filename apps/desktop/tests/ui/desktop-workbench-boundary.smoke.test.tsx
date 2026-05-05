@@ -15,6 +15,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-overlay-coordination.ts'),
       'utf8',
     );
+    const desktopWorkbenchOverlayHandoffsSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/desktop-workbench-overlay-handoffs.ts'),
+      'utf8',
+    );
     const desktopWorkbenchPreviewCoordinationSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-preview-coordination.ts'),
       'utf8',
@@ -118,6 +122,9 @@ describe('desktop workbench boundary', () => {
       "import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';",
     );
     expect(workbenchSource).toContain(
+      "import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';",
+    );
+    expect(workbenchSource).toContain(
       "import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';",
     );
     expect(desktopWorkbenchOverlayCoordinationSource).toContain("from './desktop-workbench-overlays';");
@@ -134,6 +141,29 @@ describe('desktop workbench boundary', () => {
       'createDesktopWorkbenchQuickPreviewOverlayInput',
     );
     expect(desktopWorkbenchOverlayCoordinationSource).toContain('createDesktopWorkbenchOverlayProps');
+    expect(desktopWorkbenchOverlayHandoffsSource).toContain(
+      "import type { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';",
+    );
+    expect(desktopWorkbenchOverlayHandoffsSource).toContain(
+      'createDesktopWorkbenchOverlayCoordinationInput',
+    );
+    [
+      'quickPreviewAssetManagement: {',
+      'quickPreviewAssetManagementCommands: {',
+      'connectionSetupState: {',
+      'connectionSetupCommands: {',
+      'connectionSetupForm: {',
+      'galleryActionUploadConflict: {',
+      'galleryActionBulkMove: {',
+      'galleryActionBulkDelete: {',
+      'galleryActionAssetAction: {',
+      'feedbackLayerCommands: {',
+      'feedbackLayerDropOverlay: {',
+      'feedbackLayerPendingDelete: {',
+      'feedbackLayerUpload: {',
+    ].forEach((directOverlayHandoff) => {
+      expect(workbenchSource).not.toContain(directOverlayHandoff);
+    });
     expect(workbenchSource).not.toContain("from './desktop-workbench-overlays';");
     expect(workbenchSource).not.toContain('createDesktopWorkbenchQuickPreviewOverlayInput');
     expect(workbenchSource).toContain(

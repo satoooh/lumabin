@@ -1,6 +1,7 @@
 import type { DesktopApiGateway } from '../shared/desktop-api-gateway';
 import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';
 import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';
+import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';
 import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
 import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';
@@ -663,87 +664,62 @@ export const useDesktopWorkbench = ({
     }),
   );
 
-  const appOverlaysProps = createDesktopWorkbenchOverlayCoordinationProps({
-    quickPreview: quickPreviewOverlayInput,
-    quickPreviewAssetManagement: {
-      isAssetActionBusy,
-    },
-    quickPreviewAssetManagementCommands: {
-      onOpenAssetDelete: handleOpenAssetDelete,
-      onOpenAssetMove: handleOpenAssetMove,
-      onOpenAssetRename: handleOpenAssetRename,
-    },
-    connectionSetupState: {
-      isConnectionSetupOpen,
-      isProfileBusy,
-      selectedProfileId,
-    },
-    connectionSetupCommands: {
+  const appOverlaysProps = createDesktopWorkbenchOverlayCoordinationProps(
+    createDesktopWorkbenchOverlayCoordinationInput({
+      activePendingDeleteJob,
+      activeUploadJobCount,
+      allowStoredSecret,
+      assetActionDialog,
+      bulkDeleteDialogKeys,
+      bulkMoveDialog,
+      canSaveProfile,
+      dropOverlayPrefixLabel: shellUi.dropOverlayPrefixLabel,
+      executePendingDelete,
+      handleCancelUpload,
+      handleChangeAssetActionInputValue,
+      handleChangeBulkMoveDestinationPrefix,
+      handleClearFinishedUploads,
+      handleCloseAssetActionDialog,
+      handleCloseBulkDeleteDialog,
+      handleCloseBulkMoveDialog,
       handleCloseConnectionSetup,
+      handleCloseShortcutHelp,
+      handleCloseUploadConflictDialog,
       handleDeleteProfile,
+      handleOpenAssetDelete,
+      handleOpenAssetMove,
+      handleOpenAssetRename,
       handleR2AccountIdChange,
+      handleResolveUploadConflict,
+      handleRetryUpload,
       handleSaveProfile,
       handleStartNewProfile,
-    },
-    connectionSetupForm: {
-      allowStoredSecret,
-      canSaveProfile,
-      isCreatingProfile,
-      profileFieldErrors,
-      profileForm,
-      profileFormValidationErrors,
-      r2AccountId,
-      setProfileForm,
-    },
-    connectionSetupProfileFormRefs: profileFormRefs,
-    galleryActionUploadConflict: {
-      uploadConflictDialog,
-      isUploadBusy,
-      handleCloseUploadConflictDialog,
-      handleResolveUploadConflict,
-    },
-    galleryActionBulkMove: {
-      bulkMoveDialog,
-      handleCloseBulkMoveDialog,
-      handleChangeBulkMoveDestinationPrefix,
-      handleSubmitBulkMove,
-    },
-    galleryActionBulkDelete: {
-      bulkDeleteDialogKeys,
-      handleCloseBulkDeleteDialog,
-      handleSubmitBulkDelete,
-    },
-    galleryActionAssetAction: {
-      assetActionDialog,
-      handleChangeAssetActionInputValue,
-      handleCloseAssetActionDialog,
       handleSubmitAssetAction,
+      handleSubmitBulkDelete,
+      handleSubmitBulkMove,
       isAssetActionBusy,
-      selectedProfileId,
-    },
-    feedbackLayerCommands: {
-      handleCancelUpload,
-      handleClearFinishedUploads,
-      handleRetryUpload,
-      executePendingDelete,
-      undoPendingDelete,
-    },
-    feedbackLayerDropOverlay: {
-      dropOverlayPrefixLabel: shellUi.dropOverlayPrefixLabel,
+      isConnectionSetupOpen,
+      isCreatingProfile,
       isDropActive,
-    },
-    feedbackLayerPendingDelete: {
-      activePendingDeleteJob,
-      pendingDeleteQueuedMoreCount,
-      pendingDeleteRemainingSeconds,
-      showPendingDeleteToast,
-    },
-    feedbackLayerUpload: {
-      activeUploadJobCount,
+      isProfileBusy,
+      isShortcutHelpOpen,
       isUploadBusy,
       isUploadToastExpanded,
+      pendingDeleteQueuedMoreCount,
+      pendingDeleteRemainingSeconds,
+      profileFieldErrors,
+      profileForm,
+      profileFormRefs,
+      profileFormValidationErrors,
+      quickPreviewOverlayInput,
+      r2AccountId,
+      selectedProfileId,
+      setProfileForm,
+      showPendingDeleteToast,
       showUploadToast,
       totalUploadJobs,
+      undoPendingDelete,
+      uploadConflictDialog,
       uploadSummaryCanRetry,
       uploadSummaryCompactTitle,
       uploadSummaryJob,
@@ -752,13 +728,9 @@ export const useDesktopWorkbench = ({
       uploadSummarySubtitle,
       uploadSummaryTitle,
       uploadToastRef,
-    },
-    shortcutHelp: {
-      isOpen: isShortcutHelpOpen,
-      onClose: handleCloseShortcutHelp,
-    },
-    workspaceSettings: workspaceSettingsOverlayProps,
-  });
+      workspaceSettingsOverlayProps,
+    }),
+  );
   const appTopbarProps = createDesktopWorkbenchTopbarCoordinationProps({
     assets: {
       logoSrc,
