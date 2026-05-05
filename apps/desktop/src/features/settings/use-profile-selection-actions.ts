@@ -5,7 +5,7 @@ type StatusTone = 'neutral' | 'success' | 'error';
 
 interface UseProfileSelectionActionsOptions {
   closeProfileMenu: () => void;
-  shouldDiscardUnsavedProfileChanges: () => boolean;
+  requestDiscardUnsavedProfileChanges: (onConfirm: () => void) => boolean;
   handleStartNewProfile: () => void;
   handleOpenConnectionSetup: () => void;
   profiles: ProfileSummary[];
@@ -22,7 +22,7 @@ interface UseProfileSelectionActionsOptions {
 
 export const useProfileSelectionActions = ({
   closeProfileMenu,
-  shouldDiscardUnsavedProfileChanges,
+  requestDiscardUnsavedProfileChanges,
   handleStartNewProfile,
   handleOpenConnectionSetup,
   profiles,
@@ -39,13 +39,6 @@ export const useProfileSelectionActions = ({
   const handleSelectProfile = useCallback((profileId: string) => {
     closeProfileMenu();
 
-    if (
-      profileId !== selectedProfileId &&
-      !shouldDiscardUnsavedProfileChanges()
-    ) {
-      return;
-    }
-
     if (profileId === newProfileOptionValue) {
       handleStartNewProfile();
       return;
@@ -56,17 +49,28 @@ export const useProfileSelectionActions = ({
       return;
     }
 
-    setSelectedProfileId(profileId);
-    setIsCreatingProfile(false);
-    onProfileSelected();
-    const selected = profiles.find((profile) => profile.id === profileId);
-    setStatusLine(
-      selected ? `Profile selected: ${selected.name}` : 'Profile selected.',
-      'neutral',
-    );
-    if (selected) {
-      pushInlineFeedback(`Using ${selected.name}`);
+    const selectProfile = () => {
+      setSelectedProfileId(profileId);
+      setIsCreatingProfile(false);
+      onProfileSelected();
+      const selected = profiles.find((profile) => profile.id === profileId);
+      setStatusLine(
+        selected ? `Profile selected: ${selected.name}` : 'Profile selected.',
+        'neutral',
+      );
+      if (selected) {
+        pushInlineFeedback(`Using ${selected.name}`);
+      }
+    };
+
+    if (
+      profileId !== selectedProfileId &&
+      !requestDiscardUnsavedProfileChanges(selectProfile)
+    ) {
+      return;
     }
+
+    selectProfile();
   }, [
     closeProfileMenu,
     handleOpenConnectionSetup,
@@ -80,7 +84,7 @@ export const useProfileSelectionActions = ({
     setIsCreatingProfile,
     setSelectedProfileId,
     setStatusLine,
-    shouldDiscardUnsavedProfileChanges,
+    requestDiscardUnsavedProfileChanges,
   ]);
 
   const handleProfileMenuSelect = useCallback(

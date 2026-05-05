@@ -722,7 +722,6 @@ describe('App UI smoke', () => {
     const user = userEvent.setup();
     const api = createMockLumabinApi();
     window.lumabin = api;
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     render(<App />);
     await waitForKindAllFilter();
@@ -735,9 +734,14 @@ describe('App UI smoke', () => {
     await user.selectOptions(appearanceSelect, 'light');
 
     await user.click(within(settingsDialog).getByRole('button', { name: 'Close' }));
-    await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledWith('Discard unsaved workspace settings?');
-    });
+    expect(
+      await within(settingsDialog).findByText('Discard unsaved workspace settings?'),
+    ).toBeTruthy();
+    await user.click(within(settingsDialog).getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByRole('dialog', { name: 'Workspace Settings' })).toBeTruthy();
+
+    await user.click(within(settingsDialog).getByRole('button', { name: 'Close' }));
+    await user.click(await within(settingsDialog).findByRole('button', { name: 'Discard changes' }));
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Workspace Settings' })).toBeNull();
     });
@@ -747,8 +751,6 @@ describe('App UI smoke', () => {
     await user.click(within(reopenedDialog).getByRole('tab', { name: /Workspace defaults/i }));
     const reopenedAppearanceSelect = within(reopenedDialog).getByLabelText('Appearance') as HTMLSelectElement;
     expect(reopenedAppearanceSelect.value).toBe('dark');
-
-    confirmSpy.mockRestore();
   });
 
   it('covers selection mode bulk action dialogs', async () => {

@@ -268,6 +268,9 @@ export const useDesktopWorkbench = ({
   });
 
   const {
+    pendingDiscardConfirmation,
+    cancelDiscardConfirmation,
+    confirmDiscardChanges,
     handleCloseConnectionSetup,
     handleCloseShortcutHelp,
     handleCloseWorkspaceSettings,
@@ -618,7 +621,10 @@ export const useDesktopWorkbench = ({
         viewDefaults: workspaceSettingsViewDefaults,
       },
       modal: {
+        cancelDiscardConfirmation,
+        confirmDiscardChanges,
         handleCloseWorkspaceSettings,
+        isSettingsDiscardConfirming: pendingDiscardConfirmation?.kind === 'settings',
         isWorkspaceSettingsOpen,
       },
       profile: {
@@ -644,6 +650,8 @@ export const useDesktopWorkbench = ({
       bulkDeleteDialogKeys,
       bulkMoveDialog,
       canSaveProfile,
+      cancelDiscardConfirmation,
+      confirmDiscardChanges,
       dropOverlayPrefixLabel: shellUi.dropOverlayPrefixLabel,
       executePendingDelete,
       handleCancelUpload,
@@ -671,6 +679,7 @@ export const useDesktopWorkbench = ({
       isAssetActionBusy,
       isConnectionSetupOpen,
       isCreatingProfile,
+      isProfileDiscardConfirming: pendingDiscardConfirmation?.kind === 'profile',
       isDropActive,
       isProfileBusy,
       isShortcutHelpOpen,

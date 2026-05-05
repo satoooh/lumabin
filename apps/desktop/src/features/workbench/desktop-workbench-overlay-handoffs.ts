@@ -24,6 +24,8 @@ interface DesktopWorkbenchOverlayHandoffInput {
   bulkDeleteDialogKeys: GalleryActionBulkDelete['bulkDeleteDialogKeys'];
   bulkMoveDialog: GalleryActionBulkMove['bulkMoveDialog'];
   canSaveProfile: ConnectionSetupForm['canSaveProfile'];
+  cancelDiscardConfirmation: ConnectionSetupCommands['cancelDiscardConfirmation'];
+  confirmDiscardChanges: ConnectionSetupCommands['confirmDiscardChanges'];
   dropOverlayPrefixLabel: FeedbackLayerDropOverlay['dropOverlayPrefixLabel'];
   executePendingDelete: FeedbackLayerCommands['executePendingDelete'];
   handleCancelUpload: FeedbackLayerCommands['handleCancelUpload'];
@@ -51,6 +53,7 @@ interface DesktopWorkbenchOverlayHandoffInput {
   isAssetActionBusy: GalleryActionAssetAction['isAssetActionBusy'];
   isConnectionSetupOpen: ConnectionSetupState['isConnectionSetupOpen'];
   isCreatingProfile: ConnectionSetupForm['isCreatingProfile'];
+  isProfileDiscardConfirming: ConnectionSetupState['isDiscardConfirming'];
   isDropActive: FeedbackLayerDropOverlay['isDropActive'];
   isProfileBusy: ConnectionSetupState['isProfileBusy'];
   isShortcutHelpOpen: ShortcutHelp['isOpen'];
@@ -90,6 +93,8 @@ export const createDesktopWorkbenchOverlayCoordinationInput = ({
   bulkDeleteDialogKeys,
   bulkMoveDialog,
   canSaveProfile,
+  cancelDiscardConfirmation,
+  confirmDiscardChanges,
   dropOverlayPrefixLabel,
   executePendingDelete,
   handleCancelUpload,
@@ -117,6 +122,7 @@ export const createDesktopWorkbenchOverlayCoordinationInput = ({
   isAssetActionBusy,
   isConnectionSetupOpen,
   isCreatingProfile,
+  isProfileDiscardConfirming,
   isDropActive,
   isProfileBusy,
   isShortcutHelpOpen,
@@ -158,10 +164,13 @@ export const createDesktopWorkbenchOverlayCoordinationInput = ({
   },
   connectionSetupState: {
     isConnectionSetupOpen,
+    isDiscardConfirming: isProfileDiscardConfirming,
     isProfileBusy,
     selectedProfileId,
   },
   connectionSetupCommands: {
+    cancelDiscardConfirmation,
+    confirmDiscardChanges,
     handleCloseConnectionSetup,
     handleDeleteProfile,
     handleR2AccountIdChange,

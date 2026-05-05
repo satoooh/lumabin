@@ -37,6 +37,8 @@ const savedView: SavedView = {
 describe('workspace settings overlay props', () => {
   it('maps workspace settings state and commands into the modal contract', () => {
     const handleCloseWorkspaceSettings = vi.fn();
+    const cancelDiscardConfirmation = vi.fn();
+    const confirmDiscardChanges = vi.fn();
     const setViewMode = vi.fn();
     const setSortBy = vi.fn();
     const setSortDirection = vi.fn();
@@ -62,7 +64,10 @@ describe('workspace settings overlay props', () => {
 
     const props = createWorkspaceSettingsOverlayProps({
       modal: {
+        cancelDiscardConfirmation,
+        confirmDiscardChanges,
         isWorkspaceSettingsOpen: true,
+        isDiscardConfirming: true,
         handleCloseWorkspaceSettings,
       },
       viewDefaults: {
@@ -131,6 +136,8 @@ describe('workspace settings overlay props', () => {
     });
 
     props.onClose();
+    props.onCancelDiscardChanges();
+    props.onConfirmDiscardChanges();
     props.onChangeViewMode('list');
     props.onChangeSortBy('name');
     props.onChangeSortDirection('asc');
@@ -155,12 +162,15 @@ describe('workspace settings overlay props', () => {
     props.onCopyDevMetricsSnapshot();
 
     expect(props.isOpen).toBe(true);
+    expect(props.isDiscardConfirming).toBe(true);
     expect(props.savedViews).toEqual([savedView]);
     expect(props.selectedProfile).toBe(selectedProfile);
     expect(props.prefixes).toEqual(['photos/2026/']);
     expect(props.settings).toBe(settings);
     expect(props.previewCacheHitRate).toBe(0.5);
     expect(handleCloseWorkspaceSettings).toHaveBeenCalledTimes(1);
+    expect(cancelDiscardConfirmation).toHaveBeenCalledTimes(1);
+    expect(confirmDiscardChanges).toHaveBeenCalledTimes(1);
     expect(setViewMode).toHaveBeenCalledWith('list');
     expect(setSortBy).toHaveBeenCalledWith('name');
     expect(setSortDirection).toHaveBeenCalledWith('asc');

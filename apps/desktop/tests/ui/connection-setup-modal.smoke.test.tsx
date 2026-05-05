@@ -18,6 +18,9 @@ const baseProfileForm: SaveProfileInput = {
 const renderModal = (
   profileForm: SaveProfileInput,
   options?: {
+    isDiscardConfirming?: boolean;
+    onCancelDiscardChanges?: () => void;
+    onConfirmDiscardChanges?: () => void;
     onDeleteProfile?: () => Promise<void> | void;
     selectedProfileId?: string;
   },
@@ -27,10 +30,13 @@ const renderModal = (
       allowStoredSecret={false}
       canSaveProfile={true}
       isCreatingProfile={true}
+      isDiscardConfirming={options?.isDiscardConfirming ?? false}
       isOpen={true}
       isProfileBusy={false}
+      onCancelDiscardChanges={options?.onCancelDiscardChanges ?? vi.fn()}
       onChangeR2AccountId={vi.fn()}
       onClose={vi.fn()}
+      onConfirmDiscardChanges={options?.onConfirmDiscardChanges ?? vi.fn()}
       onDeleteProfile={options?.onDeleteProfile ?? vi.fn()}
       onSaveProfile={vi.fn()}
       onStartNewProfile={vi.fn()}
@@ -101,5 +107,26 @@ describe('ConnectionSetupModal', () => {
     await user.click(screen.getByRole('button', { name: 'Delete profile' }));
 
     expect(onDeleteProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows in-app confirmation for unsaved profile changes', async () => {
+    const user = userEvent.setup();
+    const onCancelDiscardChanges = vi.fn();
+    const onConfirmDiscardChanges = vi.fn();
+    renderModal(baseProfileForm, {
+      isDiscardConfirming: true,
+      onCancelDiscardChanges,
+      onConfirmDiscardChanges,
+      selectedProfileId: 'profile-1',
+    });
+
+    expect(screen.getByText('Discard unsaved profile changes?')).toBeTruthy();
+    expect(screen.getByText('Your edits to this connection profile will be lost.')).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(onCancelDiscardChanges).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(onConfirmDiscardChanges).toHaveBeenCalledTimes(1);
   });
 });

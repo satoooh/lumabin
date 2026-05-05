@@ -1,7 +1,13 @@
-import { useCallback, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import type { AppSettings, SaveProfileInput } from '../../shared/ipc';
 
 type StatusTone = 'neutral' | 'success' | 'error';
+type DiscardConfirmationKind = 'profile' | 'settings';
+
+interface PendingDiscardConfirmation {
+  kind: DiscardConfirmationKind;
+  onConfirm: () => void;
+}
 
 interface UseWorkspaceDialogActionsOptions {
   isConnectionSetupOpen: boolean;
@@ -42,36 +48,63 @@ export const useWorkspaceDialogActions = ({
   setIsConnectionSetupOpen,
   setStatusLine,
 }: UseWorkspaceDialogActionsOptions) => {
-  const shouldDiscardUnsavedProfileChanges = useCallback((): boolean => {
+  const [pendingDiscardConfirmation, setPendingDiscardConfirmation] =
+    useState<PendingDiscardConfirmation | null>(null);
+
+  const cancelDiscardConfirmation = useCallback(() => {
+    setPendingDiscardConfirmation(null);
+  }, []);
+
+  const confirmDiscardChanges = useCallback(() => {
+    const action = pendingDiscardConfirmation?.onConfirm;
+    setPendingDiscardConfirmation(null);
+    action?.();
+  }, [pendingDiscardConfirmation]);
+
+  const requestDiscardUnsavedProfileChanges = useCallback((onConfirm: () => void): boolean => {
     if (!isConnectionSetupOpen || isProfileBusy || !isProfileFormDirty) {
       return true;
     }
-    return window.confirm('Discard unsaved profile changes?');
+    setPendingDiscardConfirmation({
+      kind: 'profile',
+      onConfirm,
+    });
+    return false;
   }, [isConnectionSetupOpen, isProfileBusy, isProfileFormDirty]);
 
-  const shouldDiscardUnsavedSettings = useCallback((): boolean => {
+  const requestDiscardUnsavedSettings = useCallback((onConfirm: () => void): boolean => {
     if (!isWorkspaceSettingsOpen || isSettingsBusy || !isSettingsDirty) {
       return true;
     }
-    return window.confirm('Discard unsaved workspace settings?');
+    setPendingDiscardConfirmation({
+      kind: 'settings',
+      onConfirm,
+    });
+    return false;
   }, [isSettingsBusy, isSettingsDirty, isWorkspaceSettingsOpen]);
 
-  const handleCloseWorkspaceSettings = useCallback(() => {
-    if (!shouldDiscardUnsavedSettings()) {
+  const discardWorkspaceSettings = useCallback(() => {
+    if (!isSettingsDirty) {
       return;
     }
-    if (isSettingsDirty) {
-      setSettings(savedSettingsSnapshot);
-      setStatusLine('Discarded unsaved workspace settings.', 'neutral');
+    setSettings(savedSettingsSnapshot);
+    setStatusLine('Discarded unsaved workspace settings.', 'neutral');
+  }, [isSettingsDirty, savedSettingsSnapshot, setSettings, setStatusLine]);
+
+  const handleCloseWorkspaceSettings = useCallback(() => {
+    const closeWorkspaceSettings = () => {
+      discardWorkspaceSettings();
+      setIsWorkspaceSettingsOpen(false);
+    };
+
+    if (!requestDiscardUnsavedSettings(closeWorkspaceSettings)) {
+      return;
     }
-    setIsWorkspaceSettingsOpen(false);
+    closeWorkspaceSettings();
   }, [
-    isSettingsDirty,
-    savedSettingsSnapshot,
-    setSettings,
-    setStatusLine,
+    discardWorkspaceSettings,
+    requestDiscardUnsavedSettings,
     setIsWorkspaceSettingsOpen,
-    shouldDiscardUnsavedSettings,
   ]);
 
   const handleToggleWorkspaceSettings = useCallback(() => {
@@ -91,64 +124,90 @@ export const useWorkspaceDialogActions = ({
   }, [setIsShortcutHelpOpen]);
 
   const handleStartNewProfile = useCallback(() => {
-    if (!shouldDiscardUnsavedProfileChanges()) {
+    const startNewProfile = () => {
+      discardWorkspaceSettings();
+      setIsCreatingProfile(true);
+      setProfileForm(initialProfileForm);
+      setR2AccountId('');
+      setIsWorkspaceSettingsOpen(false);
+      setIsConnectionSetupOpen(true);
+      setStatusLine('New profile form.', 'neutral');
+    };
+
+    const discardSettingsThenStartNewProfile = () => {
+      if (!requestDiscardUnsavedSettings(startNewProfile)) {
+        return;
+      }
+      startNewProfile();
+    };
+
+    if (!requestDiscardUnsavedProfileChanges(discardSettingsThenStartNewProfile)) {
       return;
     }
-    if (!shouldDiscardUnsavedSettings()) {
+    if (!requestDiscardUnsavedSettings(startNewProfile)) {
       return;
     }
-    setIsCreatingProfile(true);
-    setProfileForm(initialProfileForm);
-    setR2AccountId('');
-    setIsWorkspaceSettingsOpen(false);
-    setIsConnectionSetupOpen(true);
-    setStatusLine('New profile form.', 'neutral');
+    startNewProfile();
   }, [
     initialProfileForm,
+    discardWorkspaceSettings,
+    requestDiscardUnsavedProfileChanges,
+    requestDiscardUnsavedSettings,
     setIsConnectionSetupOpen,
     setIsCreatingProfile,
     setIsWorkspaceSettingsOpen,
     setProfileForm,
     setR2AccountId,
     setStatusLine,
-    shouldDiscardUnsavedProfileChanges,
-    shouldDiscardUnsavedSettings,
   ]);
 
   const handleOpenConnectionSetup = useCallback(() => {
-    if (!shouldDiscardUnsavedSettings()) {
+    const openConnectionSetup = () => {
+      discardWorkspaceSettings();
+      setIsCreatingProfile(!selectedProfileId);
+      setIsWorkspaceSettingsOpen(false);
+      setIsConnectionSetupOpen(true);
+      setStatusLine('Setup opened.', 'neutral');
+    };
+
+    if (!requestDiscardUnsavedSettings(openConnectionSetup)) {
       return;
     }
-    setIsCreatingProfile(!selectedProfileId);
-    setIsWorkspaceSettingsOpen(false);
-    setIsConnectionSetupOpen(true);
-    setStatusLine('Setup opened.', 'neutral');
+    openConnectionSetup();
   }, [
+    discardWorkspaceSettings,
+    requestDiscardUnsavedSettings,
     selectedProfileId,
     setIsConnectionSetupOpen,
     setIsCreatingProfile,
     setIsWorkspaceSettingsOpen,
     setStatusLine,
-    shouldDiscardUnsavedSettings,
   ]);
 
   const handleCloseConnectionSetup = useCallback(() => {
-    if (!shouldDiscardUnsavedProfileChanges()) {
+    const closeConnectionSetup = () => {
+      setIsConnectionSetupOpen(false);
+      if (selectedProfileId) {
+        setIsCreatingProfile(false);
+      }
+    };
+
+    if (!requestDiscardUnsavedProfileChanges(closeConnectionSetup)) {
       return;
     }
-    setIsConnectionSetupOpen(false);
-    if (selectedProfileId) {
-      setIsCreatingProfile(false);
-    }
+    closeConnectionSetup();
   }, [
+    requestDiscardUnsavedProfileChanges,
     selectedProfileId,
     setIsConnectionSetupOpen,
     setIsCreatingProfile,
-    shouldDiscardUnsavedProfileChanges,
   ]);
 
   return {
-    shouldDiscardUnsavedProfileChanges,
+    pendingDiscardConfirmation,
+    cancelDiscardConfirmation,
+    confirmDiscardChanges,
+    requestDiscardUnsavedProfileChanges,
     handleCloseWorkspaceSettings,
     handleToggleWorkspaceSettings,
     handleCloseShortcutHelp,

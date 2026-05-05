@@ -17,6 +17,8 @@ describe('connection setup overlay props', () => {
   it('maps profile setup state, commands, and refs into the modal contract', () => {
     const handleCloseConnectionSetup = vi.fn();
     const handleDeleteProfile = vi.fn();
+    const cancelDiscardConfirmation = vi.fn();
+    const confirmDiscardChanges = vi.fn();
     const handleR2AccountIdChange = vi.fn();
     const handleSaveProfile = vi.fn();
     const handleStartNewProfile = vi.fn();
@@ -35,11 +37,14 @@ describe('connection setup overlay props', () => {
     const props = createConnectionSetupOverlayProps({
       state: {
         isConnectionSetupOpen: true,
+        isDiscardConfirming: true,
         isProfileBusy: false,
         selectedProfileId: 'profile-1',
       },
       commands: {
         handleCloseConnectionSetup,
+        cancelDiscardConfirmation,
+        confirmDiscardChanges,
         handleDeleteProfile,
         handleR2AccountIdChange,
         handleSaveProfile,
@@ -68,6 +73,8 @@ describe('connection setup overlay props', () => {
     });
 
     props.onClose();
+    props.onCancelDiscardChanges();
+    props.onConfirmDiscardChanges();
     props.onDeleteProfile();
     props.onChangeR2AccountId('next-account');
     props.onSaveProfile();
@@ -75,6 +82,7 @@ describe('connection setup overlay props', () => {
     props.setProfileForm((current) => current);
 
     expect(props.isOpen).toBe(true);
+    expect(props.isDiscardConfirming).toBe(true);
     expect(props.isProfileBusy).toBe(false);
     expect(props.profileForm).toBe(profileForm);
     expect(props.profileFieldErrors).toEqual({
@@ -83,6 +91,8 @@ describe('connection setup overlay props', () => {
     expect(props.profileNameInputRef).toBe(profileNameInputRef);
     expect(props.profileSecretKeyInputRef).toBe(profileSecretKeyInputRef);
     expect(handleCloseConnectionSetup).toHaveBeenCalledTimes(1);
+    expect(cancelDiscardConfirmation).toHaveBeenCalledTimes(1);
+    expect(confirmDiscardChanges).toHaveBeenCalledTimes(1);
     expect(handleDeleteProfile).toHaveBeenCalledTimes(1);
     expect(handleR2AccountIdChange).toHaveBeenCalledWith('next-account');
     expect(handleSaveProfile).toHaveBeenCalledTimes(1);
