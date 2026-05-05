@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 import type { AssetItem } from '../../shared/ipc';
+import { focusGalleryKeyboardTarget } from '../gallery/gallery-keyboard-focus-runner';
 import {
-  resolveGalleryKeyboardScrollTop,
   resolveGalleryNavigationIndex,
   type GalleryDaySectionLite,
   type GalleryGridLocation,
@@ -228,48 +228,19 @@ export const useGlobalKeyboardShortcuts = ({
           return;
         }
         onSelectAssetKey(targetItem.key);
-        window.requestAnimationFrame(() => {
-          onFocusAssetItemByKey(targetItem.key);
-
-          if (viewMode !== 'gallery') {
-            return;
-          }
-
-          if (assetItemRefs.current.has(targetItem.key)) {
-            return;
-          }
-
-          const location = galleryGridLocationByKey.get(targetItem.key);
-          const section = location
-            ? galleryVirtualSections[location.sectionIndex]
-            : undefined;
-          const scroller = galleryScrollRef.current;
-          if (!location || !section || !scroller) {
-            return;
-          }
-
-          const scrollTop = resolveGalleryKeyboardScrollTop({
-            galleryColumnCount,
-            galleryDayHeaderHeightPx,
-            galleryGridGapPx,
-            galleryTileHeight,
-            galleryViewportHeight,
-            location,
-            section,
-          });
-
-          if (scrollTop === undefined) {
-            return;
-          }
-
-          scroller.scrollTo({
-            top: scrollTop,
-            behavior: 'smooth',
-          });
-
-          window.setTimeout(() => {
-            onFocusAssetItemByKey(targetItem.key);
-          }, 120);
+        focusGalleryKeyboardTarget({
+          assetItemRefs,
+          galleryColumnCount,
+          galleryDayHeaderHeightPx,
+          galleryGridGapPx,
+          galleryGridLocationByKey,
+          galleryScrollRef,
+          galleryTileHeight,
+          galleryViewportHeight,
+          galleryVirtualSections,
+          onFocusAssetItemByKey,
+          targetKey: targetItem.key,
+          viewMode,
         });
       };
 
