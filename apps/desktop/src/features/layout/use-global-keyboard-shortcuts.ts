@@ -6,9 +6,9 @@ import {
   isWorkspaceKeyboardBlockedByModal,
   resolveLinearNavigationIndex,
   resolveGalleryKeyboardScrollTop,
-  isShortcutHelpHotkey,
   resolveGalleryNavigationIndex,
   resolveQuickPreviewKeyboardAction,
+  resolveWorkspaceKeyboardShortcutIntent,
   type GalleryDaySectionLite,
   type GalleryGridLocation,
   type GalleryVirtualSectionLite,
@@ -115,45 +115,42 @@ export const useGlobalKeyboardShortcuts = ({
       });
       const isSpaceKey = event.key === ' ' || event.key === 'Spacebar';
 
-      if (hasCommandModifier && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        searchInputRef.current?.focus();
-        return;
-      }
-
-      if (hasCommandModifier && event.key.toLowerCase() === 'a' && isSelectionMode) {
-        event.preventDefault();
-        onSelectAllVisible();
-        return;
-      }
-
-      if (hasCommandModifier && viewMode === 'gallery') {
-        if (event.key === '=' || event.key === '+') {
+      const shortcutIntent = resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: event.altKey,
+        hasCommandModifier,
+        hasShiftModifier: event.shiftKey,
+        isSelectionMode,
+        isTypingElement,
+        key: event.key,
+        viewMode,
+      });
+      switch (shortcutIntent) {
+        case 'focus-search':
+          event.preventDefault();
+          searchInputRef.current?.focus();
+          return;
+        case 'select-all-visible':
+          event.preventDefault();
+          onSelectAllVisible();
+          return;
+        case 'increase-gallery-tile-size':
           event.preventDefault();
           onAdjustGalleryTileMinWidth(galleryTileKeyboardStep);
           return;
-        }
-
-        if (event.key === '-' || event.key === '_') {
+        case 'decrease-gallery-tile-size':
           event.preventDefault();
           onAdjustGalleryTileMinWidth(-galleryTileKeyboardStep);
           return;
-        }
-
-        if (event.key === '0') {
+        case 'reset-gallery-tile-size':
           event.preventDefault();
           onResetGalleryTileMinWidth();
           return;
-        }
-      }
-
-      if (
-        isShortcutHelpHotkey(event.key, hasCommandModifier, event.altKey, event.shiftKey) &&
-        !isTypingElement
-      ) {
-        event.preventDefault();
-        onToggleShortcutHelp();
-        return;
+        case 'toggle-shortcut-help':
+          event.preventDefault();
+          onToggleShortcutHelp();
+          return;
+        case 'ignore':
+          break;
       }
 
       if (isTypingElement) {
