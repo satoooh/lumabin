@@ -114,7 +114,7 @@ const createWindow = () => {
 app.whenReady().then(() => {
   const appIconPath = resolveAppIconPath();
   if (process.platform === 'darwin' && appIconPath) {
-    app.dock.setIcon(appIconPath);
+    app.dock?.setIcon(appIconPath);
   }
   applicationRuntime = registerApplicationComposition();
   createWindow();

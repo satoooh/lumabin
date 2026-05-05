@@ -1,6 +1,9 @@
 import type { useDesktopWorkbenchShell } from './use-desktop-workbench-shell';
+import type { UploadConflictDialogState } from '../upload/use-upload-queue-commands';
 
-type DesktopWorkbenchShellInput = Parameters<typeof useDesktopWorkbenchShell>[0];
+type DesktopWorkbenchShellInput = Parameters<
+  typeof useDesktopWorkbenchShell<UploadConflictDialogState>
+>[0];
 type KeyboardShortcutsInput = DesktopWorkbenchShellInput['keyboardShortcuts'];
 type WorkspaceModalGuardsInput = DesktopWorkbenchShellInput['workspaceModalGuards'];
 type DialogEscapeInput = DesktopWorkbenchShellInput['dialogEscape'];

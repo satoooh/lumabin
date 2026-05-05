@@ -16,7 +16,14 @@ const appleTeamId = process.env.LUMABIN_APPLE_TEAM_ID;
 const appleSignIdentity = process.env.LUMABIN_APPLE_SIGN_IDENTITY;
 const darwinEntitlementsPath = path.resolve(__dirname, 'build/entitlements.darwin.plist');
 
-const hasNotarizeCredentials = Boolean(appleId && appleIdPassword && appleTeamId);
+const notarizeCredentials =
+  enableMacSign && appleId && appleIdPassword && appleTeamId
+    ? {
+        appleId,
+        appleIdPassword,
+        teamId: appleTeamId,
+      }
+    : undefined;
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -33,14 +40,7 @@ const config: ForgeConfig = {
           }),
         }
       : undefined,
-    osxNotarize:
-      enableMacSign && hasNotarizeCredentials
-        ? {
-            appleId,
-            appleIdPassword,
-            teamId: appleTeamId,
-          }
-        : undefined,
+    osxNotarize: notarizeCredentials,
   },
   rebuildConfig: {},
   makers: [
