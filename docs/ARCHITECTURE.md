@@ -153,6 +153,7 @@ apps/desktop/src/
 │       ├── desktop-workbench-overlay-coordination.ts
 │       ├── desktop-workbench-overlay-handoffs.ts
 │       ├── desktop-workbench-overlays.ts
+│       ├── desktop-workbench-shell-handoffs.ts
 │       ├── desktop-workbench-shell-inputs.ts
 │       ├── desktop-workbench-topbar-coordination.ts
 │       ├── desktop-workbench-topbar-handoffs.ts
