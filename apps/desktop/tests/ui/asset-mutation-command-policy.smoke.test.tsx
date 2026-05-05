@@ -3,6 +3,8 @@ import {
   planAssetMove,
   planAssetRename,
   planBulkAssetMove,
+  planQueuedAssetDeleteSelection,
+  summarizeBulkAssetMoveResult,
 } from '../../src/features/gallery/asset-mutation-command-policy';
 
 describe('asset mutation command policy', () => {
@@ -62,6 +64,56 @@ describe('asset mutation command policy', () => {
 
     expect(planBulkAssetMove(['photos/a.png', 'exports/a.png'], 'archive/')).toEqual({
       kind: 'duplicate-destination',
+    });
+  });
+
+  it('plans selection after a queued single-asset delete', () => {
+    expect(
+      planQueuedAssetDeleteSelection(
+        'photos/b.png',
+        ['photos/a.png', 'photos/b.png', 'photos/c.png'],
+        ['photos/a.png', 'photos/b.png'],
+      ),
+    ).toEqual({
+      nextSelectedKey: 'photos/c.png',
+      selectedKeys: ['photos/a.png'],
+    });
+
+    expect(
+      planQueuedAssetDeleteSelection(
+        'photos/c.png',
+        ['photos/a.png', 'photos/c.png'],
+        ['photos/c.png'],
+      ),
+    ).toEqual({
+      nextSelectedKey: 'photos/a.png',
+      selectedKeys: [],
+    });
+  });
+
+  it('summarizes bulk move results for status and inline feedback', () => {
+    expect(
+      summarizeBulkAssetMoveResult({
+        failedCount: 0,
+        movedCount: 2,
+        skippedCount: 1,
+      }),
+    ).toEqual({
+      inlineFeedback: 'Moved 2 assets',
+      statusLine: 'Moved 2 assets. Skipped 1 asset.',
+      statusTone: 'success',
+    });
+
+    expect(
+      summarizeBulkAssetMoveResult({
+        failedCount: 1,
+        movedCount: 0,
+        skippedCount: 0,
+      }),
+    ).toEqual({
+      inlineFeedback: undefined,
+      statusLine: 'Moved 0 assets. Failed 1 asset.',
+      statusTone: 'error',
     });
   });
 });
