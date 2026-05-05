@@ -1,9 +1,9 @@
-import { basename } from 'node:path';
 import { maybeOptimizeImageForUpload } from '../image-optimize';
 import { storageObjectExists } from './storage/storage-query-adapter';
 import {
   uploadStorageObject,
 } from './storage/storage-mutation-adapter';
+import { resolveStorageUploadDestinationKey } from './storage-upload-destination-planner';
 import type {
   AssetItem,
   ProfileSummary,
@@ -46,79 +46,6 @@ interface RunStorageUploadJobDependencies {
   toUploadErrorMessage(error: unknown, source?: UploadSource): string;
   updateUploadJob(jobId: string, updater: (job: UploadJobStatus) => UploadJobStatus): void;
 }
-
-const toInitialDestinationKey = (
-  destinationPrefix: string,
-  source: UploadSource,
-  dependencies: RunStorageUploadJobDependencies,
-  sourceFileName?: string,
-): string => {
-  const relativePath = dependencies.sourceRelativePathOrFileName(
-    source,
-    sourceFileName,
-  );
-  return `${dependencies.normalizeDestinationPrefix(destinationPrefix)}${relativePath}`;
-};
-
-const resolveDestinationKey = async (options: {
-  profile: StoredProfile;
-  secret: ProfileSecret;
-  destinationPrefix: string;
-  source: UploadSource;
-  dependencies: RunStorageUploadJobDependencies;
-  sourceFileName?: string;
-  conflictPolicy: StartUploadInput['conflictPolicy'];
-}): Promise<string | null> => {
-  const sourceRelativePath = options.dependencies.sourceRelativePathOrFileName(
-    options.source,
-    options.sourceFileName,
-  );
-  const fileName = basename(sourceRelativePath);
-  const normalizedPrefix = options.dependencies.normalizeDestinationPrefix(
-    options.destinationPrefix,
-  );
-  const initialKey = toInitialDestinationKey(
-    options.destinationPrefix,
-    options.source,
-    options.dependencies,
-    options.sourceFileName,
-  );
-  const policy =
-    options.conflictPolicy ?? options.dependencies.getDefaultConflictPolicy();
-
-  const initialExists = await storageObjectExists(
-    options.profile,
-    options.secret,
-    initialKey,
-  );
-  if (!initialExists) {
-    return initialKey;
-  }
-
-  if (policy === 'overwrite') {
-    return initialKey;
-  }
-
-  if (policy === 'skip') {
-    return null;
-  }
-
-  const sourceDirectory =
-    sourceRelativePath.lastIndexOf('/') >= 0
-      ? sourceRelativePath.slice(0, sourceRelativePath.lastIndexOf('/') + 1)
-      : '';
-  const { stem, ext } = options.dependencies.splitFileName(fileName);
-  for (let index = 1; index < 1_000; index += 1) {
-    const renamedRelativePath = `${sourceDirectory}${stem}-${index}${ext}`;
-    const renamedKey = `${normalizedPrefix}${renamedRelativePath}`;
-    const exists = await storageObjectExists(options.profile, options.secret, renamedKey);
-    if (!exists) {
-      return renamedKey;
-    }
-  }
-
-  throw new Error(`Unable to allocate renamed key for ${fileName}`);
-};
 
 export const runStorageUploadJob = async (
   jobId: string,
@@ -172,14 +99,13 @@ export const runStorageUploadJob = async (
         });
         cleanupOptimizedSource = optimizedSource.cleanup;
 
-        const destinationKey = await resolveDestinationKey({
-          profile,
-          secret,
+        const destinationKey = await resolveStorageUploadDestinationKey({
           destinationPrefix: input.destinationPrefix,
           source,
           dependencies,
           sourceFileName: optimizedSource.fileName,
           conflictPolicy: input.conflictPolicy,
+          objectExists: (key) => storageObjectExists(profile, secret, key),
         });
 
         if (!destinationKey) {

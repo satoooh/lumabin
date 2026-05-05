@@ -256,6 +256,7 @@ apps/desktop/src/
     │   │   ├── storage-object-policy.ts
     │   │   ├── storage-presign-adapter.ts
     │   │   └── storage-query-adapter.ts
+    │   ├── storage-upload-destination-planner.ts
     │   ├── storage-upload-runner-adapter.ts
     │   └── upload-planning-adapter.ts
     ├── __integration__/
