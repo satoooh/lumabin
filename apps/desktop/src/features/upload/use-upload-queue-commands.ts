@@ -12,6 +12,11 @@ import { normalizeAssetPrefix } from '../shared/asset-prefix';
 import type { UploadCommandApi } from '../shared/desktop-api-gateway';
 import { formatCount } from '../shared/format-count';
 import {
+  formatResolvedUploadConflictLabel,
+  mergeUploadJobIntoQueue,
+  retainActiveUploadJobs,
+} from './upload-queue-command-policy';
+import {
   loadPersistedUploadQueue,
   type UploadQueueItem,
 } from './upload-queue-persistence';
@@ -61,28 +66,16 @@ export const useUploadQueueCommands = ({
       job: UploadJobStatus,
       options?: { destinationPrefix?: string; conflictPolicy?: ConflictPolicy },
     ) => {
-      setUploadQueue((current) => {
-        const existing = current.find((item) => item.id === job.id);
-        const nextItem: UploadQueueItem = {
-          ...job,
-          destinationPrefix:
-            options?.destinationPrefix ??
-            job.destinationPrefix ??
-            existing?.destinationPrefix ??
-            normalizeAssetPrefix(assetsPrefix),
-          conflictPolicy:
-            options?.conflictPolicy ??
-            job.conflictPolicy ??
-            existing?.conflictPolicy ??
-            defaultConflictPolicy,
-        };
-
-        if (!existing) {
-          return [nextItem, ...current].slice(0, 20);
-        }
-
-        return current.map((item) => (item.id === job.id ? nextItem : item));
-      });
+      setUploadQueue((current) =>
+        mergeUploadJobIntoQueue({
+          currentQueue: current,
+          job,
+          fallbackDestinationPrefix: assetsPrefix,
+          fallbackConflictPolicy: defaultConflictPolicy,
+          destinationPrefix: options?.destinationPrefix,
+          conflictPolicy: options?.conflictPolicy,
+        }),
+      );
     },
     [assetsPrefix, defaultConflictPolicy],
   );
@@ -230,12 +223,7 @@ export const useUploadQueueCommands = ({
         destinationPrefix: pending.destinationPrefix,
         conflictPolicy,
         skipConflictCheck: true,
-        label:
-          conflictPolicy === 'overwrite'
-            ? `Upload started with overwrite policy (${formatCount(pending.sources.length, 'file')})`
-            : conflictPolicy === 'skip'
-              ? `Upload started with skip policy (${formatCount(pending.sources.length, 'file')})`
-              : `Upload started with rename policy (${formatCount(pending.sources.length, 'file')})`,
+        label: formatResolvedUploadConflictLabel(conflictPolicy, pending.sources.length),
       });
     },
     [startUploadFromSources, uploadConflictDialog],
@@ -257,9 +245,7 @@ export const useUploadQueueCommands = ({
   );
 
   const handleClearFinishedUploads = useCallback(() => {
-    setUploadQueue((current) =>
-      current.filter((job) => job.status === 'queued' || job.status === 'running'),
-    );
+    setUploadQueue((current) => retainActiveUploadJobs(current));
   }, []);
 
   return {
