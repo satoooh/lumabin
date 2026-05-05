@@ -25,6 +25,24 @@ interface ResolveGalleryKeyboardScrollTopOptions {
   section?: GalleryVirtualSectionLite;
 }
 
+interface ResolveLinearNavigationIndexOptions {
+  key: string;
+  selectedIndex: number;
+  visibleItemsLength: number;
+}
+
+interface WorkspaceKeyboardModalState {
+  hasAssetActionDialog: boolean;
+  hasBulkDeleteDialog: boolean;
+  hasBulkMoveDialog: boolean;
+  hasUploadConflictDialog: boolean;
+  isConnectionSetupOpen: boolean;
+  isShortcutHelpOpen: boolean;
+  isWorkspaceSettingsOpen: boolean;
+}
+
+export type QuickPreviewKeyboardAction = 'close' | 'move-next' | 'move-previous' | 'ignore';
+
 export const isEditableKeyboardTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
   (target.tagName === 'INPUT' ||
@@ -51,6 +69,55 @@ export const isGalleryNavigationKey = (key: string): boolean =>
   key === 'End' ||
   key === 'PageDown' ||
   key === 'PageUp';
+
+export const isWorkspaceKeyboardBlockedByModal = ({
+  hasAssetActionDialog,
+  hasBulkDeleteDialog,
+  hasBulkMoveDialog,
+  hasUploadConflictDialog,
+  isConnectionSetupOpen,
+  isShortcutHelpOpen,
+  isWorkspaceSettingsOpen,
+}: WorkspaceKeyboardModalState): boolean =>
+  isConnectionSetupOpen ||
+  isWorkspaceSettingsOpen ||
+  isShortcutHelpOpen ||
+  hasAssetActionDialog ||
+  hasBulkMoveDialog ||
+  hasBulkDeleteDialog ||
+  hasUploadConflictDialog;
+
+export const resolveQuickPreviewKeyboardAction = (
+  key: string,
+): QuickPreviewKeyboardAction => {
+  if (key === 'ArrowRight') {
+    return 'move-next';
+  }
+  if (key === 'ArrowLeft') {
+    return 'move-previous';
+  }
+  if (key === ' ' || key === 'Spacebar' || key === 'Enter') {
+    return 'close';
+  }
+  return 'ignore';
+};
+
+export const resolveLinearNavigationIndex = ({
+  key,
+  selectedIndex,
+  visibleItemsLength,
+}: ResolveLinearNavigationIndexOptions): number | undefined => {
+  if (visibleItemsLength <= 0) {
+    return undefined;
+  }
+  if (key === 'ArrowDown' || key === 'ArrowRight') {
+    return Math.min(visibleItemsLength - 1, selectedIndex < 0 ? 0 : selectedIndex + 1);
+  }
+  if (key === 'ArrowUp' || key === 'ArrowLeft') {
+    return Math.max(0, selectedIndex <= 0 ? 0 : selectedIndex - 1);
+  }
+  return undefined;
+};
 
 interface ResolveGalleryNavigationIndexOptions {
   currentLocation?: GalleryGridLocation;

@@ -3,9 +3,12 @@ import type { AssetItem } from '../../shared/ipc';
 import {
   isEditableKeyboardTarget,
   isGalleryNavigationKey,
+  isWorkspaceKeyboardBlockedByModal,
+  resolveLinearNavigationIndex,
   resolveGalleryKeyboardScrollTop,
   isShortcutHelpHotkey,
   resolveGalleryNavigationIndex,
+  resolveQuickPreviewKeyboardAction,
   type GalleryDaySectionLite,
   type GalleryGridLocation,
   type GalleryVirtualSectionLite,
@@ -101,14 +104,15 @@ export const useGlobalKeyboardShortcuts = ({
       const target = event.target;
       const hasCommandModifier = event.metaKey || event.ctrlKey;
       const isTypingElement = isEditableKeyboardTarget(target);
-      const hasBlockingDialogOpen =
-        isConnectionSetupOpen ||
-        isWorkspaceSettingsOpen ||
-        isShortcutHelpOpen ||
-        hasAssetActionDialog ||
-        hasBulkMoveDialog ||
-        hasBulkDeleteDialog ||
-        hasUploadConflictDialog;
+      const hasBlockingDialogOpen = isWorkspaceKeyboardBlockedByModal({
+        hasAssetActionDialog,
+        hasBulkDeleteDialog,
+        hasBulkMoveDialog,
+        hasUploadConflictDialog,
+        isConnectionSetupOpen,
+        isShortcutHelpOpen,
+        isWorkspaceSettingsOpen,
+      });
       const isSpaceKey = event.key === ' ' || event.key === 'Spacebar';
 
       if (hasCommandModifier && event.key.toLowerCase() === 'k') {
@@ -157,19 +161,20 @@ export const useGlobalKeyboardShortcuts = ({
       }
 
       if (isQuickPreviewOpen) {
-        if (event.key === 'ArrowRight') {
+        const quickPreviewAction = resolveQuickPreviewKeyboardAction(event.key);
+        if (quickPreviewAction === 'move-next') {
           event.preventDefault();
           onMoveQuickPreviewSelection(1);
           return;
         }
 
-        if (event.key === 'ArrowLeft') {
+        if (quickPreviewAction === 'move-previous') {
           event.preventDefault();
           onMoveQuickPreviewSelection(-1);
           return;
         }
 
-        if (isSpaceKey || event.key === 'Enter') {
+        if (quickPreviewAction === 'close') {
           event.preventDefault();
           onCloseQuickPreview();
           return;
@@ -296,20 +301,15 @@ export const useGlobalKeyboardShortcuts = ({
         return;
       }
 
-      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+      const nextLinearIndex = resolveLinearNavigationIndex({
+        key: event.key,
+        selectedIndex,
+        visibleItemsLength: visibleItems.length,
+      });
+      if (nextLinearIndex !== undefined) {
         event.preventDefault();
-        const nextIndex = Math.min(
-          visibleItems.length - 1,
-          selectedIndex < 0 ? 0 : selectedIndex + 1,
-        );
-        moveSelection(nextIndex);
+        moveSelection(nextLinearIndex);
         return;
-      }
-
-      if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
-        event.preventDefault();
-        const nextIndex = Math.max(0, selectedIndex <= 0 ? 0 : selectedIndex - 1);
-        moveSelection(nextIndex);
       }
     };
 
