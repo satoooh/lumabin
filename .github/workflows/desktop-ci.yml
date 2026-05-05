@@ -67,3 +67,6 @@ jobs:
 
       - name: Verify Darwin release artifact
         run: npm run verify:darwin-artifact
+
+      - name: Validate release evidence
+        run: npm run verify:release-evidence

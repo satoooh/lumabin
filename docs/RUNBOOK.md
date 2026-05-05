@@ -24,6 +24,7 @@ npm run e2e:dense
 npm run e2e:headed
 npm run smoke:ci
 npm run verify:darwin-artifact
+npm run verify:release-evidence
 npm run verify:mac-signing-readiness
 npm run verify:dev-metrics-snapshot
 npm run release:launch-smoke
@@ -154,7 +155,7 @@ Workflow:
   - `workflow_dispatch`
 - Jobs:
   - `Lint / Typecheck / Audit`（`smoke:integration` を内包）
-  - `Packaging smoke (macOS)`（`verify:mac-signing-readiness`、`package:darwin`、`verify:darwin-artifact` で signing readiness と release zip 構造を確認）
+  - `Packaging smoke (macOS)`（`verify:mac-signing-readiness`、`package:darwin`、`verify:darwin-artifact`、`verify:release-evidence` で signing readiness、release zip 構造、機械可読証跡を確認）
 
 `desktop-release`:
 
@@ -165,7 +166,7 @@ Workflow:
   - `Lint / Typecheck / Audit`
   - `Build and Publish macOS Release`
   - tag release は `origin/main` に含まれる commit から作成された場合のみ続行する
-  - package 前に `verify:mac-signing-readiness`、publish 前に `verify:darwin-artifact` と `release:launch-smoke` を必須実行
+  - package 前に `verify:mac-signing-readiness`、publish 前に `verify:darwin-artifact`、`verify:release-evidence`、`release:launch-smoke` を必須実行
   - `release` environment の承認後に GitHub Release へ publish する
 - 成果物:
   - `LumaBin-darwin-arm64-<version>.zip`（命名は maker 設定に準拠）
@@ -301,7 +302,7 @@ npm run release:preflight
    - `out/make/zip/darwin/arm64/*.zip` に `LumaBin.app/Contents/Resources/app.asar` が含まれる
    - bundle metadata（Bundle ID / app name / version）と executable が妥当である
    - SHA256 が表示される
-   - `out/make/release-evidence.json` に artifact SHA256 と verification checks が記録される
+   - `out/make/release-evidence.json` に artifact SHA256 と verification checks が記録され、`verify:release-evidence` で schema / 署名モード別必須項目 / artifact SHA256 の再検証が通る
    - 生成済み zip を一時展開し、LaunchServices 経由の packaged app E2E が通る
 
 3. 生成済みアセットのみ再検証したい場合は verify-only を使う
