@@ -1,22 +1,31 @@
-import { basename } from 'node:path';
 import {
   addStorageTransferredBytes,
   recordStorageFailure,
   recordStorageMetric,
 } from '../dev-metrics';
 import type {
-  AssetItem,
-  AssetMetadata,
   AssetPreview,
   ListAssetsInput,
   ListAssetsResult,
   PreviewAssetInput,
   SearchInput,
   SearchResult,
-  StartUploadInput,
-  UploadJobStatus,
-  UploadSource,
 } from '../../shared/ipc';
+import {
+  assetMetadataToItem,
+  getE2EFixtureAsset,
+  listE2EFixtureAssetMetadata,
+} from './e2e-fixture/e2e-fixture-asset-store';
+
+export {
+  deleteE2EFixtureAsset,
+  getE2EFixtureAsset,
+  hasE2EFixtureAsset,
+  resolveE2EFixtureAssetCount,
+  saveE2EFixtureAsset,
+  seedE2EFixtureAssets,
+} from './e2e-fixture/e2e-fixture-asset-store';
+export { runE2EFixtureUploadJob } from './e2e-fixture/e2e-fixture-upload-runner';
 
 export const E2E_FIXTURE_PROFILE_ID = 'e2e-fixture-profile';
 export const E2E_FIXTURE_PUBLIC_BASE_URL = 'https://cdn.lumabin-e2e.local/assets';
@@ -110,144 +119,11 @@ const E2E_FIXTURE_SVG_PREVIEWS: Record<string, string> = {
     </svg>
   `,
 };
-const E2E_FIXTURE_UPLOAD_DELAY_MS = 80;
-const E2E_FIXTURE_BASE_ASSET_COUNT = 3;
-const E2E_FIXTURE_MAX_ASSET_COUNT = 2_000;
-
-const e2eFixtureAssets = new Map<string, AssetMetadata>();
-
-interface RunE2EFixtureUploadJobDependencies {
-  createEtagSuffix(): string;
-  getDefaultConflictPolicy(): StartUploadInput['conflictPolicy'];
-  inferContentTypeFromKey(key: string): string;
-  normalizeDestinationPrefix(value: string): string;
-  nowIso(): string;
-  sourceRelativePathOrFileName(source: UploadSource, resolvedFileName?: string): string;
-  splitFileName(fileName: string): { stem: string; ext: string };
-  updateUploadJob(jobId: string, updater: (job: UploadJobStatus) => UploadJobStatus): void;
-}
-
-const toAssetItem = (metadata: AssetMetadata): AssetItem => ({
-  key: metadata.key,
-  size: metadata.size,
-  contentType: metadata.contentType,
-  lastModified: metadata.lastModified,
-  etag: metadata.etag,
-});
-
-const createE2EFixtureAsset = (options: {
-  key: string;
-  contentType: string;
-  size: number;
-  offsetMinutes: number;
-}): AssetMetadata => {
-  const timestamp = new Date(Date.now() - options.offsetMinutes * 60_000).toISOString();
-  return {
-    key: options.key,
-    size: options.size,
-    contentType: options.contentType,
-    lastModified: timestamp,
-    etag: `"e2e-${options.key}"`,
-    metadata: {
-      source: 'e2e-fixture',
-      captured_at: timestamp,
-    },
-  };
-};
-
-const createDenseE2EFixtureAsset = (index: number): AssetMetadata => {
-  const assetNumber = index + 1;
-  const paddedNumber = String(assetNumber).padStart(4, '0');
-  const extensionByKind = ['jpg', 'png', 'webp', 'csv', 'pdf'];
-  const contentTypeByKind = [
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    'text/csv',
-    'application/pdf',
-  ];
-  const kindIndex = index % extensionByKind.length;
-
-  return createE2EFixtureAsset({
-    key: `photos/2026/03/dense/lumabin-fixture-${paddedNumber}.${extensionByKind[kindIndex]}`,
-    contentType: contentTypeByKind[kindIndex],
-    size: 84_000 + (index % 37) * 3_200,
-    offsetMinutes: 120 + index,
-  });
-};
-
-export const resolveE2EFixtureAssetCount = (
-  value = process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT,
-): number => {
-  if (!value) {
-    return E2E_FIXTURE_BASE_ASSET_COUNT;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed)) {
-    return E2E_FIXTURE_BASE_ASSET_COUNT;
-  }
-
-  return Math.max(
-    E2E_FIXTURE_BASE_ASSET_COUNT,
-    Math.min(parsed, E2E_FIXTURE_MAX_ASSET_COUNT),
-  );
-};
 
 export const isE2EFixtureProfile = (
   isFixtureMode: boolean,
   profileId: string,
 ): boolean => isFixtureMode && profileId === E2E_FIXTURE_PROFILE_ID;
-
-export const seedE2EFixtureAssets = (options?: { assetCount?: number }): void => {
-  e2eFixtureAssets.clear();
-  const seeded = [
-    createE2EFixtureAsset({
-      key: 'photos/2026/05/editorial-workspace.svg',
-      contentType: 'image/svg+xml',
-      size: 126_000,
-      offsetMinutes: 4,
-    }),
-    createE2EFixtureAsset({
-      key: 'photos/2026/05/mountain-glass.svg',
-      contentType: 'image/svg+xml',
-      size: 98_400,
-      offsetMinutes: 35,
-    }),
-    createE2EFixtureAsset({
-      key: 'photos/2026/05/studio-archive.svg',
-      contentType: 'image/svg+xml',
-      size: 138_700,
-      offsetMinutes: 68,
-    }),
-  ];
-  const targetAssetCount = options?.assetCount ?? resolveE2EFixtureAssetCount();
-  const additionalAssetCount = Math.max(0, targetAssetCount - seeded.length);
-  for (let index = 0; index < additionalAssetCount; index += 1) {
-    seeded.push(createDenseE2EFixtureAsset(index));
-  }
-
-  for (const asset of seeded) {
-    e2eFixtureAssets.set(asset.key, asset);
-  }
-};
-
-export const hasE2EFixtureAsset = (key: string): boolean =>
-  e2eFixtureAssets.has(key);
-
-export const getE2EFixtureAsset = (
-  key: string,
-): AssetMetadata | undefined => e2eFixtureAssets.get(key);
-
-export const saveE2EFixtureAsset = (
-  key: string,
-  metadata: AssetMetadata,
-): void => {
-  e2eFixtureAssets.set(key, metadata);
-};
-
-export const deleteE2EFixtureAsset = (key: string): boolean =>
-  e2eFixtureAssets.delete(key);
 
 export const listE2EFixtureAssets = (
   input: ListAssetsInput,
@@ -255,13 +131,13 @@ export const listE2EFixtureAssets = (
 ): ListAssetsResult => {
   recordStorageMetric('listCalls');
   const normalizedPrefix = normalizeDestinationPrefix(input.prefix ?? '');
-  const allItems = [...e2eFixtureAssets.values()]
+  const allItems = listE2EFixtureAssetMetadata()
     .filter((asset) => asset.key.startsWith(normalizedPrefix))
     .sort(
       (left, right) =>
         new Date(right.lastModified).getTime() - new Date(left.lastModified).getTime(),
     )
-    .map(toAssetItem);
+    .map(assetMetadataToItem);
 
   const limit = Math.max(1, Math.min(input.limit ?? 300, 2_000));
   const offset = Number.parseInt(input.continuationToken ?? '0', 10);
@@ -279,7 +155,7 @@ export const listE2EFixtureAssets = (
 };
 
 export const previewE2EFixtureAsset = (input: PreviewAssetInput): AssetPreview => {
-  const metadata = e2eFixtureAssets.get(input.key);
+  const metadata = getE2EFixtureAsset(input.key);
   if (!metadata) {
     recordStorageFailure();
     throw new Error(`Asset not found: ${input.key}`);
@@ -343,113 +219,12 @@ export const previewE2EFixtureAsset = (input: PreviewAssetInput): AssetPreview =
 export const queryE2EFixtureAssets = (input: SearchInput): SearchResult => {
   const query = input.query.toLowerCase().trim();
   const limit = Math.max(1, Math.min(input.limit ?? 300, 2_000));
-  const items = [...e2eFixtureAssets.values()]
-    .map(toAssetItem)
+  const items = listE2EFixtureAssetMetadata()
+    .map(assetMetadataToItem)
     .filter((item) => (query ? item.key.toLowerCase().includes(query) : true))
     .slice(0, limit);
   return {
     items,
     total: items.length,
   };
-};
-
-const resolveE2EUploadDestinationKey = (
-  destinationPrefix: string,
-  source: UploadSource,
-  conflictPolicy: StartUploadInput['conflictPolicy'],
-  dependencies: RunE2EFixtureUploadJobDependencies,
-  sourceFileName?: string,
-): string | null => {
-  const sourceRelativePath = dependencies.sourceRelativePathOrFileName(
-    source,
-    sourceFileName,
-  );
-  const fileName = basename(sourceRelativePath);
-  const normalizedPrefix = dependencies.normalizeDestinationPrefix(destinationPrefix);
-  const initialKey = `${normalizedPrefix}${sourceRelativePath}`;
-  const policy = conflictPolicy ?? dependencies.getDefaultConflictPolicy();
-
-  if (!e2eFixtureAssets.has(initialKey)) {
-    return initialKey;
-  }
-  if (policy === 'overwrite') {
-    return initialKey;
-  }
-  if (policy === 'skip') {
-    return null;
-  }
-
-  const sourceDirectory =
-    sourceRelativePath.lastIndexOf('/') >= 0
-      ? sourceRelativePath.slice(0, sourceRelativePath.lastIndexOf('/') + 1)
-      : '';
-  const { stem, ext } = dependencies.splitFileName(fileName);
-  for (let index = 1; index < 1_000; index += 1) {
-    const renamedRelativePath = `${sourceDirectory}${stem}-${index}${ext}`;
-    const renamedKey = `${normalizedPrefix}${renamedRelativePath}`;
-    if (!e2eFixtureAssets.has(renamedKey)) {
-      return renamedKey;
-    }
-  }
-
-  throw new Error(`Unable to allocate renamed key for ${fileName}`);
-};
-
-export const runE2EFixtureUploadJob = async (
-  jobId: string,
-  input: StartUploadInput,
-  dependencies: RunE2EFixtureUploadJobDependencies,
-): Promise<void> => {
-  dependencies.updateUploadJob(jobId, (job) => ({
-    ...job,
-    status: 'running',
-    updatedAt: dependencies.nowIso(),
-  }));
-
-  for (const source of input.sources) {
-    const destinationKey = resolveE2EUploadDestinationKey(
-      input.destinationPrefix,
-      source,
-      input.conflictPolicy,
-      dependencies,
-    );
-    if (!destinationKey) {
-      dependencies.updateUploadJob(jobId, (job) => ({
-        ...job,
-        completedItems: job.completedItems + 1,
-        updatedAt: dependencies.nowIso(),
-      }));
-      continue;
-    }
-
-    const now = dependencies.nowIso();
-    const contentType = dependencies.inferContentTypeFromKey(destinationKey);
-    e2eFixtureAssets.set(destinationKey, {
-      key: destinationKey,
-      size: source.size,
-      contentType,
-      lastModified: now,
-      etag: `"e2e-upload-${dependencies.createEtagSuffix()}"`,
-      metadata: {
-        source: 'e2e-upload',
-        uploaded_at: now,
-      },
-    });
-    dependencies.updateUploadJob(jobId, (job) => ({
-      ...job,
-      completedItems: job.completedItems + 1,
-      updatedAt: dependencies.nowIso(),
-    }));
-  }
-
-  await new Promise((resolve) => {
-    setTimeout(resolve, E2E_FIXTURE_UPLOAD_DELAY_MS);
-  });
-
-  dependencies.updateUploadJob(jobId, (job) => ({
-    ...job,
-    status: 'done',
-    lastError: '',
-    updatedAt: dependencies.nowIso(),
-  }));
 };

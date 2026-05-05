@@ -4,12 +4,20 @@ import {
   resetDevMetrics,
 } from '../../src/main/dev-metrics';
 import {
+  hasE2EFixtureAsset,
   listE2EFixtureAssets,
   previewE2EFixtureAsset,
   queryE2EFixtureAssets,
   resolveE2EFixtureAssetCount,
+  runE2EFixtureUploadJob,
   seedE2EFixtureAssets,
 } from '../../src/main/adapters/e2e-fixture-storage-adapter';
+import {
+  normalizeDestinationPrefix,
+  sourceRelativePathOrFileName,
+  splitFileName,
+} from '../../src/main/adapters/upload-planning-adapter';
+import type { UploadJobStatus } from '../../src/shared/ipc';
 
 const normalizePrefix = (value: string): string => value.replace(/^\/+/, '');
 
@@ -83,5 +91,52 @@ describe('e2e fixture storage adapter', () => {
     expect(metrics.storage.getCalls).toBe(1);
     expect(metrics.storage.bytesDownloaded).toBeGreaterThan(0);
     expect(metrics.storage.failures).toBe(0);
+  });
+
+  it('keeps fixture uploads in the local bucket with rename conflict handling', async () => {
+    let job: UploadJobStatus = {
+      id: 'fixture-upload-1',
+      profileId: 'e2e-fixture-profile',
+      status: 'queued',
+      destinationPrefix: 'photos/2026/05',
+      conflictPolicy: 'rename',
+      totalItems: 1,
+      completedItems: 0,
+      failedItems: 0,
+      failedSources: [],
+      updatedAt: '2026-05-05T00:00:00.000Z',
+    };
+
+    await runE2EFixtureUploadJob(
+      job.id,
+      {
+        profileId: 'e2e-fixture-profile',
+        destinationPrefix: 'photos/2026/05',
+        conflictPolicy: 'rename',
+        sources: [
+          {
+            path: '/tmp/editorial-workspace.svg',
+            size: 12_345,
+          },
+        ],
+      },
+      {
+        createEtagSuffix: () => 'test',
+        getDefaultConflictPolicy: () => 'rename',
+        inferContentTypeFromKey: () => 'image/svg+xml',
+        normalizeDestinationPrefix,
+        nowIso: () => '2026-05-05T00:00:01.000Z',
+        sourceRelativePathOrFileName,
+        splitFileName,
+        updateUploadJob: (_jobId, updater) => {
+          job = updater(job);
+        },
+      },
+    );
+
+    expect(hasE2EFixtureAsset('photos/2026/05/editorial-workspace.svg')).toBe(true);
+    expect(hasE2EFixtureAsset('photos/2026/05/editorial-workspace-1.svg')).toBe(true);
+    expect(job.status).toBe('done');
+    expect(job.completedItems).toBe(1);
   });
 });
