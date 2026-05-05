@@ -34,6 +34,7 @@ const verification = {
   bundleMetadata: process.platform === 'darwin' ? false : 'skipped-non-darwin',
   codesign: process.platform === 'darwin' ? false : 'skipped-non-darwin',
   developerIdAuthority: enableMacSign ? false : 'not-required',
+  hardenedRuntime: enableMacSign ? false : 'not-required',
   teamIdentifier: enableMacSign ? false : 'not-required',
   spctlAssess: enableMacSign ? false : 'not-required',
   staplerValidate: enableMacSign ? false : 'not-required',
@@ -42,6 +43,11 @@ const bundleMetadata = {
   bundleId: null,
   bundleName: null,
   shortVersion: null,
+};
+const signingMetadata = {
+  authority: null,
+  teamIdentifier: null,
+  hardenedRuntime: null,
 };
 
 const runCapture = (command, args, options = {}) => {
@@ -148,13 +154,24 @@ try {
     verification.codesign = true;
     if (enableMacSign) {
       const codesignDetails = runCapture('codesign', ['-dv', '--verbose=4', appPath]);
-      if (!codesignDetails.includes('Authority=Developer ID Application:')) {
+      const authority = codesignDetails
+        .split('\n')
+        .find((line) => line.startsWith('Authority=Developer ID Application:'));
+      if (!authority) {
         throw new Error('signed release artifact is not signed with Developer ID Application authority');
       }
+      signingMetadata.authority = authority.replace(/^Authority=/, '');
       verification.developerIdAuthority = true;
-      if (process.env.LUMABIN_APPLE_TEAM_ID && !codesignDetails.includes(`TeamIdentifier=${process.env.LUMABIN_APPLE_TEAM_ID}`)) {
+      if (!/\bflags=.*\bruntime\b/.test(codesignDetails)) {
+        throw new Error('signed release artifact is missing hardened runtime');
+      }
+      signingMetadata.hardenedRuntime = true;
+      verification.hardenedRuntime = true;
+      const teamIdentifier = codesignDetails.match(/^TeamIdentifier=(.+)$/m)?.[1] ?? null;
+      if (process.env.LUMABIN_APPLE_TEAM_ID && teamIdentifier !== process.env.LUMABIN_APPLE_TEAM_ID) {
         throw new Error(`signed release artifact TeamIdentifier does not match LUMABIN_APPLE_TEAM_ID`);
       }
+      signingMetadata.teamIdentifier = teamIdentifier;
       verification.teamIdentifier = true;
       runCapture('spctl', ['--assess', '--type', 'execute', '--verbose', appPath]);
       verification.spctlAssess = true;
@@ -185,6 +202,9 @@ const evidence = {
   signing: {
     mode: enableMacSign ? 'signed' : 'unsigned-ad-hoc',
     bundleId: expectedBundleId,
+    authority: signingMetadata.authority,
+    teamIdentifier: signingMetadata.teamIdentifier,
+    hardenedRuntime: signingMetadata.hardenedRuntime,
   },
   artifact: {
     path: path.relative(projectRoot, latestZipPath),

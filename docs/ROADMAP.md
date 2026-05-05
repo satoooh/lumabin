@@ -41,7 +41,7 @@ LumaBin は public preview として利用可能な状態です。
 
 - Issue: [#3 Evaluate Developer ID signing and notarization](https://github.com/satoooh/lumabin/issues/3)
 - 目的: signed / notarized 配布に必要な Apple credentials を設定し、実リリースで検証する
-- 完了条件: `LUMABIN_ENABLE_MAC_SIGN=1` の release run が成功し、Release evidence で Developer ID authority / stapler validation が確認できる
+- 完了条件: `LUMABIN_ENABLE_MAC_SIGN=1` の release run が成功し、Release evidence で Developer ID authority / hardened runtime / stapler validation が確認できる
 
 ### 4. Public performance benchmark
 
