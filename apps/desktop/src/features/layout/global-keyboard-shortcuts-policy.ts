@@ -42,6 +42,24 @@ interface WorkspaceKeyboardModalState {
 }
 
 export type QuickPreviewKeyboardAction = 'close' | 'move-next' | 'move-previous' | 'ignore';
+export type WorkspaceKeyboardShortcutIntent =
+  | 'decrease-gallery-tile-size'
+  | 'focus-search'
+  | 'ignore'
+  | 'increase-gallery-tile-size'
+  | 'reset-gallery-tile-size'
+  | 'select-all-visible'
+  | 'toggle-shortcut-help';
+
+interface ResolveWorkspaceKeyboardShortcutIntentOptions {
+  hasAltModifier: boolean;
+  hasCommandModifier: boolean;
+  hasShiftModifier: boolean;
+  isSelectionMode: boolean;
+  isTypingElement: boolean;
+  key: string;
+  viewMode: 'gallery' | 'list';
+}
 
 export const isEditableKeyboardTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
@@ -99,6 +117,47 @@ export const resolveQuickPreviewKeyboardAction = (
   if (key === ' ' || key === 'Spacebar' || key === 'Enter') {
     return 'close';
   }
+  return 'ignore';
+};
+
+export const resolveWorkspaceKeyboardShortcutIntent = ({
+  hasAltModifier,
+  hasCommandModifier,
+  hasShiftModifier,
+  isSelectionMode,
+  isTypingElement,
+  key,
+  viewMode,
+}: ResolveWorkspaceKeyboardShortcutIntentOptions): WorkspaceKeyboardShortcutIntent => {
+  const normalizedKey = key.toLowerCase();
+
+  if (hasCommandModifier && normalizedKey === 'k') {
+    return 'focus-search';
+  }
+
+  if (hasCommandModifier && normalizedKey === 'a' && isSelectionMode) {
+    return 'select-all-visible';
+  }
+
+  if (hasCommandModifier && viewMode === 'gallery') {
+    if (key === '=' || key === '+') {
+      return 'increase-gallery-tile-size';
+    }
+    if (key === '-' || key === '_') {
+      return 'decrease-gallery-tile-size';
+    }
+    if (key === '0') {
+      return 'reset-gallery-tile-size';
+    }
+  }
+
+  if (
+    isShortcutHelpHotkey(key, hasCommandModifier, hasAltModifier, hasShiftModifier) &&
+    !isTypingElement
+  ) {
+    return 'toggle-shortcut-help';
+  }
+
   return 'ignore';
 };
 

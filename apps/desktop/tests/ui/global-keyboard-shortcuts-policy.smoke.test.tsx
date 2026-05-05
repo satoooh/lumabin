@@ -7,6 +7,7 @@ import {
   resolveGalleryNavigationIndex,
   resolveLinearNavigationIndex,
   resolveQuickPreviewKeyboardAction,
+  resolveWorkspaceKeyboardShortcutIntent,
   type GalleryDaySectionLite,
   type GalleryGridLocation,
 } from '../../src/features/layout/global-keyboard-shortcuts-policy';
@@ -32,6 +33,86 @@ describe('global keyboard shortcuts policy', () => {
     expect(isShortcutHelpHotkey('/', true, false, true)).toBe(false);
     expect(isGalleryNavigationKey('PageDown')).toBe(true);
     expect(isGalleryNavigationKey('Enter')).toBe(false);
+  });
+
+  it('resolves high-level workspace shortcut intents before command execution', () => {
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: true,
+        hasShiftModifier: false,
+        isSelectionMode: false,
+        isTypingElement: true,
+        key: 'k',
+        viewMode: 'gallery',
+      }),
+    ).toBe('focus-search');
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: true,
+        hasShiftModifier: false,
+        isSelectionMode: true,
+        isTypingElement: false,
+        key: 'a',
+        viewMode: 'list',
+      }),
+    ).toBe('select-all-visible');
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: true,
+        hasShiftModifier: false,
+        isSelectionMode: false,
+        isTypingElement: false,
+        key: '+',
+        viewMode: 'gallery',
+      }),
+    ).toBe('increase-gallery-tile-size');
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: true,
+        hasShiftModifier: false,
+        isSelectionMode: false,
+        isTypingElement: false,
+        key: '-',
+        viewMode: 'gallery',
+      }),
+    ).toBe('decrease-gallery-tile-size');
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: true,
+        hasShiftModifier: false,
+        isSelectionMode: false,
+        isTypingElement: false,
+        key: '0',
+        viewMode: 'gallery',
+      }),
+    ).toBe('reset-gallery-tile-size');
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: false,
+        hasShiftModifier: false,
+        isSelectionMode: false,
+        isTypingElement: false,
+        key: '?',
+        viewMode: 'gallery',
+      }),
+    ).toBe('toggle-shortcut-help');
+    expect(
+      resolveWorkspaceKeyboardShortcutIntent({
+        hasAltModifier: false,
+        hasCommandModifier: true,
+        hasShiftModifier: false,
+        isSelectionMode: false,
+        isTypingElement: false,
+        key: '+',
+        viewMode: 'list',
+      }),
+    ).toBe('ignore');
   });
 
   it('resolves modal blocking, quick-preview keys, and bounded linear movement', () => {
