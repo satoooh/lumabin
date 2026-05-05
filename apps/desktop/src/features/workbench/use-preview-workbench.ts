@@ -27,7 +27,7 @@ type PreviewOwnedOverlayInput = Omit<
   'assetManagement' | 'assetManagementCommands'
 >;
 
-interface UsePreviewWorkbenchOptions {
+export interface PreviewWorkbenchOptions {
   assetItemRefs: RefObject<Map<string, HTMLButtonElement>>;
   assetPreviewApi: AssetPreviewApi;
   copiedLabel: string;
@@ -73,7 +73,7 @@ export const usePreviewWorkbench = ({
   setSelectedAssetKey,
   sharingApi,
   setStatusLine,
-}: UsePreviewWorkbenchOptions) => {
+}: PreviewWorkbenchOptions) => {
   const [presignedGetUrl, setPresignedGetUrl] = useState<string>('');
   const [presignedPutUrl, setPresignedPutUrl] = useState<string>('');
   const [isSharingBusy, setIsSharingBusy] = useState<boolean>(false);

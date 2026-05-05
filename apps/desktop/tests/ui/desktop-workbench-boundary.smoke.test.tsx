@@ -15,6 +15,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-overlay-coordination.ts'),
       'utf8',
     );
+    const desktopWorkbenchPreviewCoordinationSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/desktop-workbench-preview-coordination.ts'),
+      'utf8',
+    );
     const desktopWorkbenchMainPresentersSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-main-presenters.ts'),
       'utf8',
@@ -113,6 +117,9 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).toContain(
       "import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';",
     );
+    expect(workbenchSource).toContain(
+      "import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';",
+    );
     expect(desktopWorkbenchOverlayCoordinationSource).toContain("from './desktop-workbench-overlays';");
     expect(desktopWorkbenchOverlayCoordinationSource).toContain(
       'createDesktopWorkbenchConnectionSetupCommands',
@@ -196,6 +203,13 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).not.toContain('const shellUi = useDesktopWorkbenchShell({');
     expect(workbenchSource).not.toContain('showStatusStrip,\n    canClearSearch');
     expect(workbenchSource).toContain("import { usePreviewWorkbench } from './use-preview-workbench';");
+    expect(desktopWorkbenchPreviewCoordinationSource).toContain(
+      "import type { PreviewWorkbenchOptions } from './use-preview-workbench';",
+    );
+    expect(desktopWorkbenchPreviewCoordinationSource).toContain(
+      'createDesktopWorkbenchPreviewCoordinationInput',
+    );
+    expect(workbenchSource).not.toContain('usePreviewWorkbench({');
     expect(workbenchSource).toContain("import { useUploadWorkbench } from './use-upload-workbench';");
     expect(workbenchSource).toContain("import { useAssetActionsWorkbench } from './use-asset-actions-workbench';");
     expect(workbenchSource).toContain(

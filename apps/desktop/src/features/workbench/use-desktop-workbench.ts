@@ -1,6 +1,7 @@
 import type { DesktopApiGateway } from '../shared/desktop-api-gateway';
 import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';
 import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';
+import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
 import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';
 import { useAssetActionsWorkbench } from './use-asset-actions-workbench';
@@ -216,29 +217,41 @@ export const useDesktopWorkbench = ({
     openQuickPreviewForItem,
     quickPreviewOverlayInput,
     setIsQuickPreviewOpen,
-  } = usePreviewWorkbench({
-    assetItemRefs,
-    assetPreviewApi: desktopApi.assetLibrary,
-    copiedLabel,
-    focusAssetItemByKey,
-    isConnectionSetupOpen,
-    isPreviewableKind,
-    isSelectionMode,
-    markAssetAsRecentlyViewed,
-    markCopied,
-    presignedUrlTTLSeconds: settings.presignedUrlTTLSeconds,
-    previewMediaItems,
-    pushInlineFeedback,
-    scrollToAssetInCurrentView,
-    selectedAsset,
-    selectedAssetKey,
-    selectedAssetMetadataPublicBaseUrl: selectedPublicBaseUrl,
-    selectedPreviewItemIndex,
-    selectedProfileId,
-    setSelectedAssetKey,
-    sharingApi: desktopApi.assetSharing,
-    setStatusLine,
-  });
+  } = usePreviewWorkbench(
+    createDesktopWorkbenchPreviewCoordinationInput({
+      api: {
+        assetPreviewApi: desktopApi.assetLibrary,
+        sharingApi: desktopApi.assetSharing,
+      },
+      feedback: {
+        copiedLabel,
+        markCopied,
+        pushInlineFeedback,
+        setStatusLine,
+      },
+      gallery: {
+        assetItemRefs,
+        focusAssetItemByKey,
+        isPreviewableKind,
+        markAssetAsRecentlyViewed,
+        previewMediaItems,
+        scrollToAssetInCurrentView,
+        selectedPreviewItemIndex,
+        setSelectedAssetKey,
+      },
+      previewState: {
+        isConnectionSetupOpen,
+        isSelectionMode,
+        selectedAsset,
+        selectedAssetKey,
+      },
+      profile: {
+        presignedUrlTTLSeconds: settings.presignedUrlTTLSeconds,
+        selectedAssetMetadataPublicBaseUrl: selectedPublicBaseUrl,
+        selectedProfileId,
+      },
+    }),
+  );
 
   const {
     handleProfileDeleted,
