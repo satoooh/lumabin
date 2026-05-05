@@ -9,7 +9,6 @@
     "noImplicitAny": true,
     "jsx": "react-jsx",
     "sourceMap": true,
-    "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "bundler",
     "resolveJsonModule": true
