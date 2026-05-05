@@ -32,6 +32,16 @@ interface ResolveLoadedGalleryThumbnailStateResult {
   snapshot: GalleryThumbnailStateSnapshot;
 }
 
+interface ResolveStartedGalleryThumbnailLoadingStateResult {
+  snapshot: GalleryThumbnailStateSnapshot;
+  startedCacheKeys: string[];
+}
+
+interface ResolveClearedGalleryThumbnailLoadingStateResult {
+  clearedCacheKeys: string[];
+  snapshot: GalleryThumbnailStateSnapshot;
+}
+
 const removeRecordKey = <T>(
   record: Record<string, T>,
   key: string,
@@ -42,6 +52,58 @@ const removeRecordKey = <T>(
   const nextRecord = { ...record };
   delete nextRecord[key];
   return nextRecord;
+};
+
+export const resolveStartedGalleryThumbnailLoadingState = (
+  snapshot: GalleryThumbnailStateSnapshot,
+  cacheKeys: string[],
+): ResolveStartedGalleryThumbnailLoadingStateResult => {
+  const loadingByCacheKey = { ...snapshot.loadingByCacheKey };
+  const startedCacheKeys: string[] = [];
+
+  for (const cacheKey of cacheKeys) {
+    if (loadingByCacheKey[cacheKey]) {
+      continue;
+    }
+    loadingByCacheKey[cacheKey] = true;
+    startedCacheKeys.push(cacheKey);
+  }
+
+  return {
+    snapshot: startedCacheKeys.length > 0
+      ? {
+          ...snapshot,
+          loadingByCacheKey,
+        }
+      : snapshot,
+    startedCacheKeys,
+  };
+};
+
+export const resolveClearedGalleryThumbnailLoadingState = (
+  snapshot: GalleryThumbnailStateSnapshot,
+  cacheKeys: string[],
+): ResolveClearedGalleryThumbnailLoadingStateResult => {
+  let loadingByCacheKey = snapshot.loadingByCacheKey;
+  const clearedCacheKeys: string[] = [];
+
+  for (const cacheKey of cacheKeys) {
+    if (!loadingByCacheKey[cacheKey]) {
+      continue;
+    }
+    loadingByCacheKey = removeRecordKey(loadingByCacheKey, cacheKey);
+    clearedCacheKeys.push(cacheKey);
+  }
+
+  return {
+    clearedCacheKeys,
+    snapshot: clearedCacheKeys.length > 0
+      ? {
+          ...snapshot,
+          loadingByCacheKey,
+        }
+      : snapshot,
+  };
 };
 
 export const resolveFailedGalleryThumbnailState = ({
