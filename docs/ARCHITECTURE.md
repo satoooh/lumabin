@@ -162,6 +162,7 @@ apps/desktop/src/
 │       ├── use-asset-command-flow-workbench.ts
 │       ├── use-desktop-workbench-feedback.ts
 │       ├── use-desktop-workbench.ts
+│       ├── use-desktop-workbench-preview-surface.ts
 │       ├── use-desktop-workbench-shell.ts
 │       ├── use-desktop-workbench-shell-coordination.ts
 │       ├── use-desktop-workbench-shell-resources.ts
