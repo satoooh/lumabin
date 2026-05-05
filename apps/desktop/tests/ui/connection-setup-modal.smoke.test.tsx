@@ -1,5 +1,6 @@
 import { createRef } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConnectionSetupModal } from '../../src/features/settings/connection-setup-modal';
 import type { SaveProfileInput } from '../../src/shared/ipc';
@@ -14,7 +15,13 @@ const baseProfileForm: SaveProfileInput = {
   secretAccessKey: 'secret-key',
 };
 
-const renderModal = (profileForm: SaveProfileInput) =>
+const renderModal = (
+  profileForm: SaveProfileInput,
+  options?: {
+    onDeleteProfile?: () => Promise<void> | void;
+    selectedProfileId?: string;
+  },
+) =>
   render(
     <ConnectionSetupModal
       allowStoredSecret={false}
@@ -24,7 +31,7 @@ const renderModal = (profileForm: SaveProfileInput) =>
       isProfileBusy={false}
       onChangeR2AccountId={vi.fn()}
       onClose={vi.fn()}
-      onDeleteProfile={vi.fn()}
+      onDeleteProfile={options?.onDeleteProfile ?? vi.fn()}
       onSaveProfile={vi.fn()}
       onStartNewProfile={vi.fn()}
       profileAccessKeyInputRef={createRef<HTMLInputElement>()}
@@ -37,7 +44,7 @@ const renderModal = (profileForm: SaveProfileInput) =>
       profileRegionInputRef={createRef<HTMLInputElement>()}
       profileSecretKeyInputRef={createRef<HTMLInputElement>()}
       r2AccountId=""
-      selectedProfileId=""
+      selectedProfileId={options?.selectedProfileId ?? ''}
       setProfileForm={vi.fn()}
     />,
   );
@@ -69,5 +76,30 @@ describe('ConnectionSetupModal', () => {
     expect(screen.getByPlaceholderText('My S3 Profile…')).toBeTruthy();
     expect(screen.getByPlaceholderText('https://s3.example.com')).toBeTruthy();
     expect(screen.getByLabelText('R2 Account ID')).toHaveProperty('disabled', true);
+  });
+
+  it('requires confirmation before deleting a saved profile', async () => {
+    const user = userEvent.setup();
+    const onDeleteProfile = vi.fn();
+    renderModal(baseProfileForm, {
+      onDeleteProfile,
+      selectedProfileId: 'profile-1',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(onDeleteProfile).not.toHaveBeenCalled();
+    expect(screen.getByText('Delete Production assets?')).toBeTruthy();
+    expect(
+      screen.getByText('This removes the connection profile and its saved secret from this Mac.'),
+    ).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByText('Delete Production assets?')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }));
+
+    expect(onDeleteProfile).toHaveBeenCalledTimes(1);
   });
 });
