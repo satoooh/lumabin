@@ -1816,11 +1816,16 @@ kbd {
   overflow: auto;
 }
 
-.saved-view-list li,
+.saved-view-row__main,
 .prefix-list li,
 .metadata-list li {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.saved-view-row {
+  display: grid;
   gap: 8px;
 }
 
@@ -1846,6 +1851,34 @@ kbd {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.saved-view-delete-confirmation {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fff1f2;
+  padding: 10px;
+}
+
+.saved-view-delete-confirmation__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: #7f1d1d;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.saved-view-delete-confirmation__copy strong {
+  color: #7f1d1d;
+}
+
+.saved-view-delete-confirmation__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .icon-button {
