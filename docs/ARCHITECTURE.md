@@ -159,6 +159,7 @@ apps/desktop/src/
 │       ├── desktop-workbench-topbar-coordination.ts
 │       ├── desktop-workbench-topbar-handoffs.ts
 │       ├── use-asset-actions-workbench.ts
+│       ├── use-asset-command-flow-workbench.ts
 │       ├── use-desktop-workbench-feedback.ts
 │       ├── use-desktop-workbench.ts
 │       ├── use-desktop-workbench-shell.ts
