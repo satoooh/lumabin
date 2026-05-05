@@ -25,6 +25,22 @@ updates:
         update-types:
           - minor
           - patch
+      desktop-vite-toolchain-major:
+        patterns:
+          - vite
+          - "@vitejs/plugin-react"
+        update-types:
+          - major
+      desktop-eslint-toolchain-major:
+        patterns:
+          - eslint
+          - "@typescript-eslint/*"
+        update-types:
+          - major
+    ignore:
+      - dependency-name: "@electron/fuses"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
