@@ -3,7 +3,11 @@ import {
   useRef,
 } from 'react';
 import type { UploadJobStatus } from '../../shared/ipc';
-import { formatCount } from '../shared/format-count';
+import {
+  createUploadCompletionRefreshPlan,
+  formatUploadRefreshFailureMessage,
+  formatUploadRefreshSuccessMessage,
+} from './upload-completion-refresh-policy';
 import type { UploadQueueItem } from './upload-queue-persistence';
 
 interface UseUploadCompletionRefreshOptions {
@@ -35,30 +39,14 @@ export const useUploadCompletionRefresh = ({
       return;
     }
 
-    const liveJobIds = new Set(uploadQueue.map((job) => job.id));
-    for (const jobId of Object.keys(uploadTerminalStatusRef.current)) {
-      if (!liveJobIds.has(jobId)) {
-        delete uploadTerminalStatusRef.current[jobId];
-      }
-    }
-
-    const newlyTerminalJobs = uploadQueue.filter((job) => {
-      if (job.profileId !== selectedProfileId) {
-        return false;
-      }
-      if (job.status !== 'done' && job.status !== 'failed' && job.status !== 'canceled') {
-        return false;
-      }
-      const previousStatus = uploadTerminalStatusRef.current[job.id];
-      uploadTerminalStatusRef.current[job.id] = job.status;
-      return previousStatus !== job.status;
+    const refreshPlan = createUploadCompletionRefreshPlan({
+      previousTerminalStatuses: uploadTerminalStatusRef.current,
+      selectedProfileId,
+      uploadQueue,
     });
+    uploadTerminalStatusRef.current = refreshPlan.nextTerminalStatuses;
 
-    const uploadedItems = newlyTerminalJobs.reduce(
-      (sum, job) => sum + Math.max(0, job.completedItems),
-      0,
-    );
-    if (uploadedItems === 0) {
+    if (refreshPlan.uploadedItems === 0) {
       return;
     }
 
@@ -71,11 +59,11 @@ export const useUploadCompletionRefresh = ({
       void (async () => {
         try {
           await onGalleryRefresh();
-          onStatusLine(`Uploaded ${formatCount(uploadedItems, 'item')}. Gallery refreshed.`, 'success');
+          onStatusLine(formatUploadRefreshSuccessMessage(refreshPlan.uploadedItems), 'success');
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error';
           onStatusLine(
-            `Uploaded ${formatCount(uploadedItems, 'item')}, but refresh failed: ${message}`,
+            formatUploadRefreshFailureMessage(refreshPlan.uploadedItems, message),
             'error',
           );
         }
