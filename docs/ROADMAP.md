@@ -25,35 +25,17 @@ LumaBin は public preview として利用可能な状態です。
 
 ## 今後の重点テーマ
 
-### 1. Renderer境界の継続整理
-
-- Issue: [#1 Refine renderer workbench boundaries](https://github.com/satoooh/lumabin/issues/1)
-- 目的: Renderer 側の root composition を context 間の接続に集中させ、変更影響範囲をさらに狭める
-- 完了条件: `npm run smoke:ci` が通り、残す orchestration と切り出す presenter / workbench の判断が追える
-
-### 2. CI/E2E/Release workflow の安定運用
-
-- Issue: [#2 Track E2E and release workflow stability](https://github.com/satoooh/lumabin/issues/2)
-- 目的: nightly E2E や macOS packaging smoke の失敗を作業ログではなく issue で追跡する
-- 完了条件: 恒常フレークがあれば再現条件と修正方針が整理されている
-
-### 3. Developer ID signing / notarization の実運用化
+### 1. Developer ID signing / notarization の実運用化
 
 - Issue: [#3 Evaluate Developer ID signing and notarization](https://github.com/satoooh/lumabin/issues/3)
 - 目的: signed / notarized 配布に必要な Apple credentials を設定し、実リリースで検証する
 - 完了条件: `LUMABIN_ENABLE_MAC_SIGN=1` の release run が成功し、Release evidence で Developer ID authority / hardened runtime / stapler validation が確認できる
 
-### 4. Public performance benchmark
+### 2. Desktop toolchain major upgrade の計画移行
 
-- Issue: [#4 Define public performance benchmark routine](https://github.com/satoooh/lumabin/issues/4)
-- 目的: private profile の逐次ログではなく、公開可能な fixture benchmark で性能回帰を検出する
-- 完了条件: `npm run e2e:dense` と Dev Metrics snapshot の確認観点が明確になっている
-
-### 5. Provider互換性の明確化
-
-- Issue: [#5 Clarify R2 and generic S3 compatibility boundaries](https://github.com/satoooh/lumabin/issues/5)
-- 目的: R2 first / S3 ready の対応範囲を、仕様・サポート・回復導線として明確にする
-- 完了条件: `docs/REQUIREMENTS.md` と `docs/RUNBOOK.md` のprovider境界が現行実装と一致している
+- Issue: [#60 Plan desktop toolchain major upgrades](https://github.com/satoooh/lumabin/issues/60)
+- 目的: Dependabot の通常PRでは解けない major toolchain 更新を、互換性のある単位で計画的に移行する
+- 完了条件: 対象package familyごとの dedicated PR で `npm ci`、`npm run smoke:ci`、`Desktop CI` packaging smoke が通り、移行済みfamilyだけ Dependabot ignore を解除できる
 
 ## 完了済みマイルストーン
 
@@ -62,6 +44,10 @@ LumaBin は public preview として利用可能な状態です。
 - MVP: browse / upload / preview / search / share
 - Beta hardening: CI / packaging / release workflow / preview-upload recovery / cache-index limits
 - OSS公開: sanitized public history、Release asset、contribution docs、issue/PR templates、repository hygiene workflow
+- Renderer境界整理: root workbench を context handoff に寄せ、presenter / surface hook へ分離
+- CI/E2E/Release安定化: release artifact / launch smoke / dense E2E / Dev Metrics snapshot / release evidence の検証ゲートを整備
+- Public performance benchmark: `npm run e2e:dense` と Dev Metrics snapshot の公開fixture手順を定義
+- Provider互換性: R2 / generic S3 の Beta 対応範囲と非対応境界を `REQUIREMENTS.md` / `RUNBOOK.md` に統合
 
 ## 運用ルール
 
