@@ -5,6 +5,7 @@ import {
   planAssetRename,
   planBulkAssetMove,
   planBulkAssetMoveDialog,
+  planBulkAssetMoveCompletion,
   planQueuedAssetDeleteSelection,
   summarizeBulkAssetMoveResult,
 } from '../../src/features/gallery/asset-mutation-command-policy';
@@ -108,6 +109,26 @@ describe('asset mutation command policy', () => {
 
     expect(planBulkAssetMove(['photos/a.png', 'exports/a.png'], 'archive/')).toEqual({
       kind: 'duplicate-destination',
+    });
+  });
+
+  it('plans bulk move completion selection state from failed keys', () => {
+    expect(
+      planBulkAssetMoveCompletion({
+        failedKeys: ['photos/a.png'],
+      }),
+    ).toEqual({
+      isSelectionMode: true,
+      selectedAssetKeys: ['photos/a.png'],
+    });
+
+    expect(
+      planBulkAssetMoveCompletion({
+        failedKeys: [],
+      }),
+    ).toEqual({
+      isSelectionMode: false,
+      selectedAssetKeys: [],
     });
   });
 

@@ -43,6 +43,11 @@ export interface BulkAssetMoveDialogPlan {
   keys: string[];
 }
 
+export interface BulkAssetMoveCompletionPlan {
+  isSelectionMode: boolean;
+  selectedAssetKeys: string[];
+}
+
 export type BulkAssetMovePlan =
   | {
       kind: 'ready';
@@ -174,6 +179,15 @@ export const planBulkAssetMove = (
     skippedCount,
   };
 };
+
+export const planBulkAssetMoveCompletion = ({
+  failedKeys,
+}: {
+  failedKeys: string[];
+}): BulkAssetMoveCompletionPlan => ({
+  isSelectionMode: failedKeys.length > 0,
+  selectedAssetKeys: [...failedKeys],
+});
 
 export const planQueuedAssetDeleteSelection = (
   targetKey: string,

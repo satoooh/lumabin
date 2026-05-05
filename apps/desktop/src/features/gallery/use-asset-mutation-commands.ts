@@ -7,6 +7,7 @@ import {
   planAssetMove,
   planAssetRename,
   planBulkAssetMove,
+  planBulkAssetMoveCompletion,
   planBulkAssetMoveDialog,
   planQueuedAssetDeleteSelection,
   summarizeBulkAssetMoveResult,
@@ -311,13 +312,9 @@ export const useAssetMutationCommands = ({
       setBulkMoveDialog(null);
       setIsQuickPreviewOpen(false);
 
-      if (failedKeys.length > 0) {
-        setIsSelectionMode(true);
-        setSelectedAssetKeys(failedKeys);
-      } else {
-        setSelectedAssetKeys([]);
-        setIsSelectionMode(false);
-      }
+      const completionPlan = planBulkAssetMoveCompletion({ failedKeys });
+      setSelectedAssetKeys(completionPlan.selectedAssetKeys);
+      setIsSelectionMode(completionPlan.isSelectionMode);
 
       const summary = summarizeBulkAssetMoveResult({
         failedCount: failedKeys.length,
