@@ -31,6 +31,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-topbar-coordination.ts'),
       'utf8',
     );
+    const desktopWorkbenchTopbarHandoffsSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/desktop-workbench-topbar-handoffs.ts'),
+      'utf8',
+    );
     const desktopWorkbenchCenterPaneCoordinationSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-center-pane-coordination.ts'),
       'utf8',
@@ -170,6 +174,15 @@ describe('desktop workbench boundary', () => {
       "import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';",
     );
     expect(workbenchSource).toContain(
+      "import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';",
+    );
+    expect(desktopWorkbenchTopbarHandoffsSource).toContain(
+      "import type { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';",
+    );
+    expect(desktopWorkbenchTopbarHandoffsSource).toContain(
+      'createDesktopWorkbenchTopbarCoordinationInput',
+    );
+    expect(workbenchSource).toContain(
       "import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';",
     );
     expect(workbenchSource).toContain(
@@ -213,6 +226,17 @@ describe('desktop workbench boundary', () => {
     expect(desktopWorkbenchTopbarCoordinationSource).toContain(
       'createDesktopWorkbenchTopbarProps',
     );
+    [
+      'assets: {\n      logoSrc',
+      'feedback: {\n      inlineFeedback',
+      'files: {\n      fileInputRef',
+      'profileMenu: {\n      closeProfileMenu',
+      'search: {\n      activeSearchQuery',
+      'state: {\n      isDropActive',
+      'workspaceActions: {\n      handleToggleShortcutHelp',
+    ].forEach((directTopbarHandoff) => {
+      expect(workbenchSource).not.toContain(directTopbarHandoff);
+    });
     expect(workbenchSource).not.toContain('createDesktopWorkbenchTopbarAssets');
     expect(workbenchSource).not.toContain('createDesktopWorkbenchTopbarProps');
     expect(desktopWorkbenchShellCoordinationSource).toContain("from './desktop-workbench-shell-inputs';");

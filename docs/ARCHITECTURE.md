@@ -155,6 +155,7 @@ apps/desktop/src/
 │       ├── desktop-workbench-overlays.ts
 │       ├── desktop-workbench-shell-inputs.ts
 │       ├── desktop-workbench-topbar-coordination.ts
+│       ├── desktop-workbench-topbar-handoffs.ts
 │       ├── use-asset-actions-workbench.ts
 │       ├── use-desktop-workbench-feedback.ts
 │       ├── use-desktop-workbench.ts
