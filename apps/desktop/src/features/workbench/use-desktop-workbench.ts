@@ -1,5 +1,4 @@
 import type { DesktopApiGateway } from '../shared/desktop-api-gateway';
-import { createDesktopWorkbenchShellProps } from './desktop-workbench-main-presenters';
 import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';
 import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
@@ -470,7 +469,7 @@ export const useDesktopWorkbench = ({
     visibleItems,
   });
 
-  const { shellUi } = useDesktopWorkbenchShellCoordination({
+  const { shellProps, shellUi } = useDesktopWorkbenchShellCoordination({
     dialogState: {
       hasAssetActionDialog: Boolean(assetActionDialog),
       hasBulkDeleteDialog: Boolean(bulkDeleteDialogKeys),
@@ -506,6 +505,14 @@ export const useDesktopWorkbench = ({
       onResetGalleryTileMinWidth: resetGalleryTileMinWidth,
     },
     onToggleShortcutHelp: handleToggleShortcutHelp,
+    shellChrome: {
+      dismissStatusLine,
+      isDropActive,
+      isTooltipWarm,
+      showGuidedStart,
+      status,
+      statusTone,
+    },
     keyboardQuickPreview: {
       isQuickPreviewOpen,
       onMoveQuickPreviewSelection: moveQuickPreviewSelection,
@@ -856,29 +863,14 @@ export const useDesktopWorkbench = ({
     },
   });
 
-  const {
-    appShellClassName,
-    isWorkspaceFocused,
-    isWorkspaceInert,
-    statusStripProps,
-  } = createDesktopWorkbenchShellProps({
-    dismissStatusLine,
-    isDropActive,
-    isTooltipWarm,
-    showGuidedStart,
-    showStatusStrip: shellUi.showStatusStrip,
-    status,
-    statusTone,
-  });
-
   return {
-    appShellClassName,
+    appShellClassName: shellProps.appShellClassName,
     appShellRef,
     appOverlaysProps,
     appTopbarProps,
-    isWorkspaceFocused,
-    isWorkspaceInert,
-    statusStripProps,
+    isWorkspaceFocused: shellProps.isWorkspaceFocused,
+    isWorkspaceInert: shellProps.isWorkspaceInert,
+    statusStripProps: shellProps.statusStripProps,
     workspaceCenterPaneProps,
   };
 };
