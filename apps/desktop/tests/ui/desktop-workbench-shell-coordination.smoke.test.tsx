@@ -50,6 +50,14 @@ describe('useDesktopWorkbenchShellCoordination', () => {
           onResetGalleryTileMinWidth: vi.fn(),
         },
         onToggleShortcutHelp: vi.fn(),
+        shellChrome: {
+          dismissStatusLine: vi.fn(),
+          isDropActive: false,
+          isTooltipWarm: true,
+          showGuidedStart: false,
+          status: 'Ready',
+          statusTone: 'success',
+        },
         keyboardQuickPreview: {
           isQuickPreviewOpen: true,
           onMoveQuickPreviewSelection: vi.fn(),
@@ -106,5 +114,9 @@ describe('useDesktopWorkbenchShellCoordination', () => {
     expect(result.current.shellUi.showStatusStrip).toBe(true);
     expect(result.current.shellUi.dropOverlayPrefixLabel).toBe('photos/');
     expect(result.current.shellUi.galleryRovingAssetKey).toBe(asset.key);
+    expect(result.current.shellProps.appShellClassName).toContain(
+      'app-shell--tooltips-warm',
+    );
+    expect(result.current.shellProps.statusStripProps.message).toBe('Ready');
   });
 });

@@ -19,6 +19,7 @@ import {
   createDesktopWorkbenchWorkspaceModalGuardsInput,
 } from './desktop-workbench-shell-inputs';
 import { normalizeAssetPrefix } from '../shared/asset-prefix';
+import { createDesktopWorkbenchShellProps } from './desktop-workbench-main-presenters';
 import { useDesktopWorkbenchShell } from './use-desktop-workbench-shell';
 
 type ShellDialogState = Parameters<
@@ -58,6 +59,10 @@ type UiDerivationGalleryState = Parameters<
 type UiDerivationDiagnostics = Parameters<
   typeof createDesktopWorkbenchUiDerivationDiagnostics
 >[0]['diagnostics'];
+type ShellChrome = Omit<
+  Parameters<typeof createDesktopWorkbenchShellProps>[0],
+  'showStatusStrip'
+>;
 
 interface UseDesktopWorkbenchShellCoordinationOptions {
   dialogEscapeCommands: DialogEscapeCommands;
@@ -68,6 +73,7 @@ interface UseDesktopWorkbenchShellCoordinationOptions {
   keyboardSearch: KeyboardSearch;
   keyboardSelection: KeyboardSelection;
   onToggleShortcutHelp: () => void;
+  shellChrome: ShellChrome;
   uiDerivationDiagnostics: UiDerivationDiagnostics;
   uiDerivationGalleryState: UiDerivationGalleryState;
   uiDerivationSearchState: UiDerivationSearchHandoff;
@@ -84,6 +90,7 @@ export const useDesktopWorkbenchShellCoordination = ({
   keyboardSearch,
   keyboardSelection,
   onToggleShortcutHelp,
+  shellChrome,
   uiDerivationDiagnostics,
   uiDerivationGalleryState,
   uiDerivationSearchState,
@@ -183,6 +190,10 @@ export const useDesktopWorkbenchShellCoordination = ({
 
   return {
     shellDialogState,
+    shellProps: createDesktopWorkbenchShellProps({
+      ...shellChrome,
+      showStatusStrip: shellUi.showStatusStrip,
+    }),
     shellUi,
   };
 };

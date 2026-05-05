@@ -122,7 +122,6 @@ describe('desktop workbench boundary', () => {
     expect(desktopWorkbenchOverlayCoordinationSource).toContain('createDesktopWorkbenchOverlayProps');
     expect(workbenchSource).not.toContain("from './desktop-workbench-overlays';");
     expect(workbenchSource).not.toContain('createDesktopWorkbenchQuickPreviewOverlayInput');
-    expect(workbenchSource).toContain("from './desktop-workbench-main-presenters';");
     expect(workbenchSource).toContain(
       "import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';",
     );
@@ -132,7 +131,12 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).toContain(
       "import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';",
     );
-    expect(workbenchSource).toContain('createDesktopWorkbenchShellProps');
+    expect(desktopWorkbenchShellCoordinationSource).toContain(
+      "from './desktop-workbench-main-presenters';",
+    );
+    expect(desktopWorkbenchShellCoordinationSource).toContain('createDesktopWorkbenchShellProps');
+    expect(workbenchSource).not.toContain('createDesktopWorkbenchShellProps');
+    expect(workbenchSource).not.toContain("from './desktop-workbench-main-presenters';");
     expect(desktopWorkbenchCenterPaneCoordinationSource).toContain(
       "from './desktop-workbench-main-presenters';",
     );
