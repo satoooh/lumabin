@@ -31,6 +31,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-main-presenters.ts'),
       'utf8',
     );
+    const desktopWorkbenchMainSurfacesSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/use-desktop-workbench-main-surfaces.ts'),
+      'utf8',
+    );
     const desktopWorkbenchTopbarCoordinationSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-topbar-coordination.ts'),
       'utf8',
@@ -146,9 +150,12 @@ describe('desktop workbench boundary', () => {
     expect(appSource).toContain("import { useDesktopWorkbench } from './features/workbench/use-desktop-workbench';");
     expect(appSource).not.toContain('useState');
     expect(workbenchSource).toContain(
+      "import { useDesktopWorkbenchMainSurfaces } from './use-desktop-workbench-main-surfaces';",
+    );
+    expect(workbenchSource).not.toContain(
       "import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';",
     );
-    expect(workbenchSource).toContain(
+    expect(workbenchSource).not.toContain(
       "import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';",
     );
     expect(workbenchSource).not.toContain(
@@ -177,6 +184,12 @@ describe('desktop workbench boundary', () => {
     expect(desktopWorkbenchOverlayHandoffsSource).toContain(
       'createDesktopWorkbenchOverlayCoordinationInput',
     );
+    expect(desktopWorkbenchMainSurfacesSource).toContain(
+      "import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';",
+    );
+    expect(desktopWorkbenchMainSurfacesSource).toContain(
+      "import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbench-overlay-handoffs';",
+    );
     [
       'quickPreviewAssetManagement: {',
       'quickPreviewAssetManagementCommands: {',
@@ -196,10 +209,16 @@ describe('desktop workbench boundary', () => {
     });
     expect(workbenchSource).not.toContain("from './desktop-workbench-overlays';");
     expect(workbenchSource).not.toContain('createDesktopWorkbenchQuickPreviewOverlayInput');
-    expect(workbenchSource).toContain(
+    expect(workbenchSource).not.toContain(
       "import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';",
     );
-    expect(workbenchSource).toContain(
+    expect(workbenchSource).not.toContain(
+      "import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';",
+    );
+    expect(desktopWorkbenchMainSurfacesSource).toContain(
+      "import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';",
+    );
+    expect(desktopWorkbenchMainSurfacesSource).toContain(
       "import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';",
     );
     expect(desktopWorkbenchTopbarHandoffsSource).toContain(
@@ -208,10 +227,16 @@ describe('desktop workbench boundary', () => {
     expect(desktopWorkbenchTopbarHandoffsSource).toContain(
       'createDesktopWorkbenchTopbarCoordinationInput',
     );
-    expect(workbenchSource).toContain(
+    expect(workbenchSource).not.toContain(
       "import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';",
     );
-    expect(workbenchSource).toContain(
+    expect(workbenchSource).not.toContain(
+      "import { createDesktopWorkbenchCenterPaneCoordinationInput } from './desktop-workbench-center-pane-handoffs';",
+    );
+    expect(desktopWorkbenchMainSurfacesSource).toContain(
+      "import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';",
+    );
+    expect(desktopWorkbenchMainSurfacesSource).toContain(
       "import { createDesktopWorkbenchCenterPaneCoordinationInput } from './desktop-workbench-center-pane-handoffs';",
     );
     expect(desktopWorkbenchCenterPaneHandoffsSource).toContain(
