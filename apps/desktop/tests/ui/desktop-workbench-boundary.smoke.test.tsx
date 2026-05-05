@@ -50,6 +50,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-shell-inputs.ts'),
       'utf8',
     );
+    const desktopWorkbenchShellHandoffsSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/desktop-workbench-shell-handoffs.ts'),
+      'utf8',
+    );
     const workbenchSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/use-desktop-workbench.ts'),
       'utf8',
@@ -191,6 +195,15 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).toContain(
       "import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';",
     );
+    expect(workbenchSource).toContain(
+      "import { createDesktopWorkbenchShellCoordinationInput } from './desktop-workbench-shell-handoffs';",
+    );
+    expect(desktopWorkbenchShellHandoffsSource).toContain(
+      "import type { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';",
+    );
+    expect(desktopWorkbenchShellHandoffsSource).toContain(
+      'createDesktopWorkbenchShellCoordinationInput',
+    );
     expect(desktopWorkbenchShellCoordinationSource).toContain(
       "from './desktop-workbench-main-presenters';",
     );
@@ -255,6 +268,23 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).not.toContain('createDesktopWorkbenchKeyboardShortcutsInput');
     expect(workbenchSource).not.toContain('createDesktopWorkbenchShellDialogState');
     expect(workbenchSource).not.toContain('const shellUi = useDesktopWorkbenchShell({');
+    [
+      'dialogState: {\n      hasAssetActionDialog',
+      'workspaceModalGuards: {\n      isWorkspaceSettingsOpen',
+      'keyboardSearch: {\n      searchInputRef',
+      'keyboardSelection: {\n      isSelectionMode',
+      'keyboardGalleryDensity: {\n      viewMode',
+      'shellChrome: {\n      dismissStatusLine',
+      'keyboardQuickPreview: {\n      isQuickPreviewOpen',
+      'keyboardGalleryNavigation: {\n      assetItemRefs',
+      'dialogEscapeCommands: {\n      onCloseAssetActionDialog',
+      'uiDerivationStatus: {\n      status',
+      'uiDerivationSearchState: {\n      activeSearchQuery',
+      'uiDerivationGalleryState: {\n      selectedAssetKey',
+      'uiDerivationDiagnostics: {\n      devMetrics',
+    ].forEach((directShellHandoff) => {
+      expect(workbenchSource).not.toContain(directShellHandoff);
+    });
     expect(workbenchSource).not.toContain('showStatusStrip,\n    canClearSearch');
     expect(workbenchSource).toContain("import { usePreviewWorkbench } from './use-preview-workbench';");
     expect(desktopWorkbenchPreviewCoordinationSource).toContain(
@@ -313,8 +343,12 @@ describe('desktop workbench boundary', () => {
     expect(workbenchSource).not.toContain('onCloseBulkDeleteDialog: () => setBulkDeleteDialogKeys(null)');
     expect(workbenchSource).not.toContain('onCloseBulkMoveDialog: () => setBulkMoveDialog(null)');
     expect(workbenchSource).not.toContain('onCloseUploadConflictDialog: () => setUploadConflictDialog(null)');
-    expect(workbenchSource).toContain('onCloseAssetActionDialog: handleCloseAssetActionDialog');
-    expect(workbenchSource).toContain('onCloseUploadConflictDialog: handleCloseUploadConflictDialog');
+    expect(desktopWorkbenchShellHandoffsSource).toContain(
+      'onCloseAssetActionDialog: handleCloseAssetActionDialog',
+    );
+    expect(desktopWorkbenchShellHandoffsSource).toContain(
+      'onCloseUploadConflictDialog: handleCloseUploadConflictDialog',
+    );
     expect(workbenchSource).not.toContain('useProfileFormState');
     expect(workbenchSource).not.toContain('useWorkspaceSettingsState');
     expect(workbenchSource).not.toContain('useWorkspaceBootstrap');
