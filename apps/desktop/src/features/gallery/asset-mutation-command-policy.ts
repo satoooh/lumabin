@@ -2,6 +2,9 @@ import {
   basenameFromKey,
   parentPrefixFromKey,
 } from '../shared/asset-key';
+import { formatCount } from '../shared/format-count';
+
+type AssetMutationStatusTone = 'success' | 'error';
 
 export type AssetRenamePlan =
   | {
@@ -35,6 +38,17 @@ export type BulkAssetMovePlan =
   | {
       kind: 'duplicate-destination';
     };
+
+export interface QueuedAssetDeleteSelectionPlan {
+  nextSelectedKey: string;
+  selectedKeys: string[];
+}
+
+export interface BulkAssetMoveResultSummary {
+  inlineFeedback?: string;
+  statusLine: string;
+  statusTone: AssetMutationStatusTone;
+}
 
 export const planAssetRename = (
   targetKey: string,
@@ -104,5 +118,42 @@ export const planBulkAssetMove = (
     kind: 'ready',
     moves,
     skippedCount,
+  };
+};
+
+export const planQueuedAssetDeleteSelection = (
+  targetKey: string,
+  visibleKeys: string[],
+  selectedKeys: string[],
+): QueuedAssetDeleteSelectionPlan => {
+  const selectedIndex = visibleKeys.findIndex((key) => key === targetKey);
+  const nextVisibleKey =
+    visibleKeys[selectedIndex + 1] ?? visibleKeys[selectedIndex - 1] ?? '';
+
+  return {
+    nextSelectedKey: nextVisibleKey === targetKey ? '' : nextVisibleKey,
+    selectedKeys: selectedKeys.filter((key) => key !== targetKey),
+  };
+};
+
+export const summarizeBulkAssetMoveResult = ({
+  failedCount,
+  movedCount,
+  skippedCount,
+}: {
+  failedCount: number;
+  movedCount: number;
+  skippedCount: number;
+}): BulkAssetMoveResultSummary => {
+  const movedMessage = `Moved ${formatCount(movedCount, 'asset')}.`;
+  const skippedMessage =
+    skippedCount > 0 ? ` Skipped ${formatCount(skippedCount, 'asset')}.` : '';
+  const failedMessage =
+    failedCount > 0 ? ` Failed ${formatCount(failedCount, 'asset')}.` : '';
+
+  return {
+    inlineFeedback: movedCount > 0 ? `Moved ${formatCount(movedCount, 'asset')}` : undefined,
+    statusLine: `${movedMessage}${skippedMessage}${failedMessage}`,
+    statusTone: failedCount > 0 ? 'error' : 'success',
   };
 };

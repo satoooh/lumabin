@@ -6,11 +6,12 @@ import {
   commonParentPrefixFromKeys,
 } from '../shared/asset-key';
 import type { AssetMutationApi } from '../shared/desktop-api-gateway';
-import { formatCount } from '../shared/format-count';
 import {
   planAssetMove,
   planAssetRename,
   planBulkAssetMove,
+  planQueuedAssetDeleteSelection,
+  summarizeBulkAssetMoveResult,
 } from './asset-mutation-command-policy';
 
 type StatusTone = 'neutral' | 'success' | 'error';
@@ -219,12 +220,14 @@ export const useAssetMutationCommands = ({
         return;
       }
 
-      const selectedIndex = visibleItems.findIndex((item) => item.key === targetKey);
-      const nextSelectedKeyBeforeRefresh =
-        visibleItems[selectedIndex + 1]?.key ?? visibleItems[selectedIndex - 1]?.key ?? '';
+      const selectionPlan = planQueuedAssetDeleteSelection(
+        targetKey,
+        visibleItems.map((item) => item.key),
+        selectedAssetKeys,
+      );
 
-      setSelectedAssetKey(nextSelectedKeyBeforeRefresh === targetKey ? '' : nextSelectedKeyBeforeRefresh);
-      setSelectedAssetKeys((current) => current.filter((key) => key !== targetKey));
+      setSelectedAssetKey(selectionPlan.nextSelectedKey);
+      setSelectedAssetKeys(selectionPlan.selectedKeys);
       setIsQuickPreviewOpen(false);
       setAssetActionDialog(null);
       schedulePendingDelete(selectedProfileId, [targetKey]);
@@ -243,6 +246,7 @@ export const useAssetMutationCommands = ({
     reloadCurrentItems,
     schedulePendingDelete,
     selectedProfileId,
+    selectedAssetKeys,
     setAssetActionDialog,
     setIsAssetActionBusy,
     setIsQuickPreviewOpen,
@@ -329,15 +333,14 @@ export const useAssetMutationCommands = ({
         setIsSelectionMode(false);
       }
 
-      const movedMessage = `Moved ${formatCount(movedCount, 'asset')}.`;
-      const skippedMessage = plan.skippedCount > 0 ? ` Skipped ${formatCount(plan.skippedCount, 'asset')}.` : '';
-      const failedMessage = failedKeys.length > 0 ? ` Failed ${formatCount(failedKeys.length, 'asset')}.` : '';
-      setStatusLine(
-        `${movedMessage}${skippedMessage}${failedMessage}`,
-        failedKeys.length > 0 ? 'error' : 'success',
-      );
-      if (movedCount > 0) {
-        pushInlineFeedback(`Moved ${formatCount(movedCount, 'asset')}`);
+      const summary = summarizeBulkAssetMoveResult({
+        failedCount: failedKeys.length,
+        movedCount,
+        skippedCount: plan.skippedCount,
+      });
+      setStatusLine(summary.statusLine, summary.statusTone);
+      if (summary.inlineFeedback) {
+        pushInlineFeedback(summary.inlineFeedback);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
