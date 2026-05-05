@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { UploadJobStatus } from '../../shared/ipc';
+import { listActiveUploadJobIds } from './upload-job-polling-policy';
 import type { UploadQueueItem } from './upload-queue-persistence';
 
 interface UseUploadJobPollingOptions {
@@ -14,9 +15,7 @@ export const useUploadJobPolling = ({
   uploadQueue,
 }: UseUploadJobPollingOptions): void => {
   useEffect(() => {
-    const activeJobIds = uploadQueue
-      .filter((job) => job.status === 'queued' || job.status === 'running')
-      .map((job) => job.id);
+    const activeJobIds = listActiveUploadJobIds(uploadQueue);
 
     if (activeJobIds.length === 0) {
       return;
