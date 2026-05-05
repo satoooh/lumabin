@@ -1,3 +1,5 @@
+import type { Dispatch, SetStateAction } from 'react';
+import type { UploadConflictDialogState } from '../upload/use-upload-queue-commands';
 import type { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';
 
 type ShellCoordinationInput = Parameters<typeof useDesktopWorkbenchShellCoordination>[0];
@@ -65,12 +67,12 @@ interface DesktopWorkbenchShellHandoffInput {
   setGalleryTileMinWidth: KeyboardGalleryDensity['onAdjustGalleryTileMinWidth'];
   setIsWorkspaceSettingsOpen: WorkspaceModalGuards['setIsWorkspaceSettingsOpen'];
   setSelectedAssetKey: KeyboardSelection['onSelectAssetKey'];
-  setUploadConflictDialog: WorkspaceModalGuards['setUploadConflictDialog'];
+  setUploadConflictDialog: Dispatch<SetStateAction<UploadConflictDialogState | null>>;
   showGuidedStart: ShellChrome['showGuidedStart'];
   status: UiDerivationStatus['status'];
   statusTone: ShellChrome['statusTone'];
   toggleAssetSelection: KeyboardQuickPreview['onToggleAssetSelection'];
-  uploadConflictDialog: WorkspaceModalGuards['uploadConflictDialog'];
+  uploadConflictDialog: UploadConflictDialogState | null;
   viewMode: KeyboardGalleryDensity['viewMode'];
   visibleItems: KeyboardQuickPreview['visibleItems'];
 }

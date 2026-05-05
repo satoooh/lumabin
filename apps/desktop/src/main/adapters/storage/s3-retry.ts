@@ -8,7 +8,10 @@ const sleep = async (milliseconds: number): Promise<void> =>
 
 export const isRetryableUploadError = (error: unknown): boolean => {
   const statusCode = toHttpStatusCode(error);
-  if (statusCode === 408 || statusCode === 429 || statusCode >= 500) {
+  if (
+    statusCode !== undefined &&
+    (statusCode === 408 || statusCode === 429 || statusCode >= 500)
+  ) {
     return true;
   }
 

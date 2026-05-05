@@ -181,7 +181,7 @@ export const usePreviewWorkbench = ({
     isSelectionMode,
     markAssetAsRecentlyViewed,
     resetQuickPreviewGeometry,
-    selectedAsset,
+    selectedAsset: selectedAsset ?? undefined,
     selectedAssetKey,
     selectedProfileId,
     setIsQuickPreviewInfoOpen,

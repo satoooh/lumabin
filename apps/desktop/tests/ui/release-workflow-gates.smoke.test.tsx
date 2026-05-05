@@ -83,9 +83,10 @@ describe('release workflow gates', () => {
     expect(signingReadinessVerifier).toContain("execFileSync('/usr/bin/security', ['find-identity', '-p', 'codesigning', '-v']");
     expect(signingReadinessVerifier).toContain('Developer ID signing identity is available');
     expect(signingReadinessVerifier).toContain('Developer ID certificate import inputs are configured');
-    expect(forgeConfig).toContain('const hasNotarizeCredentials = Boolean(appleId && appleIdPassword && appleTeamId);');
+    expect(forgeConfig).toContain('const notarizeCredentials =');
     expect(forgeConfig).toContain('osxNotarize:');
-    expect(forgeConfig).toContain('enableMacSign && hasNotarizeCredentials');
+    expect(forgeConfig).toContain('enableMacSign && appleId && appleIdPassword && appleTeamId');
+    expect(forgeConfig).toContain('osxNotarize: notarizeCredentials');
     expect(forgeConfig).toContain('teamId: appleTeamId');
     expect(releaseWorkflow).toContain('Signing mode: %s');
     expect(releaseWorkflow).toContain('release-evidence.json');

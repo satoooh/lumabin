@@ -4,7 +4,7 @@ interface UseWorkspaceRuntimeStateWorkbenchOptions {
   isBrowserBusy: boolean;
   isSearchBusy: boolean;
   selectedProfileId: string;
-  nextAssetsContinuationToken: string;
+  nextAssetsContinuationToken?: string;
   activeSearchQuery: string;
   hasInitialized: boolean;
 }
