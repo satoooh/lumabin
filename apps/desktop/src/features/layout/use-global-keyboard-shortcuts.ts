@@ -1,17 +1,19 @@
 import { useEffect, type RefObject } from 'react';
 import type { AssetItem } from '../../shared/ipc';
 import {
+  resolveGalleryKeyboardScrollTop,
+  resolveGalleryNavigationIndex,
+  type GalleryDaySectionLite,
+  type GalleryGridLocation,
+  type GalleryVirtualSectionLite,
+} from '../gallery/gallery-keyboard-navigation-policy';
+import {
   isEditableKeyboardTarget,
   isGalleryNavigationKey,
   isWorkspaceKeyboardBlockedByModal,
   resolveLinearNavigationIndex,
-  resolveGalleryKeyboardScrollTop,
-  resolveGalleryNavigationIndex,
   resolveQuickPreviewKeyboardAction,
   resolveWorkspaceKeyboardShortcutIntent,
-  type GalleryDaySectionLite,
-  type GalleryGridLocation,
-  type GalleryVirtualSectionLite,
 } from './global-keyboard-shortcuts-policy';
 
 interface UseGlobalKeyboardShortcutsOptions {
