@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isGalleryNavigationKey,
   isShortcutHelpHotkey,
+  resolveGalleryKeyboardScrollTop,
   resolveGalleryNavigationIndex,
   type GalleryDaySectionLite,
   type GalleryGridLocation,
@@ -67,5 +68,43 @@ describe('global keyboard shortcuts policy', () => {
         visibleItemsLength: 5,
       }),
     ).toBe(1);
+  });
+
+  it('resolves the virtualized gallery scroll target for keyboard focus movement', () => {
+    expect(
+      resolveGalleryKeyboardScrollTop({
+        galleryColumnCount: 3,
+        galleryDayHeaderHeightPx: 36,
+        galleryGridGapPx: 12,
+        galleryTileHeight: 100,
+        galleryViewportHeight: 400,
+        location: {
+          sectionIndex: 1,
+          localIndex: 7,
+          sectionStartIndex: 20,
+        },
+        section: {
+          topOffset: 1_000,
+        },
+      }),
+    ).toBe(1_120);
+
+    expect(
+      resolveGalleryKeyboardScrollTop({
+        galleryColumnCount: 3,
+        galleryDayHeaderHeightPx: 36,
+        galleryGridGapPx: 12,
+        galleryTileHeight: 100,
+        galleryViewportHeight: 2_000,
+        location: {
+          sectionIndex: 0,
+          localIndex: 0,
+          sectionStartIndex: 0,
+        },
+        section: {
+          topOffset: 100,
+        },
+      }),
+    ).toBe(0);
   });
 });
