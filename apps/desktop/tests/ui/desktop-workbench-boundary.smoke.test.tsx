@@ -74,6 +74,10 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/use-asset-actions-workbench.ts'),
       'utf8',
     );
+    const assetCommandFlowWorkbenchSource = readFileSync(
+      join(SOURCE_ROOT, 'features/workbench/use-asset-command-flow-workbench.ts'),
+      'utf8',
+    );
     const desktopWorkbenchFeedbackSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/use-desktop-workbench-feedback.ts'),
       'utf8',
@@ -321,8 +325,17 @@ describe('desktop workbench boundary', () => {
       'createDesktopWorkbenchPreviewCoordinationInput',
     );
     expect(workbenchSource).not.toContain('usePreviewWorkbench({');
-    expect(workbenchSource).toContain("import { useUploadWorkbench } from './use-upload-workbench';");
-    expect(workbenchSource).toContain("import { useAssetActionsWorkbench } from './use-asset-actions-workbench';");
+    expect(workbenchSource).toContain(
+      "import { useAssetCommandFlowWorkbench } from './use-asset-command-flow-workbench';",
+    );
+    expect(workbenchSource).not.toContain("import { useUploadWorkbench } from './use-upload-workbench';");
+    expect(workbenchSource).not.toContain("import { useAssetActionsWorkbench } from './use-asset-actions-workbench';");
+    expect(assetCommandFlowWorkbenchSource).toContain("import { useUploadWorkbench } from './use-upload-workbench';");
+    expect(assetCommandFlowWorkbenchSource).toContain(
+      "import { useAssetActionsWorkbench } from './use-asset-actions-workbench';",
+    );
+    expect(assetCommandFlowWorkbenchSource).toContain('useAssetActionsWorkbench({');
+    expect(assetCommandFlowWorkbenchSource).toContain('useUploadWorkbench({');
     expect(workbenchSource).toContain(
       "import { useDesktopWorkbenchShellResources } from './use-desktop-workbench-shell-resources';",
     );

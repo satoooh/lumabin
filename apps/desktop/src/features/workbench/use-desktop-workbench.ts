@@ -8,7 +8,7 @@ import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workben
 import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';
 import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';
 import { createDesktopWorkbenchShellCoordinationInput } from './desktop-workbench-shell-handoffs';
-import { useAssetActionsWorkbench } from './use-asset-actions-workbench';
+import { useAssetCommandFlowWorkbench } from './use-asset-command-flow-workbench';
 import { useDesktopWorkbenchShellResources } from './use-desktop-workbench-shell-resources';
 import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';
 import { useDiagnosticsWorkbench } from './use-diagnostics-workbench';
@@ -16,7 +16,6 @@ import { useGalleryBrowsingWorkbench } from './use-gallery-browsing-workbench';
 import { useGallerySettingsWorkbench } from './use-gallery-settings-workbench';
 import { useGallerySessionWorkbench } from './use-gallery-session-workbench';
 import { usePreviewWorkbench } from './use-preview-workbench';
-import { useUploadWorkbench } from './use-upload-workbench';
 import { useWorkspaceCommandsWorkbench } from './use-workspace-commands-workbench';
 import { useWorkspaceGalleryLifecycleWorkbench } from './use-workspace-gallery-lifecycle-workbench';
 import { useWorkspaceRuntimeStateWorkbench } from './use-workspace-runtime-state-workbench';
@@ -362,67 +361,46 @@ export const useDesktopWorkbench = ({
 
   const {
     activePendingDeleteJob,
+    activeUploadJobCount,
     assetActionDialog,
     bulkDeleteDialogKeys,
     bulkMoveDialog,
     executePendingDelete,
+    fileInputRef,
+    handleCancelUpload,
     handleChangeAssetActionInputValue,
     handleChangeBulkMoveDestinationPrefix,
+    handleClearFinishedUploads,
     handleCloseAssetActionDialog,
     handleCloseBulkDeleteDialog,
     handleCloseBulkMoveDialog,
+    handleCloseUploadConflictDialog,
+    handleFilePickerChange,
     handleOpenAssetDelete,
     handleOpenAssetMove,
     handleOpenAssetRename,
     handleOpenBulkDeleteDialog,
     handleOpenBulkMoveDialog,
+    handleOpenFilePicker,
+    handleResolveUploadConflict,
+    handleRetryUpload,
     handleSubmitAssetAction,
     handleSubmitBulkDelete,
     handleSubmitBulkMove,
     isAssetActionBusy,
+    isDropActive,
+    isUploadBusy,
+    isUploadToastExpanded,
     pendingDeleteQueuedMoreCount,
     pendingDeleteRemainingSeconds,
     setAssetActionDialog,
     setBulkDeleteDialogKeys,
     setBulkMoveDialog,
-    showPendingDeleteToast,
-    undoPendingDelete,
-  } = useAssetActionsWorkbench({
-    assetMutationApi: desktopApi.assetLibrary,
-    assetsPrefix,
-    deleteAssets: desktopApi.assetLibrary.deleteAssets,
-    isConnectionSetupOpen,
-    pushInlineFeedback,
-    reloadCurrentItems,
-    selectedAsset,
-    selectedAssetKey,
-    selectedAssetKeys,
-    selectedProfileId,
-    setIsQuickPreviewOpen,
-    setIsSelectionMode,
-    setSelectedAssetKey,
-    setSelectedAssetKeys,
-    setStatusLine,
-    showGuidedStart,
-    visibleItems,
-  });
-
-  const {
-    activeUploadJobCount,
-    fileInputRef,
-    handleCancelUpload,
-    handleClearFinishedUploads,
-    handleCloseUploadConflictDialog,
-    handleFilePickerChange,
-    handleOpenFilePicker,
-    handleResolveUploadConflict,
-    handleRetryUpload,
-    isDropActive,
-    isUploadBusy,
-    isUploadToastExpanded,
     setUploadConflictDialog,
+    showPendingDeleteToast,
     showUploadToast,
     totalUploadJobs,
+    undoPendingDelete,
     uploadConflictDialog,
     uploadSummaryCanRetry,
     uploadSummaryCompactTitle,
@@ -431,20 +409,40 @@ export const useDesktopWorkbench = ({
     uploadSummaryProgress,
     uploadSummarySubtitle,
     uploadSummaryTitle,
-  } = useUploadWorkbench({
-    appShellRef,
-    assetsPrefix,
-    defaultConflictPolicy: settings.defaultConflictPolicy,
-    filesApi: desktopApi.files,
-    isConnectionReady: Boolean(selectedProfileId),
-    isConnectionSetupOpen,
-    onGalleryRefresh: reloadCurrentItems,
-    onInlineFeedback: pushInlineFeedback,
-    onStatusLine: setStatusLine,
-    selectedProfileId,
-    showGuidedStart,
-    uploadApi: desktopApi.assetUpload,
-    uploadToastRef,
+  } = useAssetCommandFlowWorkbench({
+    api: {
+      assetLibrary: desktopApi.assetLibrary,
+      assetUpload: desktopApi.assetUpload,
+      files: desktopApi.files,
+    },
+    feedback: {
+      pushInlineFeedback,
+      setStatusLine,
+    },
+    gallery: {
+      assetsPrefix,
+      reloadCurrentItems,
+      selectedAsset,
+      selectedAssetKey,
+      selectedAssetKeys,
+      setIsSelectionMode,
+      setSelectedAssetKey,
+      setSelectedAssetKeys,
+      visibleItems,
+    },
+    preview: {
+      setIsQuickPreviewOpen,
+    },
+    surfaces: {
+      appShellRef,
+      uploadToastRef,
+    },
+    workspace: {
+      defaultConflictPolicy: settings.defaultConflictPolicy,
+      isConnectionSetupOpen,
+      selectedProfileId,
+      showGuidedStart,
+    },
   });
 
   const {
