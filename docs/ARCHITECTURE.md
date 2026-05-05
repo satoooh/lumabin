@@ -45,6 +45,7 @@ apps/desktop/src/
 │   │   ├── bulk-action-dialogs.tsx
 │   │   ├── delete-undo-toast.tsx
 │   │   ├── empty-browser-state.tsx
+│   │   ├── gallery-keyboard-focus-runner.ts
 │   │   ├── gallery-keyboard-navigation-policy.ts
 │   │   ├── gallery-layout-policy.ts
 │   │   ├── gallery-thumbnail-loader.ts
