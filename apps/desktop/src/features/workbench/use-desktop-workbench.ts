@@ -6,20 +6,18 @@ import { createDesktopWorkbenchOverlayCoordinationInput } from './desktop-workbe
 import { createDesktopWorkbenchPreviewCoordinationInput } from './desktop-workbench-preview-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
 import { createDesktopWorkbenchTopbarCoordinationInput } from './desktop-workbench-topbar-handoffs';
-import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';
 import { createDesktopWorkbenchShellCoordinationInput } from './desktop-workbench-shell-handoffs';
 import { useAssetCommandFlowWorkbench } from './use-asset-command-flow-workbench';
+import { useDesktopWorkbenchWorkspaceSettingsSurface } from './use-desktop-workbench-workspace-settings-surface';
 import { useDesktopWorkbenchShellResources } from './use-desktop-workbench-shell-resources';
 import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';
 import { useDiagnosticsWorkbench } from './use-diagnostics-workbench';
 import { useGalleryBrowsingWorkbench } from './use-gallery-browsing-workbench';
-import { useGallerySettingsWorkbench } from './use-gallery-settings-workbench';
 import { useGallerySessionWorkbench } from './use-gallery-session-workbench';
 import { usePreviewWorkbench } from './use-preview-workbench';
 import { useWorkspaceCommandsWorkbench } from './use-workspace-commands-workbench';
 import { useWorkspaceGalleryLifecycleWorkbench } from './use-workspace-gallery-lifecycle-workbench';
 import { useWorkspaceRuntimeStateWorkbench } from './use-workspace-runtime-state-workbench';
-import { useWorkspaceSettingsWorkbench } from './use-workspace-settings-workbench';
 import { useWorkspaceStateWorkbench } from './use-workspace-state-workbench';
 
 interface UseDesktopWorkbenchOptions {
@@ -58,15 +56,11 @@ export const useDesktopWorkbench = ({
     isTooltipWarm,
   } = useDesktopWorkbenchShellResources();
 
+  const workspaceState = useWorkspaceStateWorkbench();
   const {
     allowStoredSecret,
     canSaveProfile,
     closeProfileMenu,
-    handleAppearanceChange,
-    handleDefaultConflictPolicyChange,
-    handlePresignedUrlTTLSecondsChange,
-    handleSelectedPublicBaseUrlChange,
-    handleUploadOptimizeImagesBeforeUploadChange,
     initialProfileForm,
     isConnectionSetupOpen,
     isCreatingProfile,
@@ -79,7 +73,6 @@ export const useDesktopWorkbench = ({
     isWorkspaceSettingsOpen,
     manageProfileOptionValue,
     moveProfileMenuActiveIndex,
-    newSavedViewName,
     newProfileOptionValue,
     openProfileMenu,
     profileFieldErrors,
@@ -90,7 +83,6 @@ export const useDesktopWorkbench = ({
     profiles,
     r2AccountId,
     savedSettingsSnapshot,
-    savedViews,
     selectedProfile,
     selectedProfileId,
     selectedProfileLabel,
@@ -101,7 +93,6 @@ export const useDesktopWorkbench = ({
     setIsSettingsBusy,
     setIsShortcutHelpOpen,
     setIsWorkspaceSettingsOpen,
-    setNewSavedViewName,
     setProfileForm,
     setProfileMenuActiveIndex,
     setProfiles,
@@ -111,8 +102,19 @@ export const useDesktopWorkbench = ({
     setSelectedProfileId,
     setSettings,
     settings,
-  } = useWorkspaceStateWorkbench();
+  } = workspaceState;
 
+  const galleryBrowsing = useGalleryBrowsingWorkbench({
+    appShellRef,
+    assetDiscoveryApi: desktopApi.assetDiscovery,
+    assetLibraryApi: desktopApi.assetLibrary,
+    galleryScrollRef,
+    gallerySizeSliderRef,
+    listContainerRef,
+    searchInputRef,
+    selectedProfileId,
+    setStatusLine,
+  });
   const {
     activeKindFilter,
     activeKindLabel,
@@ -124,7 +126,6 @@ export const useDesktopWorkbench = ({
     applyGalleryTileMinWidth,
     assetItemRefs,
     assetsPrefix,
-    assetsResult,
     commitGalleryTileMinWidth,
     flushGalleryTileMinWidthCommit,
     focusAssetItemByKey,
@@ -140,8 +141,6 @@ export const useDesktopWorkbench = ({
     galleryVirtualSections,
     galleryViewportHeight,
     handleLoadFirstPage,
-    handleLoadNextPage,
-    handleOpenPrefix,
     handleResetViewFilters,
     handleSearchClear,
     handleSearchSubmit,
@@ -167,7 +166,6 @@ export const useDesktopWorkbench = ({
     resetGalleryTileMinWidth,
     resetSearchState,
     resolvePersistedUiStateForProfile,
-    runSearch,
     scheduleGalleryTileMinWidthCommit,
     scrollToAssetInCurrentView,
     searchInput,
@@ -182,7 +180,6 @@ export const useDesktopWorkbench = ({
     setAssetsPrefix,
     setGalleryScrollTop,
     setGalleryTileMinWidth,
-    setIsSearchBusy,
     setIsSelectionMode,
     setKindFilter,
     setListScrollTop,
@@ -194,23 +191,11 @@ export const useDesktopWorkbench = ({
     setSortBy,
     setSortDirection,
     setViewMode,
-    sortBy,
-    sortDirection,
     unifiedFilterOptions,
     viewMode,
     visibleGallerySections,
     visibleItems,
-  } = useGalleryBrowsingWorkbench({
-    appShellRef,
-    assetDiscoveryApi: desktopApi.assetDiscovery,
-    assetLibraryApi: desktopApi.assetLibrary,
-    galleryScrollRef,
-    gallerySizeSliderRef,
-    listContainerRef,
-    searchInputRef,
-    selectedProfileId,
-    setStatusLine,
-  });
+  } = galleryBrowsing;
 
   const {
     closeQuickPreview,
@@ -267,27 +252,7 @@ export const useDesktopWorkbench = ({
     setSelectedAssetKey,
   });
 
-  const {
-    pendingDiscardConfirmation,
-    cancelDiscardConfirmation,
-    confirmDiscardChanges,
-    handleCloseConnectionSetup,
-    handleCloseShortcutHelp,
-    handleCloseWorkspaceSettings,
-    handleConnectionTest,
-    handleDeleteProfile,
-    handleOpenConnectionSetup,
-    handleProfileMenuSelect,
-    handleR2AccountIdChange,
-    handleSaveProfile,
-    handleSaveSettings,
-    handleSelectProfile,
-    handleStartNewProfile,
-    handleToggleShortcutHelp,
-    handleToggleWorkspaceSettings,
-    hasInitialized,
-    loadSavedViews,
-  } = useWorkspaceCommandsWorkbench({
+  const workspaceCommands = useWorkspaceCommandsWorkbench({
     assetDiscoveryApi: desktopApi.assetDiscovery,
     closeProfileMenu,
     initialProfileForm,
@@ -330,15 +295,25 @@ export const useDesktopWorkbench = ({
     settings,
     workspaceApi: desktopApi.workspace,
   });
-
   const {
-    devMetrics,
-    handleCopyDevMetricsSnapshot,
-    handleResetDevMetrics,
-    isDiagnosticsEnabled,
-    isDevMetricsBusy,
-    loadDevMetrics,
-  } = useDiagnosticsWorkbench({
+    pendingDiscardConfirmation,
+    cancelDiscardConfirmation,
+    confirmDiscardChanges,
+    handleCloseConnectionSetup,
+    handleCloseShortcutHelp,
+    handleCloseWorkspaceSettings,
+    handleDeleteProfile,
+    handleProfileMenuSelect,
+    handleR2AccountIdChange,
+    handleSaveProfile,
+    handleSelectProfile,
+    handleStartNewProfile,
+    handleToggleShortcutHelp,
+    handleToggleWorkspaceSettings,
+    hasInitialized,
+  } = workspaceCommands;
+
+  const diagnostics = useDiagnosticsWorkbench({
     copyToClipboard: handleCopyToClipboard,
     diagnosticsApi: desktopApi.diagnostics,
     isDevEnv,
@@ -348,12 +323,11 @@ export const useDesktopWorkbench = ({
     runtimeApi: desktopApi.runtime,
     setStatusLine,
   });
-
   const {
-    isListLoading,
-    isNextPageDisabled,
-    showGuidedStart,
-  } = useWorkspaceRuntimeStateWorkbench({
+    devMetrics,
+  } = diagnostics;
+
+  const runtimeState = useWorkspaceRuntimeStateWorkbench({
     isBrowserBusy,
     isSearchBusy,
     selectedProfileId,
@@ -361,6 +335,10 @@ export const useDesktopWorkbench = ({
     activeSearchQuery,
     hasInitialized,
   });
+  const {
+    isListLoading,
+    showGuidedStart,
+  } = runtimeState;
 
   const {
     activePendingDeleteJob,
@@ -551,95 +529,16 @@ export const useDesktopWorkbench = ({
     }),
   );
 
-  const {
-    browserSession: workspaceSettingsBrowserSession,
-    savedViews: workspaceSettingsSavedViews,
-    viewDefaults: workspaceSettingsViewDefaults,
-  } = useGallerySettingsWorkbench({
-    activeKindFilter,
-    activeSearchQuery,
-    activeSmartCollection,
-    assetsPrefix,
-    browserPrefixes: assetsResult.prefixes,
-    handleLoadFirstPage,
-    handleLoadNextPage,
-    handleOpenPrefix,
-    isListLoading,
-    isNextPageDisabled,
-    isSearchBusy,
-    loadAssetsPage,
-    loadSavedViews,
-    newSavedViewName,
-    runSearch,
-    savedViewApi: desktopApi.assetDiscovery,
-    savedViews,
-    searchInput,
-    selectedProfileId,
-    setAssetsPrefix,
-    setIsSearchBusy,
-    setKindFilter,
-    setNewSavedViewName,
-    setSearchInput,
-    setSmartCollection,
-    setSortBy,
-    setSortDirection,
+  const { workspaceSettingsOverlayProps } = useDesktopWorkbenchWorkspaceSettingsSurface({
+    desktopApi,
+    diagnostics,
+    galleryBrowsing,
+    runtimeState,
+    shellUi,
     setStatusLine,
-    setViewMode,
-    sortBy,
-    sortDirection,
-    viewMode,
+    workspaceCommands,
+    workspaceState,
   });
-
-  const { workspaceSettingsOverlayProps } = useWorkspaceSettingsWorkbench(
-    createDesktopWorkbenchWorkspaceSettingsCoordinationInput({
-      browserSession: workspaceSettingsBrowserSession,
-      cacheMetrics: {
-        headCacheHitRate: shellUi.headCacheHitRate,
-        previewCacheHitRate: shellUi.previewCacheHitRate,
-        searchCacheHitRate: shellUi.searchCacheHitRate,
-      },
-      commands: {
-        handleAppearanceChange,
-        handleConnectionTest,
-        handleDefaultConflictPolicyChange,
-        handleOpenConnectionSetup,
-        handlePresignedUrlTTLSecondsChange,
-        handleSaveSettings,
-        handleSelectedPublicBaseUrlChange,
-        handleUploadOptimizeImagesBeforeUploadChange,
-      },
-      devMetrics: {
-        devMetrics,
-        handleCopyDevMetricsSnapshot,
-        handleResetDevMetrics,
-        isDevMetricsBusy,
-        isDiagnosticsEnabled,
-        loadDevMetrics,
-      },
-      gallerySettings: {
-        savedViews: workspaceSettingsSavedViews,
-        viewDefaults: workspaceSettingsViewDefaults,
-      },
-      modal: {
-        cancelDiscardConfirmation,
-        confirmDiscardChanges,
-        handleCloseWorkspaceSettings,
-        isSettingsDiscardConfirming: pendingDiscardConfirmation?.kind === 'settings',
-        isWorkspaceSettingsOpen,
-      },
-      profile: {
-        isProfileBusy,
-        selectedProfile,
-        selectedProfileId,
-        selectedPublicBaseUrl,
-      },
-      settingsState: {
-        isSettingsBusy,
-        isSettingsDirty,
-        settings,
-      },
-    }),
-  );
 
   const appOverlaysProps = createDesktopWorkbenchOverlayCoordinationProps(
     createDesktopWorkbenchOverlayCoordinationInput({

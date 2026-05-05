@@ -165,6 +165,7 @@ apps/desktop/src/
 │       ├── use-desktop-workbench-shell.ts
 │       ├── use-desktop-workbench-shell-coordination.ts
 │       ├── use-desktop-workbench-shell-resources.ts
+│       ├── use-desktop-workbench-workspace-settings-surface.ts
 │       ├── use-diagnostics-workbench.ts
 │       ├── use-gallery-browsing-workbench.ts
 │       ├── use-gallery-session-workbench.ts
