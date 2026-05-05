@@ -8,6 +8,10 @@ import {
   toPreviewFailureMessage,
   type PreviewableKind,
 } from './asset-preview-loading-policy';
+import {
+  resolveAssetPreviewDataUrl,
+  resolvePdfPreviewPage,
+} from './asset-preview-state-policy';
 import type {
   AssetItem,
   AssetMetadata,
@@ -42,12 +46,10 @@ export const useAssetPreviewController = ({
   const [isHeadBusy, setIsHeadBusy] = useState<boolean>(false);
   const [isPreviewBusy, setIsPreviewBusy] = useState<boolean>(false);
 
-  const previewDataUrl = useMemo(() => {
-    if (!assetPreview?.dataBase64) {
-      return '';
-    }
-    return `data:${assetPreview.contentType};base64,${assetPreview.dataBase64}`;
-  }, [assetPreview]);
+  const previewDataUrl = useMemo(
+    () => resolveAssetPreviewDataUrl(assetPreview),
+    [assetPreview],
+  );
 
   const loadSelectedAssetMetadata = useCallback(
     async (profileId: string, key: string) => {
@@ -215,8 +217,10 @@ export const useAssetPreviewController = ({
     handleImageDecodeError: () => {
       setAssetPreviewError('Image preview failed to decode. Try another item or download.');
     },
-    handlePdfNextPage: () => setPdfPreviewPage((current) => current + 1),
-    handlePdfPrevPage: () => setPdfPreviewPage((current) => Math.max(1, current - 1)),
+    handlePdfNextPage: () =>
+      setPdfPreviewPage((current) => resolvePdfPreviewPage(current, 'next')),
+    handlePdfPrevPage: () =>
+      setPdfPreviewPage((current) => resolvePdfPreviewPage(current, 'previous')),
     handleRetrySelectedAssetMetadata,
     handleRetrySelectedAssetPreview,
     handleVideoDecodeError: () => {

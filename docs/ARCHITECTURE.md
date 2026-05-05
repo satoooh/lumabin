@@ -91,6 +91,7 @@ apps/desktop/src/
 │   │   └── guided-start.tsx
 │   ├── preview/
 │   │   ├── asset-preview-loading-policy.ts
+│   │   ├── asset-preview-state-policy.ts
 │   │   ├── quick-preview-animation-policy.ts
 │   │   ├── quick-preview-action-button.tsx
 │   │   ├── quick-preview-info-panel.tsx
