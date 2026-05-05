@@ -15,6 +15,16 @@ export interface GalleryVirtualSectionLite {
   topOffset: number;
 }
 
+interface ResolveGalleryKeyboardScrollTopOptions {
+  galleryColumnCount: number;
+  galleryDayHeaderHeightPx: number;
+  galleryGridGapPx: number;
+  galleryTileHeight: number;
+  galleryViewportHeight: number;
+  location?: GalleryGridLocation;
+  section?: GalleryVirtualSectionLite;
+}
+
 export const isEditableKeyboardTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement &&
   (target.tagName === 'INPUT' ||
@@ -145,4 +155,26 @@ export const resolveGalleryNavigationIndex = ({
   }
 
   return selectedIndex;
+};
+
+export const resolveGalleryKeyboardScrollTop = ({
+  galleryColumnCount,
+  galleryDayHeaderHeightPx,
+  galleryGridGapPx,
+  galleryTileHeight,
+  galleryViewportHeight,
+  location,
+  section,
+}: ResolveGalleryKeyboardScrollTopOptions): number | undefined => {
+  if (!location || !section) {
+    return undefined;
+  }
+
+  const safeColumnCount = Math.max(1, galleryColumnCount);
+  const rowHeight = galleryTileHeight + galleryGridGapPx;
+  const targetRow = Math.floor(location.localIndex / safeColumnCount);
+  const targetTop =
+    section.topOffset + galleryDayHeaderHeightPx + targetRow * rowHeight;
+
+  return Math.max(0, targetTop - galleryViewportHeight * 0.35);
 };

@@ -3,6 +3,7 @@ import type { AssetItem } from '../../shared/ipc';
 import {
   isEditableKeyboardTarget,
   isGalleryNavigationKey,
+  resolveGalleryKeyboardScrollTop,
   isShortcutHelpHotkey,
   resolveGalleryNavigationIndex,
   type GalleryDaySectionLite,
@@ -243,13 +244,22 @@ export const useGlobalKeyboardShortcuts = ({
             return;
           }
 
-          const rowHeight = galleryTileHeight + galleryGridGapPx;
-          const targetRow = Math.floor(location.localIndex / galleryColumnCount);
-          const targetTop =
-            section.topOffset + galleryDayHeaderHeightPx + targetRow * rowHeight;
+          const scrollTop = resolveGalleryKeyboardScrollTop({
+            galleryColumnCount,
+            galleryDayHeaderHeightPx,
+            galleryGridGapPx,
+            galleryTileHeight,
+            galleryViewportHeight,
+            location,
+            section,
+          });
+
+          if (scrollTop === undefined) {
+            return;
+          }
 
           scroller.scrollTo({
-            top: Math.max(0, targetTop - galleryViewportHeight * 0.35),
+            top: scrollTop,
             behavior: 'smooth',
           });
 
