@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   resolveFailedGalleryThumbnailState,
+  resolveClearedGalleryThumbnailLoadingState,
   resolveLoadedGalleryThumbnailState,
   resolveRequestedGalleryThumbnailRetryState,
+  resolveStartedGalleryThumbnailLoadingState,
   type GalleryThumbnailStateSnapshot,
 } from '../../src/features/gallery/gallery-thumbnail-state';
 
@@ -120,5 +122,47 @@ describe('gallery thumbnail state', () => {
     expect(result.thumbnailsByCacheKey['profile-1::photos/a.png']).toBe(
       'data:image/png;base64,cached',
     );
+  });
+
+  it('marks only newly requested batch thumbnails as loading', () => {
+    const currentSnapshot = snapshot({
+      loadingByCacheKey: {
+        'profile-1::photos/a.png': true,
+      },
+    });
+
+    const result = resolveStartedGalleryThumbnailLoadingState(
+      currentSnapshot,
+      ['profile-1::photos/a.png', 'profile-1::photos/b.png'],
+    );
+
+    expect(result.startedCacheKeys).toEqual(['profile-1::photos/b.png']);
+    expect(result.snapshot.loadingByCacheKey).toEqual({
+      'profile-1::photos/a.png': true,
+      'profile-1::photos/b.png': true,
+    });
+  });
+
+  it('clears completed batch thumbnails from loading state', () => {
+    const currentSnapshot = snapshot({
+      loadingByCacheKey: {
+        'profile-1::photos/a.png': true,
+        'profile-1::photos/b.png': true,
+        'profile-1::photos/c.png': true,
+      },
+    });
+
+    const result = resolveClearedGalleryThumbnailLoadingState(
+      currentSnapshot,
+      ['profile-1::photos/a.png', 'profile-1::photos/b.png'],
+    );
+
+    expect(result.clearedCacheKeys).toEqual([
+      'profile-1::photos/a.png',
+      'profile-1::photos/b.png',
+    ]);
+    expect(result.snapshot.loadingByCacheKey).toEqual({
+      'profile-1::photos/c.png': true,
+    });
   });
 });

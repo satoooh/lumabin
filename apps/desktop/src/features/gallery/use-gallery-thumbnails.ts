@@ -16,9 +16,11 @@ import {
 } from './gallery-thumbnail-policy';
 import { loadGalleryThumbnailDataUrl } from './gallery-thumbnail-loader';
 import {
+  resolveClearedGalleryThumbnailLoadingState,
   resolveFailedGalleryThumbnailState,
   resolveLoadedGalleryThumbnailState,
   resolveRequestedGalleryThumbnailRetryState,
+  resolveStartedGalleryThumbnailLoadingState,
   type GalleryThumbnailStateSnapshot,
 } from './gallery-thumbnail-state';
 import type { ViewMode } from './use-gallery-view-model';
@@ -243,42 +245,37 @@ export const useGalleryThumbnails = ({
         const batch = pendingItems.slice(index, index + GALLERY_THUMBNAIL_CONCURRENCY);
 
         const batchKeys = batch.map((item) => toThumbnailCacheKey(selectedProfileId, item.key));
-        const nextLoading = { ...galleryThumbnailLoadingRef.current };
-        let hasLoadingChanged = false;
-        for (const cacheKey of batchKeys) {
-          if (!nextLoading[cacheKey]) {
-            nextLoading[cacheKey] = true;
-            galleryThumbnailLoadingStartedAtRef.current[cacheKey] = Date.now();
-            const existingWatchdog = galleryThumbnailLoadWatchdogsRef.current[cacheKey];
-            if (existingWatchdog !== undefined) {
-              window.clearTimeout(existingWatchdog);
-              delete galleryThumbnailLoadWatchdogsRef.current[cacheKey];
-            }
-            galleryThumbnailLoadWatchdogsRef.current[cacheKey] = window.setTimeout(() => {
-              delete galleryThumbnailLoadWatchdogsRef.current[cacheKey];
-              delete galleryThumbnailLoadingStartedAtRef.current[cacheKey];
-              if (!galleryThumbnailLoadingRef.current[cacheKey]) {
-                return;
-              }
-
-              const result = resolveFailedGalleryThumbnailState({
-                cacheKey,
-                snapshot: readThumbnailStateSnapshot(),
-              });
-              applyThumbnailStateSnapshot(result.snapshot);
-
-              if (result.action === 'mark-error') {
-                clearThumbnailRetryTimer(cacheKey);
-              } else {
-                scheduleThumbnailRetry(cacheKey, result.attempts);
-              }
-            }, THUMBNAIL_LOADING_STALE_MS);
-            hasLoadingChanged = true;
+        const loadingStartedResult = resolveStartedGalleryThumbnailLoadingState(
+          readThumbnailStateSnapshot(),
+          batchKeys,
+        );
+        applyThumbnailStateSnapshot(loadingStartedResult.snapshot);
+        for (const cacheKey of loadingStartedResult.startedCacheKeys) {
+          galleryThumbnailLoadingStartedAtRef.current[cacheKey] = Date.now();
+          const existingWatchdog = galleryThumbnailLoadWatchdogsRef.current[cacheKey];
+          if (existingWatchdog !== undefined) {
+            window.clearTimeout(existingWatchdog);
+            delete galleryThumbnailLoadWatchdogsRef.current[cacheKey];
           }
-        }
-        if (hasLoadingChanged) {
-          galleryThumbnailLoadingRef.current = nextLoading;
-          setGalleryThumbnailLoading(nextLoading);
+          galleryThumbnailLoadWatchdogsRef.current[cacheKey] = window.setTimeout(() => {
+            delete galleryThumbnailLoadWatchdogsRef.current[cacheKey];
+            delete galleryThumbnailLoadingStartedAtRef.current[cacheKey];
+            if (!galleryThumbnailLoadingRef.current[cacheKey]) {
+              return;
+            }
+
+            const result = resolveFailedGalleryThumbnailState({
+              cacheKey,
+              snapshot: readThumbnailStateSnapshot(),
+            });
+            applyThumbnailStateSnapshot(result.snapshot);
+
+            if (result.action === 'mark-error') {
+              clearThumbnailRetryTimer(cacheKey);
+            } else {
+              scheduleThumbnailRetry(cacheKey, result.attempts);
+            }
+          }, THUMBNAIL_LOADING_STALE_MS);
         }
 
         await Promise.all(
@@ -332,18 +329,11 @@ export const useGalleryThumbnails = ({
           }),
         );
 
-        const nextLoadingAfterBatch = { ...galleryThumbnailLoadingRef.current };
-        let hasLoadingCleared = false;
-        for (const cacheKey of batchKeys) {
-          if (nextLoadingAfterBatch[cacheKey]) {
-            delete nextLoadingAfterBatch[cacheKey];
-            hasLoadingCleared = true;
-          }
-        }
-        if (hasLoadingCleared) {
-          galleryThumbnailLoadingRef.current = nextLoadingAfterBatch;
-          setGalleryThumbnailLoading(nextLoadingAfterBatch);
-        }
+        const loadingClearedResult = resolveClearedGalleryThumbnailLoadingState(
+          readThumbnailStateSnapshot(),
+          batchKeys,
+        );
+        applyThumbnailStateSnapshot(loadingClearedResult.snapshot);
       }
     };
 
