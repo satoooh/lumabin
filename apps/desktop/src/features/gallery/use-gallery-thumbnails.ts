@@ -8,7 +8,6 @@ import type { AssetItem } from '../../shared/ipc';
 import type { AssetThumbnailApi } from '../shared/desktop-api-gateway';
 import {
   GALLERY_THUMBNAIL_CONCURRENCY,
-  GALLERY_THUMBNAIL_MAX_ATTEMPTS,
   THUMBNAIL_LOADING_STALE_MS,
   resolvePendingThumbnailItems,
   thumbnailRetryDelayMs,
@@ -16,6 +15,12 @@ import {
   type ThumbnailAssetKind,
 } from './gallery-thumbnail-policy';
 import { loadGalleryThumbnailDataUrl } from './gallery-thumbnail-loader';
+import {
+  resolveFailedGalleryThumbnailState,
+  resolveLoadedGalleryThumbnailState,
+  resolveRequestedGalleryThumbnailRetryState,
+  type GalleryThumbnailStateSnapshot,
+} from './gallery-thumbnail-state';
 import type { ViewMode } from './use-gallery-view-model';
 
 interface UseGalleryThumbnailsOptions {
@@ -104,6 +109,34 @@ export const useGalleryThumbnails = ({
     galleryThumbnailLoadingStartedAtRef.current = {};
   }, []);
 
+  const readThumbnailStateSnapshot = useCallback((): GalleryThumbnailStateSnapshot => ({
+    attemptsByCacheKey: galleryThumbnailAttemptsRef.current,
+    errorsByCacheKey: galleryThumbnailErrorsRef.current,
+    loadingByCacheKey: galleryThumbnailLoadingRef.current,
+    retryAtByCacheKey: galleryThumbnailRetryAtRef.current,
+    thumbnailsByCacheKey: galleryThumbnailsRef.current,
+  }), []);
+
+  const applyThumbnailStateSnapshot = useCallback((snapshot: GalleryThumbnailStateSnapshot) => {
+    galleryThumbnailAttemptsRef.current = snapshot.attemptsByCacheKey;
+    galleryThumbnailRetryAtRef.current = snapshot.retryAtByCacheKey;
+
+    if (galleryThumbnailsRef.current !== snapshot.thumbnailsByCacheKey) {
+      galleryThumbnailsRef.current = snapshot.thumbnailsByCacheKey;
+      setGalleryThumbnails(snapshot.thumbnailsByCacheKey);
+    }
+
+    if (galleryThumbnailErrorsRef.current !== snapshot.errorsByCacheKey) {
+      galleryThumbnailErrorsRef.current = snapshot.errorsByCacheKey;
+      setGalleryThumbnailErrors(snapshot.errorsByCacheKey);
+    }
+
+    if (galleryThumbnailLoadingRef.current !== snapshot.loadingByCacheKey) {
+      galleryThumbnailLoadingRef.current = snapshot.loadingByCacheKey;
+      setGalleryThumbnailLoading(snapshot.loadingByCacheKey);
+    }
+  }, []);
+
   const resetGalleryThumbnails = useCallback(() => {
     clearAllThumbnailRetryTimers();
     clearAllThumbnailLoadWatchdogs();
@@ -132,67 +165,40 @@ export const useGalleryThumbnails = ({
   const requestThumbnailRetry = useCallback((cacheKey: string) => {
     clearThumbnailRetryTimer(cacheKey);
     clearThumbnailLoadWatchdog(cacheKey);
-    delete galleryThumbnailAttemptsRef.current[cacheKey];
-    delete galleryThumbnailRetryAtRef.current[cacheKey];
-
-    if (galleryThumbnailErrorsRef.current[cacheKey]) {
-      const nextErrors = { ...galleryThumbnailErrorsRef.current };
-      delete nextErrors[cacheKey];
-      galleryThumbnailErrorsRef.current = nextErrors;
-      setGalleryThumbnailErrors(nextErrors);
-    }
-
-    if (galleryThumbnailLoadingRef.current[cacheKey]) {
-      const nextLoading = { ...galleryThumbnailLoadingRef.current };
-      delete nextLoading[cacheKey];
-      galleryThumbnailLoadingRef.current = nextLoading;
-      setGalleryThumbnailLoading(nextLoading);
-    }
+    applyThumbnailStateSnapshot(
+      resolveRequestedGalleryThumbnailRetryState(readThumbnailStateSnapshot(), cacheKey),
+    );
 
     setThumbnailRetryTick((current) => current + 1);
-  }, [clearThumbnailLoadWatchdog, clearThumbnailRetryTimer]);
+  }, [
+    applyThumbnailStateSnapshot,
+    clearThumbnailLoadWatchdog,
+    clearThumbnailRetryTimer,
+    readThumbnailStateSnapshot,
+  ]);
 
   const handleThumbnailDecodeError = useCallback((cacheKey: string) => {
     clearThumbnailRetryTimer(cacheKey);
     clearThumbnailLoadWatchdog(cacheKey);
 
-    if (galleryThumbnailsRef.current[cacheKey]) {
-      const nextThumbnails = { ...galleryThumbnailsRef.current };
-      delete nextThumbnails[cacheKey];
-      galleryThumbnailsRef.current = nextThumbnails;
-      setGalleryThumbnails(nextThumbnails);
-    }
+    const result = resolveFailedGalleryThumbnailState({
+      cacheKey,
+      snapshot: readThumbnailStateSnapshot(),
+    });
+    applyThumbnailStateSnapshot(result.snapshot);
 
-    if (galleryThumbnailLoadingRef.current[cacheKey]) {
-      const nextLoading = { ...galleryThumbnailLoadingRef.current };
-      delete nextLoading[cacheKey];
-      galleryThumbnailLoadingRef.current = nextLoading;
-      setGalleryThumbnailLoading(nextLoading);
-    }
-
-    const attempts = (galleryThumbnailAttemptsRef.current[cacheKey] ?? 0) + 1;
-    galleryThumbnailAttemptsRef.current[cacheKey] = attempts;
-
-    if (attempts >= GALLERY_THUMBNAIL_MAX_ATTEMPTS) {
-      delete galleryThumbnailRetryAtRef.current[cacheKey];
-      const nextErrors = {
-        ...galleryThumbnailErrorsRef.current,
-        [cacheKey]: true,
-      };
-      galleryThumbnailErrorsRef.current = nextErrors;
-      setGalleryThumbnailErrors(nextErrors);
-    } else {
-      if (galleryThumbnailErrorsRef.current[cacheKey]) {
-        const nextErrors = { ...galleryThumbnailErrorsRef.current };
-        delete nextErrors[cacheKey];
-        galleryThumbnailErrorsRef.current = nextErrors;
-        setGalleryThumbnailErrors(nextErrors);
-      }
-      scheduleThumbnailRetry(cacheKey, attempts);
+    if (result.action === 'schedule-retry') {
+      scheduleThumbnailRetry(cacheKey, result.attempts);
     }
 
     setThumbnailRetryTick((current) => current + 1);
-  }, [clearThumbnailLoadWatchdog, clearThumbnailRetryTimer, scheduleThumbnailRetry]);
+  }, [
+    applyThumbnailStateSnapshot,
+    clearThumbnailLoadWatchdog,
+    clearThumbnailRetryTimer,
+    readThumbnailStateSnapshot,
+    scheduleThumbnailRetry,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -255,24 +261,16 @@ export const useGalleryThumbnails = ({
                 return;
               }
 
-              const nextLoadingAfterTimeout = { ...galleryThumbnailLoadingRef.current };
-              delete nextLoadingAfterTimeout[cacheKey];
-              galleryThumbnailLoadingRef.current = nextLoadingAfterTimeout;
-              setGalleryThumbnailLoading(nextLoadingAfterTimeout);
+              const result = resolveFailedGalleryThumbnailState({
+                cacheKey,
+                snapshot: readThumbnailStateSnapshot(),
+              });
+              applyThumbnailStateSnapshot(result.snapshot);
 
-              const attempts = (galleryThumbnailAttemptsRef.current[cacheKey] ?? 0) + 1;
-              galleryThumbnailAttemptsRef.current[cacheKey] = attempts;
-              if (attempts >= GALLERY_THUMBNAIL_MAX_ATTEMPTS) {
+              if (result.action === 'mark-error') {
                 clearThumbnailRetryTimer(cacheKey);
-                delete galleryThumbnailRetryAtRef.current[cacheKey];
-                const nextErrors = {
-                  ...galleryThumbnailErrorsRef.current,
-                  [cacheKey]: true,
-                };
-                galleryThumbnailErrorsRef.current = nextErrors;
-                setGalleryThumbnailErrors(nextErrors);
               } else {
-                scheduleThumbnailRetry(cacheKey, attempts);
+                scheduleThumbnailRetry(cacheKey, result.attempts);
               }
             }, THUMBNAIL_LOADING_STALE_MS);
             hasLoadingChanged = true;
@@ -286,10 +284,10 @@ export const useGalleryThumbnails = ({
         await Promise.all(
           batch.map(async (item) => {
             const cacheKey = toThumbnailCacheKey(selectedProfileId, item.key);
-            let hasThumbnail = false;
+            let thumbnailDataUrl: string | null = null;
             try {
               const attempts = galleryThumbnailAttemptsRef.current[cacheKey] ?? 0;
-              const thumbnailDataUrl = await loadGalleryThumbnailDataUrl({
+              thumbnailDataUrl = await loadGalleryThumbnailDataUrl({
                 assetPreviewApi,
                 attempts,
                 inferAssetKind,
@@ -300,18 +298,6 @@ export const useGalleryThumbnails = ({
               if (activeProfileIdRef.current !== selectedProfileId) {
                 return;
               }
-
-              if (thumbnailDataUrl) {
-                if (!galleryThumbnailsRef.current[cacheKey]) {
-                  const nextThumbnails = {
-                    ...galleryThumbnailsRef.current,
-                    [cacheKey]: thumbnailDataUrl,
-                  };
-                  galleryThumbnailsRef.current = nextThumbnails;
-                  setGalleryThumbnails(nextThumbnails);
-                }
-                hasThumbnail = true;
-              }
             } catch {
               if (activeProfileIdRef.current !== selectedProfileId) {
                 return;
@@ -319,30 +305,26 @@ export const useGalleryThumbnails = ({
             }
 
             if (activeProfileIdRef.current === selectedProfileId) {
-              if (hasThumbnail || Boolean(galleryThumbnailsRef.current[cacheKey])) {
-                delete galleryThumbnailAttemptsRef.current[cacheKey];
-                delete galleryThumbnailRetryAtRef.current[cacheKey];
+              const loadedResult = resolveLoadedGalleryThumbnailState({
+                cacheKey,
+                snapshot: readThumbnailStateSnapshot(),
+                thumbnailDataUrl,
+              });
+
+              if (loadedResult.hasThumbnail) {
+                applyThumbnailStateSnapshot(loadedResult.snapshot);
                 clearThumbnailRetryTimer(cacheKey);
-                if (galleryThumbnailErrorsRef.current[cacheKey]) {
-                  const nextErrors = { ...galleryThumbnailErrorsRef.current };
-                  delete nextErrors[cacheKey];
-                  galleryThumbnailErrorsRef.current = nextErrors;
-                  setGalleryThumbnailErrors(nextErrors);
-                }
               } else {
-                const attempts = (galleryThumbnailAttemptsRef.current[cacheKey] ?? 0) + 1;
-                galleryThumbnailAttemptsRef.current[cacheKey] = attempts;
-                if (attempts >= GALLERY_THUMBNAIL_MAX_ATTEMPTS) {
+                const failedResult = resolveFailedGalleryThumbnailState({
+                  cacheKey,
+                  snapshot: readThumbnailStateSnapshot(),
+                });
+                applyThumbnailStateSnapshot(failedResult.snapshot);
+
+                if (failedResult.action === 'mark-error') {
                   clearThumbnailRetryTimer(cacheKey);
-                  delete galleryThumbnailRetryAtRef.current[cacheKey];
-                  const nextErrors = {
-                    ...galleryThumbnailErrorsRef.current,
-                    [cacheKey]: true,
-                  };
-                  galleryThumbnailErrorsRef.current = nextErrors;
-                  setGalleryThumbnailErrors(nextErrors);
                 } else {
-                  scheduleThumbnailRetry(cacheKey, attempts);
+                  scheduleThumbnailRetry(cacheKey, failedResult.attempts);
                 }
               }
               clearThumbnailLoadWatchdog(cacheKey);
@@ -368,10 +350,12 @@ export const useGalleryThumbnails = ({
     void load();
   }, [
     assetPreviewApi,
+    applyThumbnailStateSnapshot,
     clearThumbnailLoadWatchdog,
     clearThumbnailRetryTimer,
     inferAssetKind,
     isGalleryScrolling,
+    readThumbnailStateSnapshot,
     scheduleThumbnailRetry,
     selectedProfileId,
     thumbnailRetryTick,

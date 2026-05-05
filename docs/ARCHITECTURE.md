@@ -48,6 +48,7 @@ apps/desktop/src/
 │   │   ├── gallery-layout-policy.ts
 │   │   ├── gallery-thumbnail-loader.ts
 │   │   ├── gallery-thumbnail-policy.ts
+│   │   ├── gallery-thumbnail-state.ts
 │   │   ├── filter-bars.tsx
 │   │   ├── gallery-filter-options.ts
 │   │   ├── gallery-view-model-calculations.ts
