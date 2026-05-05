@@ -33,7 +33,11 @@ interface DesktopWorkbenchWorkspaceSettingsCoordinationInput {
   >;
   modal: Pick<
     WorkspaceSettingsWorkbenchOptions,
-    'handleCloseWorkspaceSettings' | 'isWorkspaceSettingsOpen'
+    | 'cancelDiscardConfirmation'
+    | 'confirmDiscardChanges'
+    | 'handleCloseWorkspaceSettings'
+    | 'isSettingsDiscardConfirming'
+    | 'isWorkspaceSettingsOpen'
   >;
   profile: Pick<
     WorkspaceSettingsWorkbenchOptions,
@@ -61,6 +65,8 @@ export const createDesktopWorkbenchWorkspaceSettingsCoordinationInput = ({
   browserSession,
   devMetrics: devMetrics.devMetrics,
   handleAppearanceChange: commands.handleAppearanceChange,
+  cancelDiscardConfirmation: modal.cancelDiscardConfirmation,
+  confirmDiscardChanges: modal.confirmDiscardChanges,
   handleCloseWorkspaceSettings: modal.handleCloseWorkspaceSettings,
   handleConnectionTest: commands.handleConnectionTest,
   handleCopyDevMetricsSnapshot: devMetrics.handleCopyDevMetricsSnapshot,
@@ -76,6 +82,7 @@ export const createDesktopWorkbenchWorkspaceSettingsCoordinationInput = ({
   isDevEnv: devMetrics.isDiagnosticsEnabled,
   isDevMetricsBusy: devMetrics.isDevMetricsBusy,
   isProfileBusy: profile.isProfileBusy,
+  isSettingsDiscardConfirming: modal.isSettingsDiscardConfirming,
   isSettingsBusy: settingsState.isSettingsBusy,
   isSettingsDirty: settingsState.isSettingsDirty,
   isWorkspaceSettingsOpen: modal.isWorkspaceSettingsOpen,

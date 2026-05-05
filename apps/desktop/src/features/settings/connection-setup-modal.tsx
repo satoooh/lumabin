@@ -1,5 +1,6 @@
 import { useEffect, useState, type Dispatch, type RefObject, type SetStateAction } from 'react';
 import type { SaveProfileInput } from '../../shared/ipc';
+import { UnsavedChangesConfirmation } from './unsaved-changes-confirmation';
 
 type ProfileFieldErrors = Partial<Record<
   'name' | 'endpoint' | 'region' | 'bucket' | 'accessKeyId' | 'secretAccessKey',
@@ -22,6 +23,9 @@ interface ConnectionSetupModalProps {
   canSaveProfile: boolean;
   selectedProfileId: string;
   onDeleteProfile: () => Promise<void> | void;
+  isDiscardConfirming: boolean;
+  onCancelDiscardChanges: () => void;
+  onConfirmDiscardChanges: () => void;
   profileFormValidationErrors: string[];
   profileNameInputRef: RefObject<HTMLInputElement | null>;
   profileEndpointInputRef: RefObject<HTMLInputElement | null>;
@@ -47,6 +51,9 @@ export const ConnectionSetupModal = ({
   canSaveProfile,
   selectedProfileId,
   onDeleteProfile,
+  isDiscardConfirming,
+  onCancelDiscardChanges,
+  onConfirmDiscardChanges,
   profileFormValidationErrors,
   profileNameInputRef,
   profileEndpointInputRef,
@@ -292,6 +299,15 @@ export const ConnectionSetupModal = ({
               </span>
             </button>
           </div>
+
+          {isDiscardConfirming ? (
+            <UnsavedChangesConfirmation
+              title="Discard unsaved profile changes?"
+              message="Your edits to this connection profile will be lost."
+              onCancel={onCancelDiscardChanges}
+              onConfirm={onConfirmDiscardChanges}
+            />
+          ) : null}
 
           {isDeleteConfirming && selectedProfileId ? (
             <div className="destructive-inline-confirmation" role="alert">

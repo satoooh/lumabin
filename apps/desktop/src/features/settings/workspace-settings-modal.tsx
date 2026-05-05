@@ -4,6 +4,7 @@ import { WorkspaceConnectionPanel } from './workspace-connection-panel';
 import { WorkspaceDefaultsPanel } from './workspace-defaults-panel';
 import { WorkspaceSavedViewsPanel } from './workspace-saved-views-panel';
 import { WorkspaceSettingsFooter } from './workspace-settings-footer';
+import { UnsavedChangesConfirmation } from './unsaved-changes-confirmation';
 import { useMemo, useState } from 'react';
 import type { AppSettings, DevMetricsSnapshot, ProfileSummary, SavedView } from '../../shared/ipc';
 
@@ -59,6 +60,9 @@ interface WorkspaceSettingsModalProps {
   isSettingsDirty: boolean;
   isSettingsBusy: boolean;
   onSaveSettings: () => Promise<void> | void;
+  isDiscardConfirming: boolean;
+  onCancelDiscardChanges: () => void;
+  onConfirmDiscardChanges: () => void;
   isDevEnv: boolean;
   isDevMetricsBusy: boolean;
   devMetrics: DevMetricsSnapshot | null;
@@ -111,6 +115,9 @@ export const WorkspaceSettingsModal = ({
   isSettingsDirty,
   isSettingsBusy,
   onSaveSettings,
+  isDiscardConfirming,
+  onCancelDiscardChanges,
+  onConfirmDiscardChanges,
   isDevEnv,
   isDevMetricsBusy,
   devMetrics,
@@ -315,6 +322,14 @@ export const WorkspaceSettingsModal = ({
           isSettingsDirty={isSettingsDirty}
           onSaveSettings={onSaveSettings}
         />
+        {isDiscardConfirming ? (
+          <UnsavedChangesConfirmation
+            title="Discard unsaved workspace settings?"
+            message="Public URL and default preference edits will be reset to the last saved values."
+            onCancel={onCancelDiscardChanges}
+            onConfirm={onConfirmDiscardChanges}
+          />
+        ) : null}
       </section>
     </div>
   );

@@ -10,6 +10,8 @@ interface ConnectionSetupOverlayPropsInput {
     handleR2AccountIdChange: ConnectionSetupModalProps['onChangeR2AccountId'];
     handleSaveProfile: ConnectionSetupModalProps['onSaveProfile'];
     handleStartNewProfile: ConnectionSetupModalProps['onStartNewProfile'];
+    cancelDiscardConfirmation: ConnectionSetupModalProps['onCancelDiscardChanges'];
+    confirmDiscardChanges: ConnectionSetupModalProps['onConfirmDiscardChanges'];
   };
   form: {
     allowStoredSecret: ConnectionSetupModalProps['allowStoredSecret'];
@@ -31,6 +33,7 @@ interface ConnectionSetupOverlayPropsInput {
   };
   state: {
     isConnectionSetupOpen: ConnectionSetupModalProps['isOpen'];
+    isDiscardConfirming: ConnectionSetupModalProps['isDiscardConfirming'];
     isProfileBusy: ConnectionSetupModalProps['isProfileBusy'];
     selectedProfileId: ConnectionSetupModalProps['selectedProfileId'];
   };
@@ -57,6 +60,9 @@ export const createConnectionSetupOverlayProps = ({
   canSaveProfile: form.canSaveProfile,
   selectedProfileId: state.selectedProfileId,
   onDeleteProfile: commands.handleDeleteProfile,
+  isDiscardConfirming: state.isDiscardConfirming,
+  onCancelDiscardChanges: commands.cancelDiscardConfirmation,
+  onConfirmDiscardChanges: commands.confirmDiscardChanges,
   profileFormValidationErrors: form.profileFormValidationErrors,
   profileNameInputRef: refs.profileNameInputRef,
   profileEndpointInputRef: refs.profileEndpointInputRef,

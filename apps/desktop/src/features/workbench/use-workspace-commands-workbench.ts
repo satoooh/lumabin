@@ -169,7 +169,10 @@ export const useWorkspaceCommandsWorkbench = ({
   });
 
   const {
-    shouldDiscardUnsavedProfileChanges,
+    pendingDiscardConfirmation,
+    cancelDiscardConfirmation,
+    confirmDiscardChanges,
+    requestDiscardUnsavedProfileChanges,
     handleCloseWorkspaceSettings,
     handleToggleWorkspaceSettings,
     handleCloseShortcutHelp,
@@ -199,7 +202,7 @@ export const useWorkspaceCommandsWorkbench = ({
 
   const { handleSelectProfile, handleProfileMenuSelect } = useProfileSelectionActions({
     closeProfileMenu,
-    shouldDiscardUnsavedProfileChanges,
+    requestDiscardUnsavedProfileChanges,
     handleStartNewProfile,
     handleOpenConnectionSetup,
     profiles,
@@ -272,5 +275,8 @@ export const useWorkspaceCommandsWorkbench = ({
     handleToggleWorkspaceSettings,
     hasInitialized,
     loadSavedViews,
+    pendingDiscardConfirmation,
+    cancelDiscardConfirmation,
+    confirmDiscardChanges,
   };
 };

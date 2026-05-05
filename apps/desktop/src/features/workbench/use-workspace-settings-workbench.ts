@@ -16,6 +16,8 @@ export interface WorkspaceSettingsWorkbenchOptions {
   browserSession: WorkspaceSettingsOverlayPropsInput['browserSession'];
   devMetrics: DevMetricsSnapshot | null;
   handleAppearanceChange: (value: AppSettings['appearance']) => void;
+  cancelDiscardConfirmation: () => void;
+  confirmDiscardChanges: () => void;
   handleCloseWorkspaceSettings: () => void;
   handleConnectionTest: () => Promise<void> | void;
   handleCopyDevMetricsSnapshot: () => Promise<void> | void;
@@ -30,6 +32,7 @@ export interface WorkspaceSettingsWorkbenchOptions {
   isDevEnv: boolean;
   isDevMetricsBusy: boolean;
   isProfileBusy: boolean;
+  isSettingsDiscardConfirming: boolean;
   isSettingsBusy: boolean;
   isSettingsDirty: boolean;
   isWorkspaceSettingsOpen: boolean;
@@ -48,6 +51,8 @@ export const useWorkspaceSettingsWorkbench = ({
   browserSession,
   devMetrics,
   handleAppearanceChange,
+  cancelDiscardConfirmation,
+  confirmDiscardChanges,
   handleCloseWorkspaceSettings,
   handleConnectionTest,
   handleCopyDevMetricsSnapshot,
@@ -62,6 +67,7 @@ export const useWorkspaceSettingsWorkbench = ({
   isDevEnv,
   isDevMetricsBusy,
   isProfileBusy,
+  isSettingsDiscardConfirming,
   isSettingsBusy,
   isSettingsDirty,
   isWorkspaceSettingsOpen,
@@ -77,7 +83,10 @@ export const useWorkspaceSettingsWorkbench = ({
 }: WorkspaceSettingsWorkbenchOptions) => {
   const workspaceSettingsOverlayProps = createWorkspaceSettingsOverlayProps({
     modal: {
+      cancelDiscardConfirmation,
+      confirmDiscardChanges,
       isWorkspaceSettingsOpen,
+      isDiscardConfirming: isSettingsDiscardConfirming,
       handleCloseWorkspaceSettings,
     },
     viewDefaults,

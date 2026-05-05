@@ -28,7 +28,7 @@ describe('profile selection actions', () => {
     const { result } = renderHook(() =>
       useProfileSelectionActions({
         closeProfileMenu,
-        shouldDiscardUnsavedProfileChanges: () => true,
+        requestDiscardUnsavedProfileChanges: () => true,
         handleStartNewProfile: vi.fn(),
         handleOpenConnectionSetup: vi.fn(),
         profiles: [profile],

@@ -49,6 +49,7 @@ const renderModal = () => render(
     formatBytes={(value) => `${value} B`}
     formatDate={(value) => value}
     headCacheHitRate={0}
+    isDiscardConfirming={false}
     isDevEnv={true}
     isDevMetricsBusy={false}
     isListLoading={false}
@@ -60,6 +61,7 @@ const renderModal = () => render(
     isSettingsDirty={false}
     newSavedViewName=""
     onApplySavedView={vi.fn()}
+    onCancelDiscardChanges={vi.fn()}
     onChangeAppearance={vi.fn()}
     onChangeAssetsPrefix={vi.fn()}
     onChangeDefaultConflictPolicy={vi.fn()}
@@ -72,6 +74,7 @@ const renderModal = () => render(
     onChangeViewMode={vi.fn()}
     onClose={vi.fn()}
     onConnectionTest={vi.fn()}
+    onConfirmDiscardChanges={vi.fn()}
     onCopyDevMetricsSnapshot={vi.fn()}
     onDeleteSavedView={vi.fn()}
     onLoadFirstPage={vi.fn()}

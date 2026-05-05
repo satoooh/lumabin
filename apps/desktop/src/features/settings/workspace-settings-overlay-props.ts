@@ -57,7 +57,10 @@ export interface WorkspaceSettingsOverlayPropsInput {
     formatDate: (value: string) => string;
   };
   modal: {
+    cancelDiscardConfirmation: WorkspaceSettingsModalProps['onCancelDiscardChanges'];
+    confirmDiscardChanges: WorkspaceSettingsModalProps['onConfirmDiscardChanges'];
     handleCloseWorkspaceSettings: () => void;
+    isDiscardConfirming: WorkspaceSettingsModalProps['isDiscardConfirming'];
     isWorkspaceSettingsOpen: boolean;
   };
   savedViews: {
@@ -95,6 +98,9 @@ export const createWorkspaceSettingsOverlayProps = ({
 }: WorkspaceSettingsOverlayPropsInput): WorkspaceSettingsModalProps => ({
   isOpen: modal.isWorkspaceSettingsOpen,
   onClose: modal.handleCloseWorkspaceSettings,
+  isDiscardConfirming: modal.isDiscardConfirming,
+  onCancelDiscardChanges: modal.cancelDiscardConfirmation,
+  onConfirmDiscardChanges: modal.confirmDiscardChanges,
   viewMode: viewDefaults.viewMode,
   onChangeViewMode: viewDefaults.setViewMode,
   sortBy: viewDefaults.sortBy,
