@@ -107,6 +107,7 @@ apps/desktop/src/
 │   │   └── use-preview-sharing-commands.ts
 │   ├── settings/
 │   │   ├── connection-setup-modal.tsx
+│   │   ├── connection-profile-fields.tsx
 │   │   ├── dev-metrics-panel.tsx
 │   │   ├── profile-form-state.ts
 │   │   ├── shortcut-help-modal.tsx
