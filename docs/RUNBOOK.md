@@ -10,6 +10,11 @@
 
 ## 2. 開発コマンド
 
+前提:
+
+- Node.js `^20.19.0 || >=22.12.0`（CI は Node.js 22）
+- npm `>=10`
+
 ```bash
 cd apps/desktop
 npm install
