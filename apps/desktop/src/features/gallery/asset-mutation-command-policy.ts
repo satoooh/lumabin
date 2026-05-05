@@ -1,10 +1,19 @@
 import {
   basenameFromKey,
+  commonParentPrefixFromKeys,
   parentPrefixFromKey,
 } from '../shared/asset-key';
 import { formatCount } from '../shared/format-count';
 
 type AssetMutationStatusTone = 'success' | 'error';
+
+export type AssetActionDialogKind = 'delete' | 'move' | 'rename';
+
+export interface AssetActionDialogPlan {
+  inputValue: string;
+  key: string;
+  kind: AssetActionDialogKind;
+}
 
 export type AssetRenamePlan =
   | {
@@ -29,6 +38,11 @@ export interface BulkAssetMovePlanItem {
   destinationKey: string;
 }
 
+export interface BulkAssetMoveDialogPlan {
+  destinationPrefix: string;
+  keys: string[];
+}
+
 export type BulkAssetMovePlan =
   | {
       kind: 'ready';
@@ -49,6 +63,46 @@ export interface BulkAssetMoveResultSummary {
   statusLine: string;
   statusTone: AssetMutationStatusTone;
 }
+
+export const planAssetActionDialog = (
+  kind: AssetActionDialogKind,
+  targetKey: string,
+): AssetActionDialogPlan => {
+  if (kind === 'rename') {
+    return {
+      kind,
+      key: targetKey,
+      inputValue: basenameFromKey(targetKey),
+    };
+  }
+  if (kind === 'move') {
+    return {
+      kind,
+      key: targetKey,
+      inputValue: targetKey,
+    };
+  }
+  return {
+    kind,
+    key: targetKey,
+    inputValue: '',
+  };
+};
+
+export const planBulkAssetMoveDialog = ({
+  assetsPrefix,
+  normalizePrefix,
+  selectedAssetKeys,
+}: {
+  assetsPrefix: string;
+  normalizePrefix: (prefix: string) => string;
+  selectedAssetKeys: string[];
+}): BulkAssetMoveDialogPlan => ({
+  keys: [...selectedAssetKeys],
+  destinationPrefix:
+    commonParentPrefixFromKeys(selectedAssetKeys) ||
+    normalizePrefix(assetsPrefix),
+});
 
 export const planAssetRename = (
   targetKey: string,

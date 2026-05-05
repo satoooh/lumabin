@@ -1,13 +1,57 @@
 import { describe, expect, it } from 'vitest';
 import {
+  planAssetActionDialog,
   planAssetMove,
   planAssetRename,
   planBulkAssetMove,
+  planBulkAssetMoveDialog,
   planQueuedAssetDeleteSelection,
   summarizeBulkAssetMoveResult,
 } from '../../src/features/gallery/asset-mutation-command-policy';
 
 describe('asset mutation command policy', () => {
+  it('plans single-asset action dialogs from the selected asset', () => {
+    expect(planAssetActionDialog('rename', 'photos/nested/a.png')).toEqual({
+      kind: 'rename',
+      key: 'photos/nested/a.png',
+      inputValue: 'a.png',
+    });
+    expect(planAssetActionDialog('move', 'photos/a.png')).toEqual({
+      kind: 'move',
+      key: 'photos/a.png',
+      inputValue: 'photos/a.png',
+    });
+    expect(planAssetActionDialog('delete', 'photos/a.png')).toEqual({
+      kind: 'delete',
+      key: 'photos/a.png',
+      inputValue: '',
+    });
+  });
+
+  it('plans bulk move dialog defaults from selected keys and current prefix', () => {
+    expect(
+      planBulkAssetMoveDialog({
+        assetsPrefix: 'exports/',
+        normalizePrefix: (prefix) => (prefix.endsWith('/') ? prefix : `${prefix}/`),
+        selectedAssetKeys: ['photos/a.png', 'photos/b.png'],
+      }),
+    ).toEqual({
+      keys: ['photos/a.png', 'photos/b.png'],
+      destinationPrefix: 'photos/',
+    });
+
+    expect(
+      planBulkAssetMoveDialog({
+        assetsPrefix: 'exports',
+        normalizePrefix: (prefix) => (prefix.endsWith('/') ? prefix : `${prefix}/`),
+        selectedAssetKeys: ['a.png', 'b.png'],
+      }),
+    ).toEqual({
+      keys: ['a.png', 'b.png'],
+      destinationPrefix: 'exports/',
+    });
+  });
+
   it('plans single-asset rename without allowing empty names or path separators', () => {
     expect(planAssetRename('photos/a.png', ' b.png ')).toEqual({
       kind: 'rename',

@@ -1,15 +1,13 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { AssetItem } from '../../shared/ipc';
 import type { AssetActionDialogState, BulkMoveDialogState } from './action-modals';
-import {
-  basenameFromKey,
-  commonParentPrefixFromKeys,
-} from '../shared/asset-key';
 import type { AssetMutationApi } from '../shared/desktop-api-gateway';
 import {
+  planAssetActionDialog,
   planAssetMove,
   planAssetRename,
   planBulkAssetMove,
+  planBulkAssetMoveDialog,
   planQueuedAssetDeleteSelection,
   summarizeBulkAssetMoveResult,
 } from './asset-mutation-command-policy';
@@ -71,33 +69,21 @@ export const useAssetMutationCommands = ({
     if (!selectedAsset) {
       return;
     }
-    setAssetActionDialog({
-      kind: 'rename',
-      key: selectedAsset.key,
-      inputValue: basenameFromKey(selectedAsset.key),
-    });
+    setAssetActionDialog(planAssetActionDialog('rename', selectedAsset.key));
   }, [selectedAsset, setAssetActionDialog]);
 
   const handleOpenAssetMove = useCallback(() => {
     if (!selectedAsset) {
       return;
     }
-    setAssetActionDialog({
-      kind: 'move',
-      key: selectedAsset.key,
-      inputValue: selectedAsset.key,
-    });
+    setAssetActionDialog(planAssetActionDialog('move', selectedAsset.key));
   }, [selectedAsset, setAssetActionDialog]);
 
   const handleOpenAssetDelete = useCallback(() => {
     if (!selectedAsset) {
       return;
     }
-    setAssetActionDialog({
-      kind: 'delete',
-      key: selectedAsset.key,
-      inputValue: '',
-    });
+    setAssetActionDialog(planAssetActionDialog('delete', selectedAsset.key));
   }, [selectedAsset, setAssetActionDialog]);
 
   const handleOpenBulkDeleteDialog = useCallback(() => {
@@ -113,13 +99,13 @@ export const useAssetMutationCommands = ({
       setStatusLine('Select assets first.', 'error');
       return;
     }
-    const suggestedPrefix =
-      commonParentPrefixFromKeys(selectedAssetKeys) ||
-      normalizePrefix(assetsPrefix);
-    setBulkMoveDialog({
-      keys: [...selectedAssetKeys],
-      destinationPrefix: suggestedPrefix,
-    });
+    setBulkMoveDialog(
+      planBulkAssetMoveDialog({
+        assetsPrefix,
+        normalizePrefix,
+        selectedAssetKeys,
+      }),
+    );
   }, [assetsPrefix, normalizePrefix, selectedAssetKeys, setBulkMoveDialog, setStatusLine]);
 
   const handleCloseAssetActionDialog = useCallback(() => {
