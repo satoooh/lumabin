@@ -151,6 +151,7 @@ apps/desktop/src/
 │       ├── desktop-workbench-center-pane-coordination.ts
 │       ├── desktop-workbench-main-presenters.ts
 │       ├── desktop-workbench-overlay-coordination.ts
+│       ├── desktop-workbench-overlay-handoffs.ts
 │       ├── desktop-workbench-overlays.ts
 │       ├── desktop-workbench-shell-inputs.ts
 │       ├── desktop-workbench-topbar-coordination.ts
