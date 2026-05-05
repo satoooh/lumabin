@@ -294,8 +294,8 @@ export const ConnectionSetupModal = ({
           </div>
 
           {isDeleteConfirming && selectedProfileId ? (
-            <div className="profile-delete-confirmation" role="alert">
-              <div className="profile-delete-confirmation__copy">
+            <div className="destructive-inline-confirmation" role="alert">
+              <div className="destructive-inline-confirmation__copy">
                 <strong>Delete {profileName}?</strong>
                 <span>
                   This removes the connection profile and its saved secret from this Mac.

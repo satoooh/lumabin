@@ -107,12 +107,15 @@ export const WorkspaceSavedViewsPanel = ({
                 </div>
 
                 {isDeleteConfirming ? (
-                  <div className="saved-view-delete-confirmation" role="alert">
-                    <div className="saved-view-delete-confirmation__copy">
+                  <div
+                    className="destructive-inline-confirmation destructive-inline-confirmation--compact"
+                    role="alert"
+                  >
+                    <div className="destructive-inline-confirmation__copy destructive-inline-confirmation__copy--compact">
                       <strong>Delete {view.name}?</strong>
                       <span>This removes the saved search and filters. Assets stay in the bucket.</span>
                     </div>
-                    <div className="saved-view-delete-confirmation__actions">
+                    <div className="destructive-inline-confirmation__actions">
                       <button
                         type="button"
                         onClick={() => setConfirmingDeleteViewId(null)}
