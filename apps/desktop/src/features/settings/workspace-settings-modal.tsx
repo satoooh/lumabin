@@ -7,18 +7,16 @@ import { WorkspaceSettingsFooter } from './workspace-settings-footer';
 import { UnsavedChangesConfirmation } from './unsaved-changes-confirmation';
 import { useMemo, useState } from 'react';
 import type { AppSettings, DevMetricsSnapshot, ProfileSummary, SavedView } from '../../shared/ipc';
+import {
+  DEFAULT_WORKSPACE_SETTINGS_SECTION_ID,
+  resolveActiveWorkspaceSettingsSection,
+  resolveWorkspaceSettingsSections,
+  type WorkspaceSettingsSectionId,
+} from './workspace-settings-sections';
 
 type ViewMode = 'gallery' | 'list';
 type SortField = 'name' | 'size' | 'modified' | 'type';
 type SortDirection = 'asc' | 'desc';
-type WorkspaceSettingsSectionId = 'connection' | 'defaults' | 'browser' | 'views' | 'developer';
-
-interface WorkspaceSettingsSection {
-  id: WorkspaceSettingsSectionId;
-  label: string;
-  description: string;
-  badge?: string;
-}
 
 interface WorkspaceSettingsModalProps {
   isOpen: boolean;
@@ -129,45 +127,17 @@ export const WorkspaceSettingsModal = ({
   onResetDevMetrics,
   onCopyDevMetricsSnapshot,
 }: WorkspaceSettingsModalProps) => {
-  const sections = useMemo<WorkspaceSettingsSection[]>(() => {
-    const availableSections: WorkspaceSettingsSection[] = [
-      {
-        id: 'connection',
-        label: 'Connection profile',
-        description: selectedProfileId ? 'Profile and public URL' : 'Set up a profile',
-        badge: selectedProfileId ? 'Ready' : 'Setup',
-      },
-      {
-        id: 'defaults',
-        label: 'Workspace defaults',
-        description: 'Appearance, upload, and share expiry',
-        badge: isSettingsDirty ? 'Unsaved' : undefined,
-      },
-      {
-        id: 'browser',
-        label: 'Browser session',
-        description: 'Current prefix, sort, and paging',
-      },
-      {
-        id: 'views',
-        label: 'Saved views',
-        description: `${savedViews.length} saved`,
-      },
-    ];
+  const sections = useMemo(() => resolveWorkspaceSettingsSections({
+    isDevEnv,
+    isSettingsDirty,
+    savedViewCount: savedViews.length,
+    selectedProfileId,
+  }), [isDevEnv, isSettingsDirty, savedViews.length, selectedProfileId]);
 
-    if (isDevEnv) {
-      availableSections.push({
-        id: 'developer',
-        label: 'Dev metrics',
-        description: 'Cache and runtime metrics',
-      });
-    }
-
-    return availableSections;
-  }, [isDevEnv, isSettingsDirty, savedViews.length, selectedProfileId]);
-
-  const [activeSectionId, setActiveSectionId] = useState<WorkspaceSettingsSectionId>('connection');
-  const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
+  const [activeSectionId, setActiveSectionId] = useState<WorkspaceSettingsSectionId>(
+    DEFAULT_WORKSPACE_SETTINGS_SECTION_ID,
+  );
+  const activeSection = resolveActiveWorkspaceSettingsSection(sections, activeSectionId);
 
   if (!isOpen) {
     return null;

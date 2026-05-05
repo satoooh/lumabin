@@ -123,6 +123,7 @@ apps/desktop/src/
 │   │   ├── workspace-defaults-panel.tsx
 │   │   ├── workspace-saved-views-panel.tsx
 │   │   ├── workspace-settings-footer.tsx
+│   │   ├── workspace-settings-sections.ts
 │   │   ├── workspace-settings-state.ts
 │   │   └── workspace-settings-modal.tsx
 │   ├── shared/
