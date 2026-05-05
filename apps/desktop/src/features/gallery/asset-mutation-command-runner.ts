@@ -1,5 +1,23 @@
 import type { AssetMutationApi } from '../shared/desktop-api-gateway';
-import type { BulkAssetMovePlanItem } from './asset-mutation-command-policy';
+import type {
+  AssetMovePlan,
+  AssetRenamePlan,
+  BulkAssetMovePlanItem,
+} from './asset-mutation-command-policy';
+
+interface ExecuteAssetRenamePlanOptions {
+  fromKey: string;
+  plan: Extract<AssetRenamePlan, { kind: 'rename' }>;
+  profileId: string;
+  renameAsset: AssetMutationApi['renameAsset'];
+}
+
+interface ExecuteAssetMovePlanOptions {
+  fromKey: string;
+  moveAsset: AssetMutationApi['moveAsset'];
+  plan: Extract<AssetMovePlan, { kind: 'move' }>;
+  profileId: string;
+}
 
 interface ExecuteBulkAssetMovePlanOptions {
   moveAsset: AssetMutationApi['moveAsset'];
@@ -11,6 +29,30 @@ export interface BulkAssetMoveExecutionResult {
   failedKeys: string[];
   movedCount: number;
 }
+
+export const executeAssetRenamePlan = ({
+  fromKey,
+  plan,
+  profileId,
+  renameAsset,
+}: ExecuteAssetRenamePlanOptions): ReturnType<AssetMutationApi['renameAsset']> =>
+  renameAsset({
+    profileId,
+    fromKey,
+    toKey: plan.destinationKey,
+  });
+
+export const executeAssetMovePlan = ({
+  fromKey,
+  moveAsset,
+  plan,
+  profileId,
+}: ExecuteAssetMovePlanOptions): ReturnType<AssetMutationApi['moveAsset']> =>
+  moveAsset({
+    profileId,
+    fromKey,
+    toKey: plan.destinationKey,
+  });
 
 export const executeBulkAssetMovePlan = async ({
   moveAsset,

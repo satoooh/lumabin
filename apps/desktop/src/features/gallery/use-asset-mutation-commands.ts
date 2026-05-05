@@ -2,7 +2,11 @@ import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { AssetItem } from '../../shared/ipc';
 import type { AssetActionDialogState, BulkMoveDialogState } from './action-modals';
 import type { AssetMutationApi } from '../shared/desktop-api-gateway';
-import { executeBulkAssetMovePlan } from './asset-mutation-command-runner';
+import {
+  executeAssetMovePlan,
+  executeAssetRenamePlan,
+  executeBulkAssetMovePlan,
+} from './asset-mutation-command-runner';
 import {
   planAssetActionDialog,
   planAssetMove,
@@ -172,10 +176,11 @@ export const useAssetMutationCommands = ({
           return;
         }
 
-        await assetMutationApi.renameAsset({
+        await executeAssetRenamePlan({
+          renameAsset: assetMutationApi.renameAsset,
+          plan,
           profileId: selectedProfileId,
           fromKey: targetKey,
-          toKey: plan.destinationKey,
         });
 
         await reloadCurrentItems();
@@ -194,10 +199,11 @@ export const useAssetMutationCommands = ({
           return;
         }
 
-        await assetMutationApi.moveAsset({
+        await executeAssetMovePlan({
+          moveAsset: assetMutationApi.moveAsset,
+          plan,
           profileId: selectedProfileId,
           fromKey: targetKey,
-          toKey: plan.destinationKey,
         });
 
         await reloadCurrentItems();
