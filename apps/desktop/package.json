@@ -5,6 +5,10 @@
   "description": "LumaBin desktop app (Electron + React + Vite + TypeScript)",
   "main": ".vite/build/main.js",
   "private": true,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "electron-forge start",
     "dev:e2e": "LUMABIN_E2E=1 LUMABIN_E2E_FIXTURE=1 LUMABIN_E2E_RUN_ID=${LUMABIN_E2E_RUN_ID:-default} electron-forge start -- --remote-debugging-port=${LUMABIN_E2E_CDP_PORT:-9222}",
