@@ -4,10 +4,14 @@ import type { AssetActionDialogState, BulkMoveDialogState } from './action-modal
 import {
   basenameFromKey,
   commonParentPrefixFromKeys,
-  parentPrefixFromKey,
 } from '../shared/asset-key';
 import type { AssetMutationApi } from '../shared/desktop-api-gateway';
 import { formatCount } from '../shared/format-count';
+import {
+  planAssetMove,
+  planAssetRename,
+  planBulkAssetMove,
+} from './asset-mutation-command-policy';
 
 type StatusTone = 'neutral' | 'success' | 'error';
 
@@ -172,15 +176,8 @@ export const useAssetMutationCommands = ({
     setIsAssetActionBusy(true);
     try {
       if (assetActionDialog.kind === 'rename') {
-        const nextName = assetActionDialog.inputValue.trim();
-        if (!nextName) {
-          throw new Error('File name is required.');
-        }
-        if (/[/\\]/.test(nextName)) {
-          throw new Error('File name cannot include "/" or "\\".');
-        }
-        const destinationKey = `${parentPrefixFromKey(targetKey)}${nextName}`;
-        if (destinationKey === targetKey) {
+        const plan = planAssetRename(targetKey, assetActionDialog.inputValue);
+        if (plan.kind === 'no-change') {
           setAssetActionDialog(null);
           setStatusLine('No rename changes detected.', 'neutral');
           return;
@@ -189,11 +186,11 @@ export const useAssetMutationCommands = ({
         await assetMutationApi.renameAsset({
           profileId: selectedProfileId,
           fromKey: targetKey,
-          toKey: destinationKey,
+          toKey: plan.destinationKey,
         });
 
         await reloadCurrentItems();
-        setSelectedAssetKey(destinationKey);
+        setSelectedAssetKey(plan.destinationKey);
         setAssetActionDialog(null);
         pushInlineFeedback('Renamed');
         setStatusLine('Asset renamed.', 'success');
@@ -201,11 +198,8 @@ export const useAssetMutationCommands = ({
       }
 
       if (assetActionDialog.kind === 'move') {
-        const destinationKey = assetActionDialog.inputValue.trim().replace(/^\/+/, '');
-        if (!destinationKey) {
-          throw new Error('Destination key is required.');
-        }
-        if (destinationKey === targetKey) {
+        const plan = planAssetMove(targetKey, assetActionDialog.inputValue);
+        if (plan.kind === 'no-change') {
           setAssetActionDialog(null);
           setStatusLine('No move changes detected.', 'neutral');
           return;
@@ -214,11 +208,11 @@ export const useAssetMutationCommands = ({
         await assetMutationApi.moveAsset({
           profileId: selectedProfileId,
           fromKey: targetKey,
-          toKey: destinationKey,
+          toKey: plan.destinationKey,
         });
 
         await reloadCurrentItems();
-        setSelectedAssetKey(destinationKey);
+        setSelectedAssetKey(plan.destinationKey);
         setAssetActionDialog(null);
         pushInlineFeedback('Moved');
         setStatusLine('Asset moved.', 'success');
@@ -296,41 +290,30 @@ export const useAssetMutationCommands = ({
     }
 
     const destinationPrefix = normalizePrefix(bulkMoveDialog.destinationPrefix);
-    const destinationKeySet = new Set<string>();
-    for (const sourceKey of bulkMoveDialog.keys) {
-      const destinationKey = `${destinationPrefix}${basenameFromKey(sourceKey)}`;
-      if (destinationKeySet.has(destinationKey)) {
-        setStatusLine(
-          'Selected assets include duplicate file names. Move fewer items or rename first.',
-          'error',
-        );
-        return;
-      }
-      destinationKeySet.add(destinationKey);
+    const plan = planBulkAssetMove(bulkMoveDialog.keys, destinationPrefix);
+    if (plan.kind === 'duplicate-destination') {
+      setStatusLine(
+        'Selected assets include duplicate file names. Move fewer items or rename first.',
+        'error',
+      );
+      return;
     }
 
     setIsAssetActionBusy(true);
     try {
       let movedCount = 0;
-      let skippedCount = 0;
       const failedKeys: string[] = [];
 
-      for (const sourceKey of bulkMoveDialog.keys) {
-        const destinationKey = `${destinationPrefix}${basenameFromKey(sourceKey)}`;
-        if (destinationKey === sourceKey) {
-          skippedCount += 1;
-          continue;
-        }
-
+      for (const item of plan.moves) {
         try {
           await assetMutationApi.moveAsset({
             profileId: selectedProfileId,
-            fromKey: sourceKey,
-            toKey: destinationKey,
+            fromKey: item.sourceKey,
+            toKey: item.destinationKey,
           });
           movedCount += 1;
         } catch {
-          failedKeys.push(sourceKey);
+          failedKeys.push(item.sourceKey);
         }
       }
 
@@ -347,7 +330,7 @@ export const useAssetMutationCommands = ({
       }
 
       const movedMessage = `Moved ${formatCount(movedCount, 'asset')}.`;
-      const skippedMessage = skippedCount > 0 ? ` Skipped ${formatCount(skippedCount, 'asset')}.` : '';
+      const skippedMessage = plan.skippedCount > 0 ? ` Skipped ${formatCount(plan.skippedCount, 'asset')}.` : '';
       const failedMessage = failedKeys.length > 0 ? ` Failed ${formatCount(failedKeys.length, 'asset')}.` : '';
       setStatusLine(
         `${movedMessage}${skippedMessage}${failedMessage}`,

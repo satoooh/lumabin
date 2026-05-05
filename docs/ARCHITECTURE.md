@@ -39,6 +39,7 @@ apps/desktop/src/
 │   ├── gallery/
 │   │   ├── action-modals.tsx
 │   │   ├── active-query-summary.tsx
+│   │   ├── asset-mutation-command-policy.ts
 │   │   ├── asset-action-dialog.tsx
 │   │   ├── asset-list-pane.tsx
 │   │   ├── bulk-action-dialogs.tsx
