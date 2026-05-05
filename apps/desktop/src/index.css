@@ -2035,6 +2035,28 @@ kbd {
   line-height: 1.4;
 }
 
+.profile-delete-confirmation {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff1f2;
+  padding: 12px;
+}
+
+.profile-delete-confirmation__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #7f1d1d;
+}
+
+.profile-delete-confirmation__copy strong {
+  color: #7f1d1d;
+}
+
 .toolbar {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) auto;

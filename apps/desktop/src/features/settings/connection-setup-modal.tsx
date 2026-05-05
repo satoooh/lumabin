@@ -1,4 +1,4 @@
-import type { Dispatch, RefObject, SetStateAction } from 'react';
+import { useEffect, useState, type Dispatch, type RefObject, type SetStateAction } from 'react';
 import type { SaveProfileInput } from '../../shared/ipc';
 
 type ProfileFieldErrors = Partial<Record<
@@ -55,11 +55,18 @@ export const ConnectionSetupModal = ({
   profileAccessKeyInputRef,
   profileSecretKeyInputRef,
 }: ConnectionSetupModalProps) => {
+  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
+
+  useEffect(() => {
+    setIsDeleteConfirming(false);
+  }, [isOpen, selectedProfileId]);
+
   if (!isOpen) {
     return null;
   }
 
   const isR2Profile = profileForm.provider === 'r2';
+  const profileName = profileForm.name.trim() || 'this profile';
   const profileNamePlaceholder = isR2Profile ? 'My R2 Profile…' : 'My S3 Profile…';
   const endpointPlaceholder = isR2Profile
     ? 'https://example-account.r2.cloudflarestorage.com'
@@ -268,7 +275,7 @@ export const ConnectionSetupModal = ({
             <button
               type="button"
               disabled={isProfileBusy || !selectedProfileId}
-              onClick={() => void onDeleteProfile()}
+              onClick={() => setIsDeleteConfirming(true)}
               aria-busy={isProfileBusy}
             >
               <span className="button-content">
@@ -285,6 +292,52 @@ export const ConnectionSetupModal = ({
               </span>
             </button>
           </div>
+
+          {isDeleteConfirming && selectedProfileId ? (
+            <div className="profile-delete-confirmation" role="alert">
+              <div className="profile-delete-confirmation__copy">
+                <strong>Delete {profileName}?</strong>
+                <span>
+                  This removes the connection profile and its saved secret from this Mac.
+                </span>
+              </div>
+              <div className="row-actions row-actions--modal">
+                <button
+                  type="button"
+                  disabled={isProfileBusy}
+                  onClick={() => setIsDeleteConfirming(false)}
+                >
+                  <span className="button-content">
+                    <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 6l12 12" />
+                      <path d="M18 6L6 18" />
+                    </svg>
+                    <span>Cancel</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="danger-action-button"
+                  disabled={isProfileBusy}
+                  onClick={() => void onDeleteProfile()}
+                  aria-busy={isProfileBusy}
+                >
+                  <span className="button-content">
+                    {isProfileBusy ? <span className="button-spinner" aria-hidden="true" /> : null}
+                    <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 7h14" />
+                      <path d="M9 7V5h6v2" />
+                      <path d="M8 9v9" />
+                      <path d="M12 9v9" />
+                      <path d="M16 9v9" />
+                      <path d="M7 18.5h10" />
+                    </svg>
+                    <span>Delete profile</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {profileFormValidationErrors.length > 0 ? (
             <ul className="validation-errors" role="alert" aria-live="assertive">
