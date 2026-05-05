@@ -1,6 +1,6 @@
 # LumaBin アーキテクチャ
 
-- 最終更新日: 2026-05-04
+- 最終更新日: 2026-05-05
 - ステータス: Public preview
 - 参照: [REQUIREMENTS.md](REQUIREMENTS.md), [RUNBOOK.md](RUNBOOK.md)
 
@@ -240,6 +240,9 @@ apps/desktop/src/
     │   └── read-models/
     │       └── asset-search-read-model.ts
     ├── adapters/
+    │   ├── e2e-fixture/
+    │   │   ├── e2e-fixture-asset-store.ts
+    │   │   └── e2e-fixture-upload-runner.ts
     │   ├── e2e-fixture-storage-adapter.ts
     │   ├── storage/
     │   │   ├── s3-client-factory.ts
