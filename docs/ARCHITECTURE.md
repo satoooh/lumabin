@@ -266,6 +266,9 @@ apps/desktop/src/
     │   ├── asset-projection-cache-repository.ts
     │   ├── saved-view-repository.ts
     │   ├── sqlite-asset-search-read-model-repository.ts
+    │   ├── sqlite-search-index-database.ts
+    │   ├── sqlite-search-index-error.ts
+    │   ├── sqlite-search-index-maintenance.ts
     │   ├── upload-job-repository.ts
     │   └── workspace-repository.ts
     ├── search-index.ts
