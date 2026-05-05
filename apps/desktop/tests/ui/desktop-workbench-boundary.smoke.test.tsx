@@ -27,6 +27,13 @@ describe('desktop workbench boundary', () => {
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-center-pane-coordination.ts'),
       'utf8',
     );
+    const desktopWorkbenchWorkspaceSettingsCoordinationSource = readFileSync(
+      join(
+        SOURCE_ROOT,
+        'features/workbench/desktop-workbench-workspace-settings-coordination.ts',
+      ),
+      'utf8',
+    );
     const desktopWorkbenchShellInputsSource = readFileSync(
       join(SOURCE_ROOT, 'features/workbench/desktop-workbench-shell-inputs.ts'),
       'utf8',
@@ -129,6 +136,9 @@ describe('desktop workbench boundary', () => {
       "import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';",
     );
     expect(workbenchSource).toContain(
+      "import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';",
+    );
+    expect(workbenchSource).toContain(
       "import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';",
     );
     expect(desktopWorkbenchShellCoordinationSource).toContain(
@@ -148,6 +158,15 @@ describe('desktop workbench boundary', () => {
     );
     expect(workbenchSource).not.toContain('createDesktopWorkbenchCenterPaneAssetList');
     expect(workbenchSource).not.toContain('createDesktopWorkbenchCenterPaneProps');
+    expect(desktopWorkbenchWorkspaceSettingsCoordinationSource).toContain(
+      "import type { WorkspaceSettingsWorkbenchOptions } from './use-workspace-settings-workbench';",
+    );
+    expect(desktopWorkbenchWorkspaceSettingsCoordinationSource).toContain(
+      'createDesktopWorkbenchWorkspaceSettingsCoordinationInput',
+    );
+    expect(workbenchSource).not.toContain(
+      'useWorkspaceSettingsWorkbench({',
+    );
     expect(desktopWorkbenchTopbarCoordinationSource).toContain(
       "from './desktop-workbench-main-presenters';",
     );

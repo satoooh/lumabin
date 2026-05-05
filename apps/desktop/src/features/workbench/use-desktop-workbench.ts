@@ -2,6 +2,7 @@ import type { DesktopApiGateway } from '../shared/desktop-api-gateway';
 import { createDesktopWorkbenchCenterPaneCoordinationProps } from './desktop-workbench-center-pane-coordination';
 import { createDesktopWorkbenchOverlayCoordinationProps } from './desktop-workbench-overlay-coordination';
 import { createDesktopWorkbenchTopbarCoordinationProps } from './desktop-workbench-topbar-coordination';
+import { createDesktopWorkbenchWorkspaceSettingsCoordinationInput } from './desktop-workbench-workspace-settings-coordination';
 import { useAssetActionsWorkbench } from './use-asset-actions-workbench';
 import { useDesktopWorkbenchShellResources } from './use-desktop-workbench-shell-resources';
 import { useDesktopWorkbenchShellCoordination } from './use-desktop-workbench-shell-coordination';
@@ -601,37 +602,53 @@ export const useDesktopWorkbench = ({
     viewMode,
   });
 
-  const { workspaceSettingsOverlayProps } = useWorkspaceSettingsWorkbench({
-    browserSession: workspaceSettingsBrowserSession,
-    devMetrics,
-    handleAppearanceChange,
-    handleCloseWorkspaceSettings,
-    handleConnectionTest,
-    handleCopyDevMetricsSnapshot,
-    handleDefaultConflictPolicyChange,
-    handleOpenConnectionSetup,
-    handlePresignedUrlTTLSecondsChange,
-    handleResetDevMetrics,
-    handleSaveSettings,
-    handleSelectedPublicBaseUrlChange,
-    handleUploadOptimizeImagesBeforeUploadChange,
-    headCacheHitRate: shellUi.headCacheHitRate,
-    isDevEnv: isDiagnosticsEnabled,
-    isDevMetricsBusy,
-    isProfileBusy,
-    isSettingsBusy,
-    isSettingsDirty,
-    isWorkspaceSettingsOpen,
-    loadDevMetrics,
-    previewCacheHitRate: shellUi.previewCacheHitRate,
-    savedViews: workspaceSettingsSavedViews,
-    searchCacheHitRate: shellUi.searchCacheHitRate,
-    selectedProfile,
-    selectedProfileId,
-    selectedPublicBaseUrl,
-    settings,
-    viewDefaults: workspaceSettingsViewDefaults,
-  });
+  const { workspaceSettingsOverlayProps } = useWorkspaceSettingsWorkbench(
+    createDesktopWorkbenchWorkspaceSettingsCoordinationInput({
+      browserSession: workspaceSettingsBrowserSession,
+      cacheMetrics: {
+        headCacheHitRate: shellUi.headCacheHitRate,
+        previewCacheHitRate: shellUi.previewCacheHitRate,
+        searchCacheHitRate: shellUi.searchCacheHitRate,
+      },
+      commands: {
+        handleAppearanceChange,
+        handleConnectionTest,
+        handleDefaultConflictPolicyChange,
+        handleOpenConnectionSetup,
+        handlePresignedUrlTTLSecondsChange,
+        handleSaveSettings,
+        handleSelectedPublicBaseUrlChange,
+        handleUploadOptimizeImagesBeforeUploadChange,
+      },
+      devMetrics: {
+        devMetrics,
+        handleCopyDevMetricsSnapshot,
+        handleResetDevMetrics,
+        isDevMetricsBusy,
+        isDiagnosticsEnabled,
+        loadDevMetrics,
+      },
+      gallerySettings: {
+        savedViews: workspaceSettingsSavedViews,
+        viewDefaults: workspaceSettingsViewDefaults,
+      },
+      modal: {
+        handleCloseWorkspaceSettings,
+        isWorkspaceSettingsOpen,
+      },
+      profile: {
+        isProfileBusy,
+        selectedProfile,
+        selectedProfileId,
+        selectedPublicBaseUrl,
+      },
+      settingsState: {
+        isSettingsBusy,
+        isSettingsDirty,
+        settings,
+      },
+    }),
+  );
 
   const appOverlaysProps = createDesktopWorkbenchOverlayCoordinationProps({
     quickPreview: quickPreviewOverlayInput,

@@ -12,7 +12,7 @@ import {
   formatDate,
 } from '../shared/asset-display';
 
-interface UseWorkspaceSettingsWorkbenchOptions {
+export interface WorkspaceSettingsWorkbenchOptions {
   browserSession: WorkspaceSettingsOverlayPropsInput['browserSession'];
   devMetrics: DevMetricsSnapshot | null;
   handleAppearanceChange: (value: AppSettings['appearance']) => void;
@@ -74,7 +74,7 @@ export const useWorkspaceSettingsWorkbench = ({
   selectedPublicBaseUrl,
   settings,
   viewDefaults,
-}: UseWorkspaceSettingsWorkbenchOptions) => {
+}: WorkspaceSettingsWorkbenchOptions) => {
   const workspaceSettingsOverlayProps = createWorkspaceSettingsOverlayProps({
     modal: {
       isWorkspaceSettingsOpen,
