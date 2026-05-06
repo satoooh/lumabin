@@ -45,6 +45,8 @@ describe('release workflow gates', () => {
       join(process.cwd(), 'scripts/verify-mac-signing-readiness.mjs'),
       'utf8',
     );
+    const mainProcess = readFileSync(join(process.cwd(), 'src/main.ts'), 'utf8');
+    const e2eRuntime = readFileSync(join(process.cwd(), 'src/main/e2e-runtime.ts'), 'utf8');
     const forgeConfig = readFileSync(join(process.cwd(), 'forge.config.ts'), 'utf8');
     const packageJson = readFileSync(join(process.cwd(), 'package.json'), 'utf8');
 
@@ -88,6 +90,8 @@ describe('release workflow gates', () => {
     expect(forgeConfig).toContain('enableMacSign && appleId && appleIdPassword && appleTeamId');
     expect(forgeConfig).toContain('osxNotarize: notarizeCredentials');
     expect(forgeConfig).toContain('teamId: appleTeamId');
+    expect(forgeConfig).toContain('vitePackageRuntimeAllowlist');
+    expect(forgeConfig).toContain("filePath.startsWith('/node_modules')");
     expect(releaseWorkflow).toContain('Signing mode: %s');
     expect(releaseWorkflow).toContain('release-evidence.json');
     expect(releaseLaunchSmoke).toContain("import { createServer } from 'node:net';");
@@ -96,7 +100,12 @@ describe('release workflow gates', () => {
     expect(releaseLaunchSmoke).toContain('spawn(');
     expect(releaseLaunchSmoke).toContain('executablePath,');
     expect(releaseLaunchSmoke).not.toContain("spawn('open'");
+    expect(releaseLaunchSmoke).toContain('Packaged app exited before exposing CDP');
     expect(releaseLaunchSmoke).toContain('LUMABIN_E2E_CDP_PORT: String(cdpPort)');
+    expect(mainProcess).toContain("app.commandLine.appendSwitch('remote-debugging-port', e2eRemoteDebuggingPort);");
+    expect(e2eRuntime).toContain('export const e2eRemoteDebuggingPort');
+    expect(e2eRuntime).toContain('process.env.LUMABIN_E2E_CDP_PORT');
+    expect(e2eRuntime).toContain("argvValue('--remote-debugging-port=')");
     expect(packageJson).toContain('"e2e": "npm run package:darwin && node ./scripts/release-launch-smoke.mjs --app"');
     expect(packageJson).toContain('"e2e:dense": "npm run package:darwin && LUMABIN_E2E_DENSE=1');
     expect(packageJson).toContain('"verify:dev-metrics-snapshot": "node ./scripts/verify-dev-metrics-snapshot.mjs"');

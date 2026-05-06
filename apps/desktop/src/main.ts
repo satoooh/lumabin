@@ -1,14 +1,30 @@
 import { app, BrowserWindow, screen } from 'electron';
-import { existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { e2eRunId, isE2EMode } from './main/e2e-runtime';
 import {
-  registerApplicationComposition,
-  type ApplicationCompositionRuntime,
-} from './main/application-composition';
+  e2eRemoteDebuggingPort,
+  e2eRunId,
+  e2eStartupLogPath,
+  isE2EMode,
+} from './main/e2e-runtime';
+import type { ApplicationCompositionRuntime } from './main/application-composition';
 
 let applicationRuntime: ApplicationCompositionRuntime | null = null;
+
+const logE2EStartup = (message: string): void => {
+  if (isE2EMode) {
+    const line = `[main:e2e] ${message}`;
+    console.log(line);
+    if (e2eStartupLogPath) {
+      try {
+        appendFileSync(e2eStartupLogPath, `${line}\n`, 'utf8');
+      } catch (error) {
+        console.warn(`[main:e2e] failed to write startup log: ${toProcessErrorLog(error)}`);
+      }
+    }
+  }
+};
 
 const toProcessErrorLog = (error: unknown): string => {
   if (error instanceof Error) {
@@ -58,13 +74,20 @@ if (started) {
   app.quit();
 }
 
+if (isE2EMode && e2eRemoteDebuggingPort) {
+  app.commandLine.appendSwitch('remote-debugging-port', e2eRemoteDebuggingPort);
+  logE2EStartup(`remote-debugging-port=${e2eRemoteDebuggingPort}`);
+}
+
 if (isE2EMode) {
   const e2eUserDataPath = path.join(app.getPath('userData'), 'e2e', e2eRunId);
   mkdirSync(e2eUserDataPath, { recursive: true });
   app.setPath('userData', e2eUserDataPath);
+  logE2EStartup(`userData=${e2eUserDataPath}`);
 }
 
 const createWindow = () => {
+  logE2EStartup('createWindow:start');
   const appIconPath = resolveAppIconPath();
   const primaryDisplay = screen.getPrimaryDisplay();
   const workArea = primaryDisplay.workAreaSize;
@@ -106,18 +129,28 @@ const createWindow = () => {
   }
 
   mainWindow.once('ready-to-show', () => {
+    logE2EStartup('window:ready-to-show');
     mainWindow.show();
   });
 };
 
-// Register handlers once and then create browser windows.
-app.whenReady().then(() => {
+const initializeApplication = async (): Promise<void> => {
+  logE2EStartup('app:ready');
   const appIconPath = resolveAppIconPath();
   if (process.platform === 'darwin' && appIconPath) {
     app.dock?.setIcon(appIconPath);
   }
+  logE2EStartup('application-composition:import');
+  const { registerApplicationComposition } = await import('./main/application-composition');
   applicationRuntime = registerApplicationComposition();
+  logE2EStartup('application-composition:registered');
   createWindow();
+};
+
+// Register handlers once and then create browser windows.
+app.whenReady().then(initializeApplication).catch((error) => {
+  console.error(`[main] startup failed: ${toProcessErrorLog(error)}`);
+  app.quit();
 });
 
 app.once('before-quit', () => {

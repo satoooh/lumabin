@@ -16,6 +16,18 @@ const appleTeamId = process.env.LUMABIN_APPLE_TEAM_ID;
 const appleSignIdentity = process.env.LUMABIN_APPLE_SIGN_IDENTITY;
 const darwinEntitlementsPath = path.resolve(__dirname, 'build/entitlements.darwin.plist');
 
+const vitePackageRuntimeAllowlist = (filePath: string): boolean => {
+  if (!filePath) {
+    return false;
+  }
+
+  return !(
+    filePath.startsWith('/.vite') ||
+    filePath === '/package.json' ||
+    filePath.startsWith('/node_modules')
+  );
+};
+
 const notarizeCredentials =
   enableMacSign && appleId && appleIdPassword && appleTeamId
     ? {
@@ -30,6 +42,7 @@ const config: ForgeConfig = {
     asar: true,
     appBundleId: buildBundleId,
     icon: path.resolve(__dirname, 'build/icon'),
+    ignore: vitePackageRuntimeAllowlist,
     extraResource: [path.resolve(__dirname, 'build/lumabin-logo.png')],
     osxSign: enableMacSign
       ? {
