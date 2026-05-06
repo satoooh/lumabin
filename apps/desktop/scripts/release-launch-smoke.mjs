@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -15,6 +15,7 @@ const configuredCdpPort = process.env.LUMABIN_E2E_CDP_PORT
   ? Number(process.env.LUMABIN_E2E_CDP_PORT)
   : null;
 const runId = process.env.LUMABIN_E2E_RUN_ID ?? `release-smoke-${Date.now()}`;
+const startupLogPath = path.join(tmpdir(), `lumabin-e2e-startup-${runId}.log`);
 const shouldUsePackagedApp = process.argv.includes('--app');
 const shouldRunHeaded = process.argv.includes('--headed');
 const testGrep = process.env.LUMABIN_E2E_TEST_GREP?.trim();
@@ -105,6 +106,10 @@ const waitForDevToolsEndpoint = async (endpointPromise) => {
 
   if (detectedEndpoint) {
     return detectedEndpoint;
+  }
+
+  if (existsSync(startupLogPath)) {
+    console.warn(`[release-launch-smoke] startup log:\n${readFileSync(startupLogPath, 'utf8').trim()}`);
   }
 
   throw new Error(`Timed out waiting for packaged app CDP endpoint after ${cdpReadyTimeoutMs}ms: ${cdpVersionEndpoint}`);
@@ -218,8 +223,10 @@ try {
   ];
   const launchEnvironment = {
     LUMABIN_E2E: '1',
+    LUMABIN_E2E_CDP_PORT: String(cdpPort),
     LUMABIN_E2E_FIXTURE: '1',
     LUMABIN_E2E_RUN_ID: runId,
+    LUMABIN_E2E_STARTUP_LOG: startupLogPath,
     ...(process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT
       ? { LUMABIN_E2E_FIXTURE_ASSET_COUNT: process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT }
       : {}),
@@ -243,9 +250,7 @@ try {
 
   const appLaunchRejectedPromise = new Promise((_, reject) => {
     appProcess.once('exit', (code, signal) => {
-      if (code && code !== 0) {
-        reject(new Error(`Packaged app exited before exposing CDP: code=${code} signal=${signal ?? 'null'}`));
-      }
+      reject(new Error(`Packaged app exited before exposing CDP: code=${code ?? 'null'} signal=${signal ?? 'null'}`));
     });
   });
   const cdpEndpoint = await waitForDevToolsEndpoint(Promise.race([detectedDevToolsEndpointPromise, appLaunchRejectedPromise]));
