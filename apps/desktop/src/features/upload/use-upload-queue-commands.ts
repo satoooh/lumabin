@@ -3,12 +3,10 @@ import {
   useState,
 } from 'react';
 import type {
-  CheckUploadConflictsResult,
   ConflictPolicy,
   UploadJobStatus,
   UploadSource,
 } from '../../shared/ipc';
-import { normalizeAssetPrefix } from '../shared/asset-prefix';
 import type { UploadCommandApi } from '../shared/desktop-api-gateway';
 import { formatCount } from '../shared/format-count';
 import {
@@ -20,13 +18,16 @@ import {
   loadPersistedUploadQueue,
   type UploadQueueItem,
 } from './upload-queue-persistence';
+import {
+  runUploadQueueStartCommand,
+  type StartUploadFromSourcesOptions,
+  type UploadConflictDialogState,
+} from './upload-queue-command-runner';
 
-export interface UploadConflictDialogState {
-  sources: UploadSource[];
-  destinationPrefix: string;
-  conflicts: CheckUploadConflictsResult['conflicts'];
-  totalConflicts: number;
-}
+export type {
+  StartUploadFromSourcesOptions,
+  UploadConflictDialogState,
+} from './upload-queue-command-runner';
 
 interface UseUploadQueueCommandsOptions {
   assetsPrefix: string;
@@ -36,13 +37,6 @@ interface UseUploadQueueCommandsOptions {
   onStatusLine: (message: string, tone: 'neutral' | 'success' | 'error') => void;
   selectedProfileId: string;
   uploadApi: UploadCommandApi;
-}
-
-interface StartUploadFromSourcesOptions {
-  destinationPrefix?: string;
-  conflictPolicy?: ConflictPolicy;
-  label?: string;
-  skipConflictCheck?: boolean;
 }
 
 export const useUploadQueueCommands = ({
@@ -80,52 +74,37 @@ export const useUploadQueueCommands = ({
     [assetsPrefix, defaultConflictPolicy],
   );
 
-  const executeUploadFromSources = useCallback(
-    async (
-      sources: UploadSource[],
-      options?: {
-        destinationPrefix?: string;
-        conflictPolicy?: ConflictPolicy;
-        label?: string;
-      },
-    ) => {
-      if (!selectedProfileId) {
-        onStatusLine('Select a profile first.', 'error');
-        return;
-      }
-
-      if (sources.length === 0) {
-        onStatusLine('No files found.', 'error');
-        return;
-      }
-
-      const normalizedPrefix = normalizeAssetPrefix(options?.destinationPrefix ?? assetsPrefix);
-      const conflictPolicy = options?.conflictPolicy ?? defaultConflictPolicy;
-
+  const startUploadFromSources = useCallback(
+    async (sources: UploadSource[], options?: StartUploadFromSourcesOptions) => {
       setIsUploadBusy(true);
       try {
-        const jobId = await uploadApi.upload({
-          profileId: selectedProfileId,
-          destinationPrefix: normalizedPrefix,
-          conflictPolicy,
+        const result = await runUploadQueueStartCommand({
+          assetsPrefix,
+          defaultConflictPolicy,
+          options,
+          selectedProfileId,
           sources,
+          uploadApi,
         });
 
-        const job = await uploadApi.getUploadJob(jobId);
-        mergeUploadJob(job, {
-          destinationPrefix: normalizedPrefix,
-          conflictPolicy,
-        });
+        for (const warning of 'warnings' in result ? result.warnings : []) {
+          onStatusLine(warning, 'neutral');
+        }
 
-        onStatusLine(
-          options?.label ??
-            `Upload started: ${formatCount(sources.length, 'file')} to ${normalizedPrefix || '(bucket root)'}`,
-          'success',
-        );
-        onInlineFeedback(`Uploading ${formatCount(sources.length, 'file')}`);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        onStatusLine(`Failed to start upload: ${message}`, 'error');
+        if (result.kind === 'validation-error') {
+          onStatusLine(result.message, 'error');
+        } else if (result.kind === 'conflicts-detected') {
+          setUploadConflictDialog(result.dialog);
+        } else if (result.kind === 'started') {
+          mergeUploadJob(result.job, {
+            destinationPrefix: result.destinationPrefix,
+            conflictPolicy: result.conflictPolicy,
+          });
+          onStatusLine(result.statusLine, 'success');
+          onInlineFeedback(result.inlineFeedback);
+        } else {
+          onStatusLine(result.message, 'error');
+        }
       } finally {
         setIsUploadBusy(false);
       }
@@ -135,60 +114,6 @@ export const useUploadQueueCommands = ({
       defaultConflictPolicy,
       mergeUploadJob,
       onInlineFeedback,
-      onStatusLine,
-      selectedProfileId,
-      uploadApi,
-    ],
-  );
-
-  const startUploadFromSources = useCallback(
-    async (sources: UploadSource[], options?: StartUploadFromSourcesOptions) => {
-      if (!selectedProfileId) {
-        onStatusLine('Select a profile first.', 'error');
-        return;
-      }
-
-      if (sources.length === 0) {
-        onStatusLine('No files found.', 'error');
-        return;
-      }
-
-      const normalizedPrefix = normalizeAssetPrefix(options?.destinationPrefix ?? assetsPrefix);
-      const conflictPolicy = options?.conflictPolicy ?? defaultConflictPolicy;
-
-      if (!options?.skipConflictCheck) {
-        try {
-          const conflictCheck = await uploadApi.checkUploadConflicts({
-            profileId: selectedProfileId,
-            destinationPrefix: normalizedPrefix,
-            sources,
-          });
-
-          if (conflictCheck.totalConflicts > 0) {
-            setUploadConflictDialog({
-              sources,
-              destinationPrefix: normalizedPrefix,
-              conflicts: conflictCheck.conflicts,
-              totalConflicts: conflictCheck.totalConflicts,
-            });
-            return;
-          }
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Unknown error';
-          onStatusLine(`Conflict check failed: ${message}. Continuing upload...`, 'neutral');
-        }
-      }
-
-      await executeUploadFromSources(sources, {
-        destinationPrefix: normalizedPrefix,
-        conflictPolicy,
-        label: options?.label,
-      });
-    },
-    [
-      assetsPrefix,
-      defaultConflictPolicy,
-      executeUploadFromSources,
       onStatusLine,
       selectedProfileId,
       uploadApi,
