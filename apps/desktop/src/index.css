@@ -3801,7 +3801,7 @@ kbd {
 }
 
 .app-shell--photos .panel:hover {
-  border-color: transparent;
+  border-color: var(--border-default);
 }
 
 .app-shell--photos .panel {
@@ -3922,6 +3922,12 @@ kbd {
   border-color: rgb(202 138 4 / 40%);
   background: rgb(161 98 7 / 22%);
   color: #fcd989;
+}
+
+.app-shell--photos .asset-kind-badge {
+  border-color: var(--border-default);
+  background: var(--surface-3);
+  color: var(--fg-primary);
 }
 
 .app-shell--photos .quick-preview-media {
@@ -4154,6 +4160,11 @@ kbd {
 
 .app-shell--photos .bulk-delete-preview-list code {
   color: var(--fg-secondary);
+}
+
+.app-shell--photos .destructive-inline-confirmation {
+  border-color: color-mix(in srgb, #fca5a5 34%, var(--border-default));
+  background: color-mix(in srgb, #7f1d1d 28%, var(--surface-2));
 }
 
 .app-shell--photos .segment-chip:hover:not(:disabled) {
@@ -4418,11 +4429,11 @@ kbd {
 }
 
 .app-shell--photos .asset-list-row:hover:not(:disabled) {
-  background: #252c35;
+  background: color-mix(in srgb, var(--surface-3) 74%, transparent);
 }
 
 .app-shell--photos .asset-list-row--selected {
-  background: #323a45;
+  background: var(--surface-3);
   border-color: transparent;
 }
 
@@ -4430,8 +4441,39 @@ kbd {
 .app-shell--photos .kv-list,
 .app-shell--photos .metadata-panel,
 .app-shell--photos .url-box {
-  border-color: transparent;
+  border-color: var(--border-soft);
   background: #121820;
+}
+
+.app-shell--photos .kv-list div {
+  border-top-color: var(--border-soft);
+}
+
+.app-shell--photos .kv-list span,
+.app-shell--photos .url-box span,
+.app-shell--photos .metadata-list span,
+.app-shell--photos .saved-view-item span,
+.app-shell--photos .empty {
+  color: var(--fg-secondary);
+}
+
+.app-shell--photos .kv-list strong,
+.app-shell--photos .metadata-list strong,
+.app-shell--photos .saved-view-item strong {
+  color: var(--fg-primary);
+}
+
+.app-shell--photos .asset-image-preview,
+.app-shell--photos .asset-video-preview,
+.app-shell--photos .asset-pdf-preview,
+.app-shell--photos .asset-csv-preview {
+  border-color: var(--border-soft);
+  background: #0f141b;
+  color: var(--fg-primary);
+}
+
+.app-shell--photos .asset-csv-preview {
+  color: var(--fg-secondary);
 }
 
 .app-shell--photos .dev-metrics-item {
