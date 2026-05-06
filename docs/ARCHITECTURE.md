@@ -341,6 +341,7 @@ Main Process の application service は repository / adapter の具体実装を
 
 - Renderer から見える公開契約は `shared/ipc.ts` を維持する。
 - Main 側の IPC 登録は `application/contexts/<context>/ipc-handlers.ts` に分割する。`workspace` / `asset-ingestion` / `asset-discovery` は Application Service、`asset-library` は Command Service / Query Service / projection subscriber、`asset-sharing` は Query Service を抽出済み。workspace 接続テストは `connection-service.ts` で endpoint reachability と storage check の依存を注入し、workspace / asset library / asset sharing runtime wiring は各 `runtime-composition.ts` に集約する。asset-sharing の presign URL 生成は Query Service から strategy port として呼び出し、E2E fixture / 通常 storage の切替は runtime composition が担当する。search index bootstrap は `index-bootstrapper.ts` で storage list と read model upsert の依存を注入する。profile / object mutation に伴う local projection invalidation は `projection-invalidation-service.ts` へ分離する。clipboard 一時ファイル保存、upload planning、E2E fixture storage、通常アップロード runner は infrastructure adapter、workspace state / Saved View / upload job state / local projection cache は repository として分離済みで、`application-composition.ts` は context 間の最小 orchestration を保持する。
+- Renderer 側の upload queue も `asset-ingestion` の adapter として扱い、conflict check query、upload start command、upload job projection lookup は command runner へ寄せる。React hook は dialog / queue state への反映とユーザー通知に集中させる。
 - 書き込み系の副作用は command handler に閉じ、読み取り系は query/read model として扱う。
 - search index / preview cache / upload job は local projection として扱い、R2/S3 の object metadata を正とする。
 
