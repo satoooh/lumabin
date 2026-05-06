@@ -225,17 +225,15 @@ try {
       : {}),
     ...(process.env.LUMABIN_E2E_DENSE ? { LUMABIN_E2E_DENSE: process.env.LUMABIN_E2E_DENSE } : {}),
   };
-  appProcess = spawn('open',
-    [
-      '-n',
-      appPath,
-      ...Object.entries(launchEnvironment).flatMap(([key, value]) => ['--env', `${key}=${value}`]),
-      '--args',
-      ...launchArguments,
-    ],
+  appProcess = spawn(
+    executablePath,
+    launchArguments,
     {
       cwd: projectRoot,
-      env: process.env,
+      env: {
+        ...process.env,
+        ...launchEnvironment,
+      },
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );
@@ -246,7 +244,7 @@ try {
   const appLaunchRejectedPromise = new Promise((_, reject) => {
     appProcess.once('exit', (code, signal) => {
       if (code && code !== 0) {
-        reject(new Error(`Failed to launch packaged app via LaunchServices: code=${code} signal=${signal ?? 'null'}`));
+        reject(new Error(`Packaged app exited before exposing CDP: code=${code} signal=${signal ?? 'null'}`));
       }
     });
   });

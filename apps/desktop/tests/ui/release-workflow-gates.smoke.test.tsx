@@ -93,6 +93,9 @@ describe('release workflow gates', () => {
     expect(releaseLaunchSmoke).toContain("import { createServer } from 'node:net';");
     expect(releaseLaunchSmoke).toContain('process.env.LUMABIN_E2E_CDP_PORT');
     expect(releaseLaunchSmoke).toContain('findAvailableCdpPort');
+    expect(releaseLaunchSmoke).toContain('spawn(');
+    expect(releaseLaunchSmoke).toContain('executablePath,');
+    expect(releaseLaunchSmoke).not.toContain("spawn('open'");
     expect(releaseLaunchSmoke).toContain('LUMABIN_E2E_CDP_PORT: String(cdpPort)');
     expect(packageJson).toContain('"e2e": "npm run package:darwin && node ./scripts/release-launch-smoke.mjs --app"');
     expect(packageJson).toContain('"e2e:dense": "npm run package:darwin && LUMABIN_E2E_DENSE=1');
