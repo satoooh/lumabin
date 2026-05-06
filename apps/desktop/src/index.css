@@ -1383,9 +1383,21 @@ kbd {
   border: 1px solid #334058;
   border-radius: 10px;
   background: rgb(10 16 27 / 72%);
+  color: currentColor;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
+}
+
+.quick-preview-action-tile__icon .action-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .quick-preview-action-tile__copy {
@@ -3823,6 +3835,42 @@ kbd {
   color: #edf0f4;
 }
 
+.app-shell--photos .workspace-settings-nav-button {
+  border-color: var(--border-soft);
+  background: color-mix(in srgb, var(--surface-2) 76%, transparent);
+  color: var(--fg-primary);
+}
+
+.app-shell--photos .workspace-settings-nav-button:hover,
+.app-shell--photos .workspace-settings-nav-button:focus-visible {
+  border-color: var(--border-default);
+  background: var(--surface-3);
+}
+
+.app-shell--photos .workspace-settings-nav-button[aria-selected='true'] {
+  border-color: var(--border-default);
+  background: var(--surface-3);
+  color: var(--fg-primary);
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--fg-primary) 46%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--fg-primary) 8%, transparent);
+}
+
+.app-shell--photos .workspace-settings-nav-description {
+  color: var(--fg-secondary);
+}
+
+.app-shell--photos .workspace-settings-nav-button > .pill {
+  border-color: var(--border-soft);
+  background: color-mix(in srgb, var(--surface-1) 74%, transparent);
+  color: var(--fg-secondary);
+}
+
+.app-shell--photos .workspace-settings-nav-button[aria-selected='true'] > .pill {
+  background: color-mix(in srgb, var(--fg-primary) 12%, transparent);
+  color: var(--fg-primary);
+}
+
 .app-shell--photos .library-nav-item {
   border-color: var(--border-soft);
   background: var(--surface-2);
@@ -3955,6 +4003,12 @@ kbd {
 .app-shell--photos .quick-preview-action-tile__icon {
   border-color: #303847;
   background: #171c24;
+  color: #dce2ec;
+}
+
+.app-shell--photos .quick-preview-action-tile__icon .action-icon {
+  fill: none;
+  stroke: currentColor;
 }
 
 .app-shell--photos .quick-preview-action-tile__description {
