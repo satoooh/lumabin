@@ -1,4 +1,4 @@
-import { createRequire } from 'node:module';
+import { safeStorage as electronSafeStorage } from 'electron';
 import { isE2EMode } from './e2e-runtime';
 
 interface ProfileSecretPayload {
@@ -8,14 +8,13 @@ interface ProfileSecretPayload {
 
 const secretStore = new Map<string, string>();
 const allowPlaintextSecretsForE2E = isE2EMode;
-const require = createRequire(import.meta.url);
 
 type SafeStorage = typeof import('electron').safeStorage;
 
 let safeStorage: SafeStorage | undefined;
 
 const getSafeStorage = (): SafeStorage => {
-  safeStorage ??= (require('electron') as typeof import('electron')).safeStorage;
+  safeStorage ??= electronSafeStorage;
   return safeStorage;
 };
 
