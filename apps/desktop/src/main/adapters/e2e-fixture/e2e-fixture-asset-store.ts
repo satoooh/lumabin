@@ -1,4 +1,5 @@
 import type { AssetItem, AssetMetadata } from '../../../shared/ipc';
+import { e2eFixtureAssetCount } from '../../e2e-runtime';
 
 const E2E_FIXTURE_BASE_ASSET_COUNT = 3;
 const E2E_FIXTURE_MAX_ASSET_COUNT = 2_000;
@@ -55,7 +56,7 @@ const createDenseE2EFixtureAsset = (index: number): AssetMetadata => {
 };
 
 export const resolveE2EFixtureAssetCount = (
-  value = process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT,
+  value = e2eFixtureAssetCount,
 ): number => {
   if (!value) {
     return E2E_FIXTURE_BASE_ASSET_COUNT;

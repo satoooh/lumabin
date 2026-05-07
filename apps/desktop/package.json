@@ -6,7 +6,7 @@
   "main": ".vite/build/main.js",
   "private": true,
   "engines": {
-    "node": "^20.19.0 || >=22.12.0",
+    "node": ">=22.12.0",
     "npm": ">=10"
   },
   "scripts": {
@@ -85,7 +85,7 @@
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
     "@vitejs/plugin-react": "^6.0.1",
-    "electron": "41.5.0",
+    "electron": "42.0.0",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
     "jsdom": "^29.1.1",

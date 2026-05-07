@@ -98,8 +98,11 @@ describe('release workflow gates', () => {
     expect(releaseLaunchSmoke).toContain('process.env.LUMABIN_E2E_CDP_PORT');
     expect(releaseLaunchSmoke).toContain('findAvailableCdpPort');
     expect(releaseLaunchSmoke).toContain('spawn(');
-    expect(releaseLaunchSmoke).toContain('executablePath,');
-    expect(releaseLaunchSmoke).not.toContain("spawn('open'");
+    expect(releaseLaunchSmoke).toContain('const executablePath =');
+    expect(releaseLaunchSmoke).toContain("spawn(\n    'open'");
+    expect(releaseLaunchSmoke).toContain("['-n', '-W', appPath, '--args', ...launchArguments]");
+    expect(releaseLaunchSmoke).toContain('--lumabin-e2e-startup-log=');
+    expect(releaseLaunchSmoke).toContain('--lumabin-e2e-fixture-asset-count=');
     expect(releaseLaunchSmoke).toContain('Packaged app exited before exposing CDP');
     expect(releaseLaunchSmoke).toContain('formatEarlyExitDiagnostics');
     expect(releaseLaunchSmoke).toContain('waitForEarlyExitDiagnostics');
@@ -111,6 +114,8 @@ describe('release workflow gates', () => {
     expect(e2eRuntime).toContain('export const e2eRemoteDebuggingPort');
     expect(e2eRuntime).toContain('process.env.LUMABIN_E2E_CDP_PORT');
     expect(e2eRuntime).toContain("argvValue('--remote-debugging-port=')");
+    expect(e2eRuntime).toContain("argvValue('--lumabin-e2e-startup-log=')");
+    expect(e2eRuntime).toContain("argvValue('--lumabin-e2e-fixture-asset-count=')");
     expect(packageJson).toContain('"e2e": "npm run package:darwin && node ./scripts/release-launch-smoke.mjs --app"');
     expect(packageJson).toContain('"e2e:dense": "npm run package:darwin && LUMABIN_E2E_DENSE=1');
     expect(packageJson).toContain('"verify:dev-metrics-snapshot": "node ./scripts/verify-dev-metrics-snapshot.mjs"');
