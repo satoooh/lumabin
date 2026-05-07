@@ -1,6 +1,6 @@
 # LumaBin Roadmap
 
-- 最終更新日: 2026-05-05
+- 最終更新日: 2026-05-07
 - 対象: public OSS project としての今後の改善方針
 - 詳細な進行管理: [GitHub Issues](https://github.com/satoooh/lumabin/issues)
 
@@ -36,6 +36,7 @@ LumaBin は public preview として利用可能な状態です。
 - Issue: [#60 Plan desktop toolchain major upgrades](https://github.com/satoooh/lumabin/issues/60)
 - 目的: Dependabot の通常PRでは解けない major toolchain 更新を、互換性のある単位で計画的に移行する
 - 完了条件: 対象package familyごとの dedicated PR で `npm ci`、`npm run smoke:ci`、`Desktop CI` packaging smoke が通り、移行済みfamilyだけ Dependabot ignore を解除できる
+- 現在地: Electron 42 までの移行は v1.0.5 に反映済み。残る major は `eslint` 10 と `@electron/fuses` 2 で、いずれも upstream peer dependency 互換性が整うまで defer する
 
 ## 完了済みマイルストーン
 
