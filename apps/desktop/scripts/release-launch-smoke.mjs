@@ -69,6 +69,92 @@ const wait = (milliseconds) =>
     setTimeout(resolve, milliseconds);
   });
 
+const readStartupLog = () => {
+  if (!existsSync(startupLogPath)) {
+    return null;
+  }
+
+  const startupLog = readFileSync(startupLogPath, 'utf8').trim();
+  return startupLog || null;
+};
+
+const readRecentCrashReport = (sinceMs) => {
+  const diagnosticReportsDirectory = process.env.HOME
+    ? path.join(process.env.HOME, 'Library', 'Logs', 'DiagnosticReports')
+    : null;
+  if (!diagnosticReportsDirectory || !existsSync(diagnosticReportsDirectory)) {
+    return null;
+  }
+
+  const crashReport = readdirSync(diagnosticReportsDirectory)
+    .filter((entry) => entry.startsWith('LumaBin-') && entry.endsWith('.ips'))
+    .map((entry) => {
+      const filePath = path.join(diagnosticReportsDirectory, entry);
+      return { filePath, mtimeMs: statSync(filePath).mtimeMs };
+    })
+    .filter((entry) => entry.mtimeMs >= sinceMs - 5_000)
+    .sort((left, right) => right.mtimeMs - left.mtimeMs)
+    .at(0);
+
+  if (!crashReport) {
+    return null;
+  }
+
+  const report = readFileSync(crashReport.filePath, 'utf8');
+  const jsonStart = report.indexOf('\n{');
+  if (jsonStart === -1) {
+    return { filePath: crashReport.filePath, summary: null };
+  }
+
+  try {
+    const crashDetails = JSON.parse(report.slice(jsonStart + 1));
+    const exceptionType = crashDetails.exception?.type;
+    const signal = crashDetails.exception?.signal;
+    const termination = crashDetails.termination?.indicator;
+    const faultingThread = crashDetails.faultingThread;
+    const summary = [
+      exceptionType ? `exception=${exceptionType}` : null,
+      signal ? `signal=${signal}` : null,
+      termination ? `termination=${termination}` : null,
+      typeof faultingThread === 'number' ? `faultingThread=${faultingThread}` : null,
+    ].filter(Boolean).join(' ');
+    return { filePath: crashReport.filePath, summary: summary || null };
+  } catch {
+    return { filePath: crashReport.filePath, summary: null };
+  }
+};
+
+const formatEarlyExitDiagnostics = (launchStartedAtMs) => {
+  const diagnostics = [];
+  const startupLog = readStartupLog();
+  if (startupLog) {
+    diagnostics.push(`[release-launch-smoke] startup log:\n${startupLog}`);
+  }
+
+  const crashReport = readRecentCrashReport(launchStartedAtMs);
+  if (crashReport) {
+    diagnostics.push([
+      `[release-launch-smoke] crash report: ${crashReport.filePath}`,
+      crashReport.summary,
+    ].filter(Boolean).join('\n'));
+  }
+
+  return diagnostics.length ? `\n${diagnostics.join('\n')}` : '';
+};
+
+const waitForEarlyExitDiagnostics = async (launchStartedAtMs) => {
+  const deadline = Date.now() + 3_000;
+  while (Date.now() < deadline) {
+    const diagnostics = formatEarlyExitDiagnostics(launchStartedAtMs);
+    if (diagnostics) {
+      return diagnostics;
+    }
+    await wait(250);
+  }
+
+  return formatEarlyExitDiagnostics(launchStartedAtMs);
+};
+
 const fetchWithTimeout = async (url, timeoutMs) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -108,8 +194,9 @@ const waitForDevToolsEndpoint = async (endpointPromise) => {
     return detectedEndpoint;
   }
 
-  if (existsSync(startupLogPath)) {
-    console.warn(`[release-launch-smoke] startup log:\n${readFileSync(startupLogPath, 'utf8').trim()}`);
+  const startupLog = readStartupLog();
+  if (startupLog) {
+    console.warn(`[release-launch-smoke] startup log:\n${startupLog}`);
   }
 
   throw new Error(`Timed out waiting for packaged app CDP endpoint after ${cdpReadyTimeoutMs}ms: ${cdpVersionEndpoint}`);
@@ -232,6 +319,7 @@ try {
       : {}),
     ...(process.env.LUMABIN_E2E_DENSE ? { LUMABIN_E2E_DENSE: process.env.LUMABIN_E2E_DENSE } : {}),
   };
+  const launchStartedAtMs = Date.now();
   appProcess = spawn(
     executablePath,
     launchArguments,
@@ -250,7 +338,15 @@ try {
 
   const appLaunchRejectedPromise = new Promise((_, reject) => {
     appProcess.once('exit', (code, signal) => {
-      reject(new Error(`Packaged app exited before exposing CDP: code=${code ?? 'null'} signal=${signal ?? 'null'}`));
+      waitForEarlyExitDiagnostics(launchStartedAtMs)
+        .then((diagnostics) => {
+          reject(new Error(
+            `Packaged app exited before exposing CDP: code=${code ?? 'null'} signal=${signal ?? 'null'}${diagnostics}`,
+          ));
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   });
   const cdpEndpoint = await waitForDevToolsEndpoint(Promise.race([detectedDevToolsEndpointPromise, appLaunchRejectedPromise]));
