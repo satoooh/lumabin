@@ -1,6 +1,6 @@
 # LumaBin Runbook
 
-- 最終更新日: 2026-05-05
+- 最終更新日: 2026-05-07
 - ステータス: Public preview
 - 対象: `apps/desktop`
 
@@ -12,7 +12,7 @@
 
 前提:
 
-- Node.js `^20.19.0 || >=22.12.0`（CI は Node.js 22）
+- Node.js `>=22.12.0`（CI は Node.js 22）
 - npm `>=10`
 
 ```bash

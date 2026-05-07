@@ -39,4 +39,10 @@ export const e2eRunId =
 
 export const e2eRemoteDebuggingPort = resolveE2ERemoteDebuggingPort();
 
-export const e2eStartupLogPath = process.env.LUMABIN_E2E_STARTUP_LOG?.trim();
+export const e2eStartupLogPath =
+  process.env.LUMABIN_E2E_STARTUP_LOG?.trim() ||
+  argvValue('--lumabin-e2e-startup-log=')?.trim();
+
+export const e2eFixtureAssetCount =
+  process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT?.trim() ||
+  argvValue('--lumabin-e2e-fixture-asset-count=')?.trim();

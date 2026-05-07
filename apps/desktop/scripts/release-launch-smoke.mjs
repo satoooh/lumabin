@@ -307,6 +307,11 @@ try {
     '--lumabin-e2e',
     '--lumabin-e2e-fixture',
     `--lumabin-e2e-run-id=${runId}`,
+    `--lumabin-e2e-startup-log=${startupLogPath}`,
+    ...(process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT
+      ? [`--lumabin-e2e-fixture-asset-count=${process.env.LUMABIN_E2E_FIXTURE_ASSET_COUNT}`]
+      : []),
+    ...(process.env.LUMABIN_E2E_DENSE ? ['--lumabin-e2e-dense'] : []),
   ];
   const launchEnvironment = {
     LUMABIN_E2E: '1',
@@ -321,8 +326,8 @@ try {
   };
   const launchStartedAtMs = Date.now();
   appProcess = spawn(
-    executablePath,
-    launchArguments,
+    'open',
+    ['-n', '-W', appPath, '--args', ...launchArguments],
     {
       cwd: projectRoot,
       env: {
