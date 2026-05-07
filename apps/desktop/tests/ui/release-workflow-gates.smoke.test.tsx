@@ -101,6 +101,11 @@ describe('release workflow gates', () => {
     expect(releaseLaunchSmoke).toContain('executablePath,');
     expect(releaseLaunchSmoke).not.toContain("spawn('open'");
     expect(releaseLaunchSmoke).toContain('Packaged app exited before exposing CDP');
+    expect(releaseLaunchSmoke).toContain('formatEarlyExitDiagnostics');
+    expect(releaseLaunchSmoke).toContain('waitForEarlyExitDiagnostics');
+    expect(releaseLaunchSmoke).toContain('[release-launch-smoke] startup log:');
+    expect(releaseLaunchSmoke).toContain('[release-launch-smoke] crash report:');
+    expect(releaseLaunchSmoke).toContain("Library', 'Logs', 'DiagnosticReports'");
     expect(releaseLaunchSmoke).toContain('LUMABIN_E2E_CDP_PORT: String(cdpPort)');
     expect(mainProcess).toContain("app.commandLine.appendSwitch('remote-debugging-port', e2eRemoteDebuggingPort);");
     expect(e2eRuntime).toContain('export const e2eRemoteDebuggingPort');
