@@ -67,6 +67,8 @@ describe('release workflow gates', () => {
       indexOfRequired(releasePreflight, "run('npm', ['run', 'package:darwin']);"),
     );
     expect(releaseWorkflow).toContain('SIGNING_MODE: ${{ steps.signing.outputs.mode }}');
+    expect(releaseWorkflow).toContain('This build is Developer ID signed and notarized');
+    expect(releaseWorkflow).toContain('Gatekeeper assessment and stapler validation are recorded in release-evidence.json');
     expect(releaseWorkflow).toContain(
       'for key in LUMABIN_APPLE_SIGN_IDENTITY LUMABIN_APPLE_ID LUMABIN_APPLE_ID_PASSWORD LUMABIN_APPLE_TEAM_ID LUMABIN_APPLE_CERTIFICATE_BASE64 LUMABIN_APPLE_CERTIFICATE_PASSWORD; do',
     );

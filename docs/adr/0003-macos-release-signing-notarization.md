@@ -1,6 +1,6 @@
 # ADR 0003: macOS Release Signing and Notarization
 
-- Status: Accepted
+- Status: Accepted / Implemented
 - Date: 2026-05-05
 
 ## Context
@@ -13,7 +13,7 @@ Electron の公式配布ガイドでは、macOS release build を Developer ID c
 
 ## Decision
 
-LumaBin は unsigned ad-hoc ZIP release を既定の public preview 経路として維持する。
+LumaBin は signed/notarized ZIP release を一般ユーザー向けの公開配布経路として扱う。Apple credentials が設定されていない環境でも再現可能な fallback として、unsigned ad-hoc ZIP release 経路は維持する。
 
 `LUMABIN_ENABLE_MAC_SIGN=1` が設定された場合、release build は Developer ID signing と notarization を一体の release mode として扱う。GitHub Actions の release job は Developer ID Application certificate を一時 keychain に import し、package 前に signing identity を検証し、Electron Forge によって app を sign / notarize し、生成された ZIP を publish 前に検証する。
 
@@ -30,8 +30,8 @@ release verifier は signed mode を unsigned mode より厳しく扱い、Relea
 
 ## Consequences
 
-- 既定の preview release は secrets なしで再現できる。
-- Apple credentials を設定すれば、コード変更なしで一般ユーザー向けの signed/notarized release に移行できる。
+- 一般ユーザー向け release は Developer ID signing / notarization を通し、Gatekeeper assessment と stapler validation を publish 前に検証する。
+- Apple credentials がない環境では unsigned ad-hoc ZIP を再現できるが、これは preview / fallback 経路として扱う。
 - signing secrets は git の外の `release` environment secrets に置き、GitHub Actions runner の一時 keychain 内でだけ materialize される。
-- 必要な Apple secrets を設定して signed release run を実行するまでは、signed/notarized 経路は実アセットで未検証の状態として扱う。
-- release documentation では、既定の unsigned preview release と、一般ユーザー向けの signed/notarized release を明確に区別する。
+- v1.0.6 release で signed/notarized ZIP の実運用は確認済み。Release evidence では `signing.mode=signed`、Developer ID authority、hardened runtime、Gatekeeper assessment、stapler validation が記録された。
+- release documentation では、一般ユーザー向けの signed/notarized release と、signing 無効時の unsigned fallback を明確に区別する。
