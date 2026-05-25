@@ -81,7 +81,7 @@ export const listStorageObjects = async (
         Prefix: normalizePrefix(input.prefix),
         Delimiter: input.recursive ? undefined : '/',
         ContinuationToken: input.continuationToken,
-        MaxKeys: input.limit ?? 100,
+        MaxKeys: input.limit ?? 1_000,
       }),
     );
 
