@@ -32,8 +32,11 @@ export interface QuickPreviewOverlayPropsInput {
     handleRetrySelectedAssetPreview: () => void;
     handleVideoDecodeError: () => void;
     isPreviewBusy: boolean;
+    isVideoPlaybackBusy: boolean;
     pdfPreviewPage: number;
     previewDataUrl: string;
+    videoPlaybackError: string;
+    videoPlaybackUrl: string;
   };
   metadata: {
     cameraLabel: string;
@@ -108,6 +111,7 @@ export const createQuickPreviewOverlayProps = ({
     assetPreview: media.assetPreview,
     assetPreviewError: media.assetPreviewError,
     isPreviewBusy: media.isPreviewBusy,
+    isVideoPlaybackBusy: media.isVideoPlaybackBusy,
     onImageDecodeError: media.handleImageDecodeError,
     onPdfNextPage: media.handlePdfNextPage,
     onPdfPrevPage: media.handlePdfPrevPage,
@@ -115,6 +119,8 @@ export const createQuickPreviewOverlayProps = ({
     onVideoDecodeError: media.handleVideoDecodeError,
     pdfPreviewPage: media.pdfPreviewPage,
     previewDataUrl: media.previewDataUrl,
+    videoPlaybackError: media.videoPlaybackError,
+    videoPlaybackUrl: media.videoPlaybackUrl,
   },
   sharing,
   sharingCommands,

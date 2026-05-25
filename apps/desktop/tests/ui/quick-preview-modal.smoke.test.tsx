@@ -51,6 +51,7 @@ const createProps = (): ComponentProps<typeof QuickPreviewModal> => ({
     assetPreview: null,
     assetPreviewError: '',
     isPreviewBusy: false,
+    isVideoPlaybackBusy: false,
     onImageDecodeError: vi.fn(),
     onPdfNextPage: vi.fn(),
     onPdfPrevPage: vi.fn(),
@@ -58,6 +59,8 @@ const createProps = (): ComponentProps<typeof QuickPreviewModal> => ({
     onVideoDecodeError: vi.fn(),
     pdfPreviewPage: 1,
     previewDataUrl: '',
+    videoPlaybackError: '',
+    videoPlaybackUrl: '',
   },
   sharing: {
     isPresignedGetCopied: false,

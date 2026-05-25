@@ -88,12 +88,27 @@ export const useAssetPreviewController = ({
         if (requestId !== previewRequestIdRef.current) {
           return;
         }
+        setIsPreviewBusy(false);
         setAssetPreview(null);
         setAssetPreviewError('Preview is not supported for this file type yet.');
         return;
       }
 
       const maxBytesSteps = buildPreviewMaxBytesSteps(kind, asset.size);
+
+      if (kind === 'video') {
+        setIsPreviewBusy(false);
+        setAssetPreview({
+          key: asset.key,
+          kind,
+          contentType: asset.contentType,
+          byteLength: 0,
+          totalBytes: asset.size,
+          truncated: false,
+        });
+        setAssetPreviewError('');
+        return;
+      }
 
       setIsPreviewBusy(true);
       try {
@@ -130,7 +145,7 @@ export const useAssetPreviewController = ({
           const shouldRetryWithMoreBytes =
             preview.truncated &&
             index < maxBytesSteps.length - 1 &&
-            (kind === 'image' || kind === 'video' || kind === 'pdf');
+            (kind === 'image' || kind === 'pdf');
           if (!shouldRetryWithMoreBytes) {
             break;
           }

@@ -33,8 +33,11 @@ describe('desktop workbench overlay coordination', () => {
           handleRetrySelectedAssetPreview: vi.fn(),
           handleVideoDecodeError: vi.fn(),
           isPreviewBusy: false,
+          isVideoPlaybackBusy: false,
           pdfPreviewPage: 1,
           previewDataUrl: '',
+          videoPlaybackError: '',
+          videoPlaybackUrl: '',
         },
         metadata: {
           cameraLabel: '-',

@@ -37,6 +37,9 @@ export interface QuickPreviewModalMedia {
   assetPreview: AssetPreview | null;
   previewDataUrl: string;
   isPreviewBusy: boolean;
+  isVideoPlaybackBusy: boolean;
+  videoPlaybackError: string;
+  videoPlaybackUrl: string;
   onImageDecodeError: () => void;
   onVideoDecodeError: () => void;
   onRetryPreview: () => void;

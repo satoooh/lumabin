@@ -8,6 +8,7 @@ interface QuickPreviewMediaPanelProps {
   hasPrevPreviewImage: boolean;
   isPreviewBusy: boolean;
   isSharingBusy: boolean;
+  isVideoPlaybackBusy: boolean;
   onDownloadSelectedAsset: () => void;
   onImageDecodeError: () => void;
   onMoveSelection: (direction: -1 | 1) => void;
@@ -19,6 +20,8 @@ interface QuickPreviewMediaPanelProps {
   previewDataUrl: string;
   selectedAsset: AssetItem;
   selectedProfileId: string;
+  videoPlaybackError: string;
+  videoPlaybackUrl: string;
 }
 
 export const QuickPreviewMediaPanel = ({
@@ -29,6 +32,7 @@ export const QuickPreviewMediaPanel = ({
   hasPrevPreviewImage,
   isPreviewBusy,
   isSharingBusy,
+  isVideoPlaybackBusy,
   onDownloadSelectedAsset,
   onImageDecodeError,
   onMoveSelection,
@@ -40,13 +44,18 @@ export const QuickPreviewMediaPanel = ({
   previewDataUrl,
   selectedAsset,
   selectedProfileId,
+  videoPlaybackError,
+  videoPlaybackUrl,
 }: QuickPreviewMediaPanelProps) => {
-  if (assetPreviewError) {
+  const previewError = assetPreviewError || videoPlaybackError;
+  const isMediaBusy = isPreviewBusy || isVideoPlaybackBusy;
+
+  if (previewError) {
     return (
       <div>
-        <p className="error-text">{assetPreviewError}</p>
+        <p className="error-text">{previewError}</p>
         <div className="row-actions">
-          <button type="button" disabled={isPreviewBusy} onClick={onRetryPreview}>
+          <button type="button" disabled={isMediaBusy} onClick={onRetryPreview}>
             <span className="button-content">
               <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M20 12a8 8 0 1 1-2.3-5.7" />
@@ -113,11 +122,11 @@ export const QuickPreviewMediaPanel = ({
     );
   }
 
-  if (assetPreview?.kind === 'video' && previewDataUrl) {
+  if (assetPreview?.kind === 'video' && videoPlaybackUrl) {
     return (
       <video
         className="asset-video-lightbox"
-        src={previewDataUrl}
+        src={videoPlaybackUrl}
         controls
         autoPlay
         playsInline
@@ -152,7 +161,7 @@ export const QuickPreviewMediaPanel = ({
     );
   }
 
-  if (isPreviewBusy) {
+  if (isMediaBusy) {
     return <p className="minor">Loading preview...</p>;
   }
 

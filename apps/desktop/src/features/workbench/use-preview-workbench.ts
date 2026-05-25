@@ -1,4 +1,10 @@
-import { useState, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import { useAssetPreviewController } from '../preview/use-asset-preview-controller';
 import { useQuickPreviewFocusRestore } from '../preview/use-quick-preview-focus-restore';
 import { useQuickPreviewLifecycle } from '../preview/use-quick-preview-lifecycle';
@@ -77,6 +83,10 @@ export const usePreviewWorkbench = ({
   const [presignedGetUrl, setPresignedGetUrl] = useState<string>('');
   const [presignedPutUrl, setPresignedPutUrl] = useState<string>('');
   const [isSharingBusy, setIsSharingBusy] = useState<boolean>(false);
+  const videoPlaybackRequestIdRef = useRef<number>(0);
+  const [videoPlaybackUrl, setVideoPlaybackUrl] = useState<string>('');
+  const [videoPlaybackError, setVideoPlaybackError] = useState<string>('');
+  const [isVideoPlaybackBusy, setIsVideoPlaybackBusy] = useState<boolean>(false);
 
   const {
     closeQuickPreview,
@@ -122,6 +132,74 @@ export const usePreviewWorkbench = ({
     selectedAsset,
     selectedProfileId,
   });
+
+  const loadSelectedVideoPlaybackUrl = useCallback(
+    async (profileId: string, asset: AssetItem) => {
+      const requestId = videoPlaybackRequestIdRef.current + 1;
+      videoPlaybackRequestIdRef.current = requestId;
+
+      if (inferAssetKind(asset) !== 'video') {
+        setIsVideoPlaybackBusy(false);
+        setVideoPlaybackUrl('');
+        setVideoPlaybackError('');
+        return;
+      }
+
+      setIsVideoPlaybackBusy(true);
+      setVideoPlaybackError('');
+      try {
+        const result = await sharingApi.createPresignedGet({
+          profileId,
+          key: asset.key,
+          expiresInSeconds: presignedUrlTTLSeconds,
+        });
+        if (requestId !== videoPlaybackRequestIdRef.current) {
+          return;
+        }
+        setVideoPlaybackUrl(result.url);
+      } catch (error) {
+        if (requestId !== videoPlaybackRequestIdRef.current) {
+          return;
+        }
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        setVideoPlaybackUrl('');
+        setVideoPlaybackError(`Video playback URL could not be prepared: ${message}`);
+      } finally {
+        if (requestId === videoPlaybackRequestIdRef.current) {
+          setIsVideoPlaybackBusy(false);
+        }
+      }
+    },
+    [presignedUrlTTLSeconds, sharingApi],
+  );
+
+  useEffect(() => {
+    videoPlaybackRequestIdRef.current += 1;
+    setVideoPlaybackUrl('');
+    setVideoPlaybackError('');
+    setIsVideoPlaybackBusy(false);
+
+    if (!selectedProfileId || !selectedAsset || inferAssetKind(selectedAsset) !== 'video') {
+      return;
+    }
+
+    void loadSelectedVideoPlaybackUrl(selectedProfileId, selectedAsset);
+  }, [loadSelectedVideoPlaybackUrl, selectedAsset, selectedProfileId]);
+
+  const handleRetrySelectedAssetMediaPreview = useCallback(() => {
+    if (selectedProfileId && selectedAsset && inferAssetKind(selectedAsset) === 'video') {
+      handleRetrySelectedAssetPreview();
+      void loadSelectedVideoPlaybackUrl(selectedProfileId, selectedAsset);
+      return;
+    }
+
+    handleRetrySelectedAssetPreview();
+  }, [
+    handleRetrySelectedAssetPreview,
+    loadSelectedVideoPlaybackUrl,
+    selectedAsset,
+    selectedProfileId,
+  ]);
 
   const {
     capturedAtLabel,
@@ -228,11 +306,14 @@ export const usePreviewWorkbench = ({
       handleImageDecodeError,
       handlePdfNextPage,
       handlePdfPrevPage,
-      handleRetrySelectedAssetPreview,
+      handleRetrySelectedAssetPreview: handleRetrySelectedAssetMediaPreview,
       handleVideoDecodeError,
       isPreviewBusy,
+      isVideoPlaybackBusy,
       pdfPreviewPage,
       previewDataUrl,
+      videoPlaybackError,
+      videoPlaybackUrl,
     },
     sharing: {
       isPresignedGetCopied: copiedLabel === 'Presigned GET URL',
