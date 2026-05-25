@@ -1,4 +1,5 @@
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
+import { clearAssetBrowserListCache } from '../../src/features/gallery/asset-browser-list-cache';
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -53,4 +54,8 @@ Object.defineProperty(navigator, 'clipboard', {
   value: {
     writeText: vi.fn(async () => undefined),
   },
+});
+
+afterEach(() => {
+  clearAssetBrowserListCache();
 });
