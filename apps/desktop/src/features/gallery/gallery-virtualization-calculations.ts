@@ -4,6 +4,7 @@ import {
   GALLERY_DAY_GROUP_GAP_PX,
   GALLERY_DAY_HEADER_HEIGHT_PX,
   GALLERY_GRID_GAP_PX,
+  GALLERY_VIRTUAL_CHUNK_ROWS,
   GALLERY_VIRTUAL_OVERSCAN_PX,
   LIST_ROW_HEIGHT_PX,
   VIRTUAL_OVERSCAN_ROWS,
@@ -97,23 +98,36 @@ export const buildGalleryVirtualSections = (
   galleryTileHeight: number,
 ): GalleryVirtualSection[] => {
   let offset = 0;
+  const safeColumnCount = Math.max(1, galleryColumnCount);
+  const chunkSize = Math.max(1, safeColumnCount * GALLERY_VIRTUAL_CHUNK_ROWS);
+  const virtualSections: GalleryVirtualSection[] = [];
 
-  return galleryDaySections.map((section) => {
-    const rowCount = Math.max(1, Math.ceil(section.items.length / galleryColumnCount));
-    const gridHeight =
-      rowCount * galleryTileHeight + Math.max(0, rowCount - 1) * GALLERY_GRID_GAP_PX;
-    const estimatedHeight =
-      GALLERY_DAY_HEADER_HEIGHT_PX + gridHeight + GALLERY_DAY_GROUP_GAP_PX;
+  for (const section of galleryDaySections) {
+    for (let chunkStart = 0; chunkStart < section.items.length; chunkStart += chunkSize) {
+      const chunkItems = section.items.slice(chunkStart, chunkStart + chunkSize);
+      const isContinuation = chunkStart > 0;
+      const rowCount = Math.max(1, Math.ceil(chunkItems.length / safeColumnCount));
+      const gridHeight =
+        rowCount * galleryTileHeight + Math.max(0, rowCount - 1) * GALLERY_GRID_GAP_PX;
+      const headerHeight = isContinuation ? 0 : GALLERY_DAY_HEADER_HEIGHT_PX;
+      const estimatedHeight = headerHeight + gridHeight + GALLERY_DAY_GROUP_GAP_PX;
 
-    const nextSection: GalleryVirtualSection = {
-      ...section,
-      estimatedHeight,
-      topOffset: offset,
-      bottomOffset: offset + estimatedHeight,
-    };
-    offset += estimatedHeight;
-    return nextSection;
-  });
+      const nextSection: GalleryVirtualSection = {
+        ...section,
+        key: isContinuation ? `${section.key}::${chunkStart}` : section.key,
+        items: chunkItems,
+        startIndex: section.startIndex + chunkStart,
+        estimatedHeight,
+        isContinuation,
+        topOffset: offset,
+        bottomOffset: offset + estimatedHeight,
+      };
+      virtualSections.push(nextSection);
+      offset += estimatedHeight;
+    }
+  }
+
+  return virtualSections;
 };
 
 export const calculateGalleryVirtualRange = (
@@ -130,7 +144,7 @@ export const calculateGalleryVirtualRange = (
     };
   }
 
-  const viewportTop = Math.max(0, galleryScrollTop - GALLERY_VIRTUAL_OVERSCAN_PX);
+  const viewportTop = Math.max(0, galleryScrollTop);
   const viewportBottom =
     galleryScrollTop + galleryViewportHeight + GALLERY_VIRTUAL_OVERSCAN_PX;
 

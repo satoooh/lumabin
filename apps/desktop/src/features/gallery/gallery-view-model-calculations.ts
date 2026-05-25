@@ -24,6 +24,7 @@ export interface GalleryDaySection {
 
 export interface GalleryVirtualSection extends GalleryDaySection {
   estimatedHeight: number;
+  isContinuation?: boolean;
   topOffset: number;
   bottomOffset: number;
 }
@@ -54,6 +55,7 @@ export const GALLERY_GRID_GAP_PX = 8;
 export const GALLERY_DAY_GROUP_GAP_PX = 8;
 export const GALLERY_DAY_HEADER_HEIGHT_PX = 34;
 export const GALLERY_CARD_ASPECT_RATIO = 3 / 4;
+export const GALLERY_VIRTUAL_CHUNK_ROWS = 8;
 export const GALLERY_VIRTUAL_OVERSCAN_PX = 540;
 
 export const isQuickPreviewKind = (kind: Exclude<KindFilter, 'all'>): boolean =>

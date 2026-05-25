@@ -3,6 +3,7 @@ import {
   countKinds,
   countSmartCollections,
   filterItemsByPrefix,
+  GALLERY_VIRTUAL_CHUNK_ROWS,
   resolveVisibleItems,
   type InferAssetKind,
 } from '../../src/features/gallery/gallery-view-model-calculations';
@@ -162,5 +163,27 @@ describe('gallery view model calculations', () => {
     expect(range.startIndex).toBe(0);
     expect(range.endIndex).toBeGreaterThan(0);
     expect(range.bottomSpacerHeight).toBeGreaterThanOrEqual(0);
+  });
+
+  it('chunks dense same-day gallery sections so scrolling only renders nearby rows', () => {
+    const denseItems = Array.from({ length: 80 }, (_, index) =>
+      item(`asset-${index}.png`, { lastModified: '2026-05-02T00:00:00.000Z' }),
+    );
+    const sections = buildGalleryDaySections(
+      denseItems,
+      (isoDate) => isoDate.slice(0, 10),
+      (dayKey) => dayKey,
+    );
+
+    const virtualSections = buildGalleryVirtualSections(sections, 4, 120);
+
+    expect(virtualSections.length).toBeGreaterThan(1);
+    expect(virtualSections[0].isContinuation).toBeFalsy();
+    expect(virtualSections[1].isContinuation).toBe(true);
+    expect(virtualSections[0].items).toHaveLength(4 * GALLERY_VIRTUAL_CHUNK_ROWS);
+    expect(virtualSections[1].items[0].key).toBe(
+      `asset-${4 * GALLERY_VIRTUAL_CHUNK_ROWS}.png`,
+    );
+    expect(virtualSections[1].topOffset).toBe(virtualSections[0].bottomOffset);
   });
 });

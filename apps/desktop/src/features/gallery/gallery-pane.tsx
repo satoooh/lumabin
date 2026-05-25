@@ -4,6 +4,7 @@ import type { AssetItem } from '../../shared/ipc';
 type AssetKind = 'image' | 'video' | 'pdf' | 'csv' | 'other';
 
 interface GallerySection {
+  isContinuation?: boolean;
   key: string;
   label: string;
   items: AssetItem[];
@@ -88,9 +89,11 @@ export const GalleryPane = ({
           <div style={{ height: galleryVirtualRange.topSpacerHeight }} />
           {visibleGallerySections.map((section) => (
             <section key={section.key} className="gallery-day-group">
-              <div className="gallery-day-header">
-                <h3>{section.label}</h3>
-              </div>
+              {section.isContinuation ? null : (
+                <div className="gallery-day-header">
+                  <h3>{section.label}</h3>
+                </div>
+              )}
 
               <div
                 className="gallery-grid-inner"
