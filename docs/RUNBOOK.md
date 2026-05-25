@@ -1,6 +1,6 @@
 # LumaBin Runbook
 
-- 最終更新日: 2026-05-07
+- 最終更新日: 2026-05-26
 - ステータス: Public preview
 - 対象: `apps/desktop`
 
@@ -123,12 +123,12 @@ npm run e2e:attach
 ```
 
 補足:
-- `npm run e2e` は `npm run package:darwin` 後、Electron 用 entitlement 付きで ad-hoc 再署名した packaged app を `--remote-debugging-port` 付きで起動し、CDP 経由で検証する
+- `npm run e2e` は `npm run package:darwin` 後、signing mode に応じた署名状態の packaged app を `--remote-debugging-port` 付きで起動し、CDP 経由で検証する
 - E2E は毎回 `LUMABIN_E2E_RUN_ID` を付与した隔離 `userData` を使うため、前回実行のローカル状態が混ざらない
 - `npm run e2e:headed` は同じ packaged app 導線で Playwright headed mode を有効にしたい場合に使う
 - `npm run e2e:dense` は packaged app を dense E2E fixture（既定 1,000 assets）で起動し、dense 専用テストだけを対象に検索・仮想スクロール・preview・Dev metrics 表示の負荷ウォークスルーを自動確認する
 - dense E2E は `apps/desktop/test-results/**/dev-metrics-snapshot.txt` に Dev Metrics snapshot を保存する
-- `npm run e2e:prelaunch` も `package:darwin` 後の再署名済み packaged app を CLI 引数付きで起動し、fixture と隔離 `userData` を有効にする
+- `npm run e2e:prelaunch` も `package:darwin` 後の packaged app を CLI 引数付きで起動し、fixture と隔離 `userData` を有効にする
 - `npm run e2e:attach` は既に起動済みの `9222` CDP へ接続して Playwright を実行する
 - 失敗時は `apps/desktop/test-results/` にスクリーンショット/trace が残る
 
@@ -178,6 +178,9 @@ Workflow:
   - `SHA256SUMS.txt`
   - `release-evidence.json`（bundle metadata / signing mode / artifact SHA256 / verification checks の機械可読証跡）
   - GitHub Releases に自動アップロード
+- 現在の公開リリース:
+  - `v1.0.6` は `signing.mode=signed` の Developer ID signed + notarized ZIP として公開済み
+  - `release-evidence.json` で Developer ID authority、hardened runtime、Gatekeeper assessment、stapler validation を確認済み
 
 `desktop-e2e`:
 
@@ -264,15 +267,15 @@ Forge は以下環境変数を参照する。
 
 リリース workflow の挙動:
 
-- 既定: unsigned ZIP を生成して GitHub Releases に公開
-- `LUMABIN_ENABLE_MAC_SIGN=1` を `release` environment variable に設定した場合のみ Developer ID signing / notarization を有効化
+- `LUMABIN_ENABLE_MAC_SIGN=1` を `release` environment variable に設定した場合、Developer ID signing / notarization を有効化して GitHub Releases に公開する
+- signing 無効時は unsigned ad-hoc ZIP を fallback として生成し、`release-evidence.json` に unsigned mode として記録する
 - signed release では GitHub Actions の macOS runner 上に一時 keychain を作成し、`LUMABIN_APPLE_CERTIFICATE_BASE64` から Developer ID 証明書を import してから `verify:mac-signing-readiness` を実行する
 - release job 終了時は一時 keychain を削除する
 - `npm run verify:mac-signing-readiness` で Electron 用 entitlements、Developer ID identity、証明書import入力、notarization 環境変数の不足を事前確認できる
 - 署名有効時に必要 secret が不足している場合は workflow を失敗させる
 - 署名有効時は Forge の Developer ID signing / notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
 - 署名有効時の `verify:darwin-artifact` は Developer ID authority、hardened runtime、Team ID、Gatekeeper assessment、stapler validate を release publish 前に確認し、非secretの署名メタデータを `release-evidence.json` に記録する
-- 現時点の既定運用は unsigned ZIP の public preview 配布。一般ユーザー向け配布へ進める場合は、上記 `release` environment secrets / variable を設定し、signed/notarized release run が成功したことを確認する
+- 一般ユーザー向け配布では、publish 前に `release-evidence.json` の `signing.mode=signed`、Developer ID authority、hardened runtime、`spctlAssess=true`、`staplerValidate=true` を確認する
 
 ### 4.5 Release 実行手順（zip配布）
 
@@ -303,7 +306,8 @@ npm run release:preflight
 2. 成功時に以下を確認する
    - `smoke:ci` が全緑
    - `package:darwin` が成功
-   - `package:darwin` 後の Electron 用 entitlement 付き ad-hoc 再署名と zip 再生成が成功
+   - signing 無効時は `package:darwin` 後の Electron 用 entitlement 付き ad-hoc 再署名と zip 再生成が成功
+   - signing 有効時は Forge の Developer ID 署名/notarization 成果物が ad-hoc 再署名で上書きされていない
    - `out/make/zip/darwin/arm64/*.zip` に `LumaBin.app/Contents/Resources/app.asar` が含まれる
    - bundle metadata（Bundle ID / app name / version）と executable が妥当である
    - SHA256 が表示される
@@ -388,11 +392,13 @@ npm run release:launch-smoke
 
 ### 5.8 配布アプリが「壊れている」と表示されて起動できない
 
-- unsigned 配布では quarantine 属性でブロックされる場合がある
+- まず対象 Release の `release-evidence.json` を確認し、`signing.mode`、`spctlAssess`、`staplerValidate` を見る
+- signed/notarized 配布で `spctlAssess=true` と `staplerValidate=true` が記録されている場合は、配布物破損ではなく、ダウンロード経路、quarantine、ローカルの Gatekeeper / ネットワーク状態を切り分ける
+- unsigned fallback 配布では quarantine 属性でブロックされる場合がある
 - unsigned mode の `apps/desktop` `package:darwin` は zip 生成後に `build/entitlements.darwin.plist` を使って ad-hoc 再署名して再zip化する
 - signed mode は Forge の Developer ID 署名/notarization 成果物を維持し、ad-hoc 再署名で上書きしない
 - 再署名時は JIT / unsigned executable memory / library validation の entitlement を維持する。これらを外すと Electron の network service や CDP 起動確認が失敗する場合がある
-- それでも初回起動でブロックされる場合は以下を実行して quarantine を外してから起動する
+- unsigned fallback で初回起動がブロックされる場合は以下を実行して quarantine を外してから起動する
 
 ```bash
 xattr -dr com.apple.quarantine LumaBin.app
@@ -452,6 +458,8 @@ npm run audit:github-prepublic-readiness
 2. GitHub Release ページで次を確認する
    - zip アセットがある
    - `SHA256SUMS.txt` がある
+   - `release-evidence.json` がある
+   - 一般ユーザー向け release では `release-evidence.json` が `signing.mode=signed`、`spctlAssess=true`、`staplerValidate=true` を含む
 3. zip をダウンロードし、SHA256 を照合する
 
 ```bash

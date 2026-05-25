@@ -236,6 +236,14 @@ jobs:
           - Includes: release-evidence.json for machine-readable release verification evidence
           NOTES
           printf '\n- Signing mode: %s\n' "${SIGNING_MODE}" >> "${NOTES_FILE}"
+          if [ "${SIGNING_MODE}" = "signed" ]; then
+            cat >> "${NOTES_FILE}" <<'SIGNED'
+
+          - This build is Developer ID signed and notarized
+          - Gatekeeper assessment and stapler validation are recorded in release-evidence.json
+          SIGNED
+          fi
+
           if [ "${SIGNING_MODE}" = "unsigned" ]; then
             cat >> "${NOTES_FILE}" <<'UNSIGNED'
 

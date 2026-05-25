@@ -22,10 +22,10 @@ LumaBin は OSS として公開されています。バグ報告、再現手順�
 macOS 向けの配布 zip は GitHub Releases で公開しています。
 
 - 最新リリース: [LumaBin Releases](https://github.com/satoooh/lumabin/releases/latest)
-- 配布形式: unsigned macOS ZIP
+- 配布形式: Developer ID signed + notarized macOS ZIP（現在の公開リリース）
 - 検証ファイル: `SHA256SUMS.txt` と `release-evidence.json`
 
-初回起動時に Gatekeeper の警告が出る場合があります。現時点では notarize 済みアプリではなく、OSS preview として unsigned ZIP を配布しています。
+現在の公開リリースは `release-evidence.json` で Developer ID 署名、hardened runtime、Gatekeeper assessment、stapler validation を確認した ZIP です。手元で unsigned mode のローカル配布物を作った場合のみ、macOS の quarantine により初回起動がブロックされることがあります。
 
 ## 現在地
 
@@ -118,7 +118,8 @@ GitHub Actions:
 - Jobs（Release）:
   - `Lint / Typecheck / Audit`
   - `Build and Publish macOS Release`（GitHub Release に zip + `SHA256SUMS.txt` を公開）
-  - 既定は unsigned ZIP。`LUMABIN_ENABLE_MAC_SIGN=1` のときのみ署名/notarize を実施
+  - `release` environment で `LUMABIN_ENABLE_MAC_SIGN=1` のとき Developer ID 署名/notarize を実施
+  - signing 無効時は unsigned ad-hoc ZIP を生成し、`release-evidence.json` に unsigned mode として記録
 
 ローカルで配布物の最終確認まで行う場合:
 
