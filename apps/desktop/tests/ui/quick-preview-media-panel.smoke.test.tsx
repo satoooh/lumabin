@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QuickPreviewMediaPanel } from '../../src/features/preview/quick-preview-media-panel';
+import { buildLumabinMediaUrl } from '../../src/shared/media-url';
 import type { AssetItem, AssetPreview } from '../../src/shared/ipc';
 
 const selectedAsset: AssetItem = {
@@ -126,13 +127,13 @@ describe('quick preview media panel', () => {
         }}
         previewDataUrl="data:video/mp4;base64,cGFydGlhbA=="
         selectedAsset={videoAsset}
-        videoPlaybackUrl="https://signed.example/clips/%E6%9D%B1%E4%BA%AC%20sample.mp4"
+        videoPlaybackUrl={buildLumabinMediaUrl('profile-1', videoAsset.key)}
       />,
     );
 
     const video = container.querySelector('video');
     expect(video?.getAttribute('src')).toBe(
-      'https://signed.example/clips/%E6%9D%B1%E4%BA%AC%20sample.mp4',
+      'lumabin-media://asset/profile-1/clips%2F%E6%9D%B1%E4%BA%AC%20sample.mp4',
     );
   });
 });

@@ -86,7 +86,7 @@ export const GalleryPane = ({
       >
         <div className="gallery-grid">
           <div style={{ height: galleryVirtualRange.topSpacerHeight }} />
-          {visibleGallerySections.map((section, sectionIndex) => (
+          {visibleGallerySections.map((section) => (
             <section key={section.key} className="gallery-day-group">
               <div className="gallery-day-header">
                 <h3>{section.label}</h3>
@@ -98,7 +98,7 @@ export const GalleryPane = ({
                   gridTemplateColumns: `repeat(${galleryColumnCount}, minmax(0, 1fr))`,
                 }}
               >
-                {section.items.map((item, itemIndex) => {
+                {section.items.map((item) => {
                   const kind = inferAssetKind(item);
                   const basename = basenameFromKey(item.key);
                   const kindLabel = iconForKind(kind);
@@ -117,10 +117,11 @@ export const GalleryPane = ({
                   const hasThumbnailError = cacheKey
                     ? Boolean(galleryThumbnailErrors[cacheKey])
                     : false;
-                  const placeholderLabel = isThumbnailLoading
+                  const showLoadingSkeleton = isThumbnailLoading && !isGalleryScrolling;
+                  const placeholderLabel = showLoadingSkeleton
                     ? '…'
                     : kind === 'image' || kind === 'video'
-                      ? ''
+                      ? kindLabel
                       : kindLabel;
 
                   return (
@@ -153,7 +154,7 @@ export const GalleryPane = ({
                             className="gallery-card-image"
                             src={thumbnailUrl}
                             alt=""
-                            loading={sectionIndex === 0 && itemIndex < 6 ? 'eager' : 'lazy'}
+                            loading="eager"
                             decoding="async"
                             draggable={false}
                             onError={() => {
@@ -166,10 +167,10 @@ export const GalleryPane = ({
                         ) : (
                           <div
                             className={`gallery-card-placeholder ${
-                              isThumbnailLoading ? 'gallery-card-placeholder--loading' : ''
+                              showLoadingSkeleton ? 'gallery-card-placeholder--loading' : ''
                             }`}
                           >
-                            {isThumbnailLoading ? (
+                            {showLoadingSkeleton ? (
                               <span className="gallery-card-skeleton" aria-hidden="true">
                                 <span className="gallery-card-skeleton-dot" />
                                 <span className="gallery-card-skeleton-chip" />
