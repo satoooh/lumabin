@@ -19,6 +19,7 @@ const defaultProps = {
   hasPrevPreviewImage: true,
   isPreviewBusy: false,
   isSharingBusy: false,
+  isVideoPlaybackBusy: false,
   onDownloadSelectedAsset: vi.fn(),
   onImageDecodeError: vi.fn(),
   onMoveSelection: vi.fn(),
@@ -30,6 +31,8 @@ const defaultProps = {
   previewDataUrl: '',
   selectedAsset,
   selectedProfileId: 'profile-1',
+  videoPlaybackError: '',
+  videoPlaybackUrl: '',
 };
 
 describe('quick preview media panel', () => {
@@ -101,5 +104,35 @@ describe('quick preview media panel', () => {
     expect(screen.getByText('Page 1')).toBeTruthy();
     expect(screen.getByText(/Preview is partial/)).toBeTruthy();
     expect(screen.getByTitle('report.pdf')).toBeTruthy();
+  });
+
+  it('renders video previews from a playback URL instead of the ranged data URL', () => {
+    const videoAsset: AssetItem = {
+      ...selectedAsset,
+      key: 'clips/東京 sample.mp4',
+      contentType: 'video/mp4',
+    };
+
+    const { container } = render(
+      <QuickPreviewMediaPanel
+        {...defaultProps}
+        assetPreview={{
+          key: videoAsset.key,
+          kind: 'video',
+          contentType: 'video/mp4',
+          byteLength: 0,
+          totalBytes: 320 * 1024 * 1024,
+          truncated: false,
+        }}
+        previewDataUrl="data:video/mp4;base64,cGFydGlhbA=="
+        selectedAsset={videoAsset}
+        videoPlaybackUrl="https://signed.example/clips/%E6%9D%B1%E4%BA%AC%20sample.mp4"
+      />,
+    );
+
+    const video = container.querySelector('video');
+    expect(video?.getAttribute('src')).toBe(
+      'https://signed.example/clips/%E6%9D%B1%E4%BA%AC%20sample.mp4',
+    );
   });
 });

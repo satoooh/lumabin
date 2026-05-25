@@ -69,8 +69,11 @@ describe('quick preview overlay props', () => {
         handleRetrySelectedAssetPreview,
         handleVideoDecodeError: vi.fn(),
         isPreviewBusy: false,
+        isVideoPlaybackBusy: false,
         pdfPreviewPage: 1,
         previewDataUrl: 'data:image/png;base64,aaa',
+        videoPlaybackError: '',
+        videoPlaybackUrl: '',
       },
       sharing: {
         isPresignedGetCopied: false,

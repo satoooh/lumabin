@@ -93,8 +93,11 @@ describe('desktop workbench overlay handoffs', () => {
           handleRetrySelectedAssetPreview: vi.fn(),
           handleVideoDecodeError: vi.fn(),
           isPreviewBusy: false,
+          isVideoPlaybackBusy: false,
           pdfPreviewPage: 1,
           previewDataUrl: '',
+          videoPlaybackError: '',
+          videoPlaybackUrl: '',
         },
         metadata: {
           cameraLabel: '-',

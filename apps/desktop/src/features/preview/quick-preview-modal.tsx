@@ -38,6 +38,7 @@ export const QuickPreviewModal = ({
     assetPreview,
     assetPreviewError,
     isPreviewBusy,
+    isVideoPlaybackBusy,
     onImageDecodeError,
     onPdfNextPage,
     onPdfPrevPage,
@@ -45,6 +46,8 @@ export const QuickPreviewModal = ({
     onVideoDecodeError,
     pdfPreviewPage,
     previewDataUrl,
+    videoPlaybackError,
+    videoPlaybackUrl,
   } = media;
   const {
     isPresignedGetCopied,
@@ -152,6 +155,7 @@ export const QuickPreviewModal = ({
               hasPrevPreviewImage={hasPrevPreviewImage}
               isPreviewBusy={isPreviewBusy}
               isSharingBusy={isSharingBusy}
+              isVideoPlaybackBusy={isVideoPlaybackBusy}
               onDownloadSelectedAsset={onDownloadSelectedAsset}
               onImageDecodeError={onImageDecodeError}
               onMoveSelection={onMoveSelection}
@@ -163,6 +167,8 @@ export const QuickPreviewModal = ({
               previewDataUrl={previewDataUrl}
               selectedAsset={selectedAsset}
               selectedProfileId={selectedProfileId}
+              videoPlaybackError={videoPlaybackError}
+              videoPlaybackUrl={videoPlaybackUrl}
             />
           </div>
           {isQuickPreviewInfoOpen ? (

@@ -5,7 +5,10 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { recordStorageFailure } from '../../dev-metrics';
 import { createStorageClient } from './s3-client-factory';
-import { normalizePresignTtl } from './storage-object-policy';
+import {
+  inferContentType,
+  normalizePresignTtl,
+} from './storage-object-policy';
 import type {
   StorageProfile,
   StorageSecret,
@@ -30,6 +33,7 @@ export const createStoragePresignedUrl = async (
         new GetObjectCommand({
           Bucket: profile.bucket,
           Key: input.key,
+          ResponseContentType: inferContentType(input.key),
         }),
         { expiresIn },
       );

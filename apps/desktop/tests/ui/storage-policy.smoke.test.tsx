@@ -21,7 +21,9 @@ describe('storage policy', () => {
     expect(normalizePrefix('photos/')).toBe('photos/');
     expect(inferContentType('image.JPG')).toBe('image/jpeg');
     expect(inferContentType('clip.mov')).toBe('video/quicktime');
+    expect(inferContentType('素材/東京 sample.MP4')).toBe('video/mp4');
     expect(inferPreviewKind('application/octet-stream', 'report.pdf')).toBe('pdf');
+    expect(inferPreviewKind('application/octet-stream', '素材/東京 sample.MP4')).toBe('video');
     expect(inferPreviewKind('text/plain', 'table.csv')).toBe('csv');
   });
 
