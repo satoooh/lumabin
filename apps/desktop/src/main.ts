@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, protocol, screen } from 'electron';
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
@@ -9,8 +9,22 @@ import {
   isE2EMode,
 } from './main/e2e-runtime';
 import type { ApplicationCompositionRuntime } from './main/application-composition';
+import { LUMABIN_MEDIA_SCHEME } from './shared/media-url';
 
 let applicationRuntime: ApplicationCompositionRuntime | null = null;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: LUMABIN_MEDIA_SCHEME,
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+    },
+  },
+]);
 
 const logE2EStartup = (message: string): void => {
   if (isE2EMode) {

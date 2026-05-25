@@ -1,7 +1,10 @@
 import { ipcMain } from 'electron';
 import { assertIpcContractCatalogCoversChannels } from './application/ipc/contract-catalog';
 import { registerDiagnosticsHandlers } from './application/contexts/diagnostics/ipc-handlers';
-import { registerAssetSharingRuntime } from './application/contexts/asset-sharing/runtime-composition';
+import {
+  registerAssetSharingRuntime,
+  registerStorageMediaProtocol,
+} from './application/contexts/asset-sharing/runtime-composition';
 import { registerWorkspaceRuntime } from './application/contexts/workspace/runtime-composition';
 import { registerAssetDiscoveryRuntime } from './application/contexts/asset-discovery/runtime-composition';
 import { registerAssetIngestionRuntime } from './application/contexts/asset-ingestion/runtime-composition';
@@ -36,6 +39,7 @@ export const registerApplicationComposition = (): ApplicationCompositionRuntime 
   registerDiagnosticsHandlers(ipcMain);
 
   registerAssetSharingRuntime(ipcMain);
+  registerStorageMediaProtocol();
 
   return {
     dispose: (): void => {

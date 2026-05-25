@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   type RefObject,
 } from 'react';
@@ -23,6 +22,7 @@ import {
   inferAssetKind,
 } from '../shared/asset-display';
 import type { AssetItem } from '../../shared/ipc';
+import { buildLumabinMediaUrl } from '../../shared/media-url';
 import type { QuickPreviewOverlayPropsInput } from '../preview/quick-preview-overlay-props';
 
 type PreviewableKind = 'image' | 'video' | 'pdf' | 'csv';
@@ -83,7 +83,6 @@ export const usePreviewWorkbench = ({
   const [presignedGetUrl, setPresignedGetUrl] = useState<string>('');
   const [presignedPutUrl, setPresignedPutUrl] = useState<string>('');
   const [isSharingBusy, setIsSharingBusy] = useState<boolean>(false);
-  const videoPlaybackRequestIdRef = useRef<number>(0);
   const [videoPlaybackUrl, setVideoPlaybackUrl] = useState<string>('');
   const [videoPlaybackError, setVideoPlaybackError] = useState<string>('');
   const [isVideoPlaybackBusy, setIsVideoPlaybackBusy] = useState<boolean>(false);
@@ -134,10 +133,7 @@ export const usePreviewWorkbench = ({
   });
 
   const loadSelectedVideoPlaybackUrl = useCallback(
-    async (profileId: string, asset: AssetItem) => {
-      const requestId = videoPlaybackRequestIdRef.current + 1;
-      videoPlaybackRequestIdRef.current = requestId;
-
+    (profileId: string, asset: AssetItem, nonce?: number) => {
       if (inferAssetKind(asset) !== 'video') {
         setIsVideoPlaybackBusy(false);
         setVideoPlaybackUrl('');
@@ -145,36 +141,14 @@ export const usePreviewWorkbench = ({
         return;
       }
 
-      setIsVideoPlaybackBusy(true);
+      setIsVideoPlaybackBusy(false);
       setVideoPlaybackError('');
-      try {
-        const result = await sharingApi.createPresignedGet({
-          profileId,
-          key: asset.key,
-          expiresInSeconds: presignedUrlTTLSeconds,
-        });
-        if (requestId !== videoPlaybackRequestIdRef.current) {
-          return;
-        }
-        setVideoPlaybackUrl(result.url);
-      } catch (error) {
-        if (requestId !== videoPlaybackRequestIdRef.current) {
-          return;
-        }
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        setVideoPlaybackUrl('');
-        setVideoPlaybackError(`Video playback URL could not be prepared: ${message}`);
-      } finally {
-        if (requestId === videoPlaybackRequestIdRef.current) {
-          setIsVideoPlaybackBusy(false);
-        }
-      }
+      setVideoPlaybackUrl(buildLumabinMediaUrl(profileId, asset.key, nonce));
     },
-    [presignedUrlTTLSeconds, sharingApi],
+    [],
   );
 
   useEffect(() => {
-    videoPlaybackRequestIdRef.current += 1;
     setVideoPlaybackUrl('');
     setVideoPlaybackError('');
     setIsVideoPlaybackBusy(false);
@@ -183,13 +157,13 @@ export const usePreviewWorkbench = ({
       return;
     }
 
-    void loadSelectedVideoPlaybackUrl(selectedProfileId, selectedAsset);
+    loadSelectedVideoPlaybackUrl(selectedProfileId, selectedAsset);
   }, [loadSelectedVideoPlaybackUrl, selectedAsset, selectedProfileId]);
 
   const handleRetrySelectedAssetMediaPreview = useCallback(() => {
     if (selectedProfileId && selectedAsset && inferAssetKind(selectedAsset) === 'video') {
       handleRetrySelectedAssetPreview();
-      void loadSelectedVideoPlaybackUrl(selectedProfileId, selectedAsset);
+      loadSelectedVideoPlaybackUrl(selectedProfileId, selectedAsset, Date.now());
       return;
     }
 
