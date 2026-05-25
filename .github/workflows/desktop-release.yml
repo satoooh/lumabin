@@ -105,7 +105,7 @@ jobs:
             fi
           done
           if [ "${missing}" -eq 1 ]; then
-            echo "Set repo variable LUMABIN_ENABLE_MAC_SIGN=0 to build unsigned releases." >&2
+            echo "Set release environment variable LUMABIN_ENABLE_MAC_SIGN=0, or remove it, to build unsigned releases." >&2
             exit 1
           fi
 

@@ -17,7 +17,7 @@ LumaBin は unsigned ad-hoc ZIP release を既定の public preview 経路とし
 
 `LUMABIN_ENABLE_MAC_SIGN=1` が設定された場合、release build は Developer ID signing と notarization を一体の release mode として扱う。GitHub Actions の release job は Developer ID Application certificate を一時 keychain に import し、package 前に signing identity を検証し、Electron Forge によって app を sign / notarize し、生成された ZIP を publish 前に検証する。
 
-signed/notarized 経路では以下の GitHub secrets を必須とする。
+signed/notarized 経路では以下の GitHub `release` environment secrets を必須とする。
 
 - `LUMABIN_APPLE_SIGN_IDENTITY`
 - `LUMABIN_APPLE_CERTIFICATE_BASE64`
@@ -32,6 +32,6 @@ release verifier は signed mode を unsigned mode より厳しく扱い、Relea
 
 - 既定の preview release は secrets なしで再現できる。
 - Apple credentials を設定すれば、コード変更なしで一般ユーザー向けの signed/notarized release に移行できる。
-- signing secrets は git の外に置き、GitHub Actions runner の一時 keychain 内でだけ materialize される。
+- signing secrets は git の外の `release` environment secrets に置き、GitHub Actions runner の一時 keychain 内でだけ materialize される。
 - 必要な Apple secrets を設定して signed release run を実行するまでは、signed/notarized 経路は実アセットで未検証の状態として扱う。
 - release documentation では、既定の unsigned preview release と、一般ユーザー向けの signed/notarized release を明確に区別する。

@@ -253,11 +253,11 @@ GitHub側で設定するもの:
 
 Forge は以下環境変数を参照する。
 
-- `LUMABIN_ENABLE_MAC_SIGN=1`（既定は `0` / unsigned 配布）
+- `LUMABIN_ENABLE_MAC_SIGN=1`（既定は `0` / unsigned 配布。GitHub Actions では `release` environment variable として設定する）
 - `LUMABIN_APP_BUNDLE_ID`（既定: `com.satoooh.lumabin`）
-- `LUMABIN_APPLE_SIGN_IDENTITY`（署名有効時は必須。macOS runner の keychain に存在する Developer ID identity）
-- `LUMABIN_APPLE_CERTIFICATE_BASE64`（署名有効時は必須。Developer ID Application 証明書 `.p12` を base64 化した GitHub Secret）
-- `LUMABIN_APPLE_CERTIFICATE_PASSWORD`（署名有効時は必須。上記 `.p12` の export password）
+- `LUMABIN_APPLE_SIGN_IDENTITY`（署名有効時は必須。macOS runner の keychain に存在する Developer ID identity。GitHub Actions では `release` environment secret として設定する）
+- `LUMABIN_APPLE_CERTIFICATE_BASE64`（署名有効時は必須。Developer ID Application 証明書 `.p12` を base64 化した `release` environment secret）
+- `LUMABIN_APPLE_CERTIFICATE_PASSWORD`（署名有効時は必須。上記 `.p12` の export password。GitHub Actions では `release` environment secret として設定する）
 - `LUMABIN_APPLE_ID`
 - `LUMABIN_APPLE_ID_PASSWORD`
 - `LUMABIN_APPLE_TEAM_ID`
@@ -265,14 +265,14 @@ Forge は以下環境変数を参照する。
 リリース workflow の挙動:
 
 - 既定: unsigned ZIP を生成して GitHub Releases に公開
-- `LUMABIN_ENABLE_MAC_SIGN=1` を repo variable に設定した場合のみ Developer ID signing / notarization を有効化
+- `LUMABIN_ENABLE_MAC_SIGN=1` を `release` environment variable に設定した場合のみ Developer ID signing / notarization を有効化
 - signed release では GitHub Actions の macOS runner 上に一時 keychain を作成し、`LUMABIN_APPLE_CERTIFICATE_BASE64` から Developer ID 証明書を import してから `verify:mac-signing-readiness` を実行する
 - release job 終了時は一時 keychain を削除する
 - `npm run verify:mac-signing-readiness` で Electron 用 entitlements、Developer ID identity、証明書import入力、notarization 環境変数の不足を事前確認できる
 - 署名有効時に必要 secret が不足している場合は workflow を失敗させる
 - 署名有効時は Forge の Developer ID signing / notarization 成果物を維持し、後段の ad-hoc 再署名は行わない
 - 署名有効時の `verify:darwin-artifact` は Developer ID authority、hardened runtime、Team ID、Gatekeeper assessment、stapler validate を release publish 前に確認し、非secretの署名メタデータを `release-evidence.json` に記録する
-- 現時点の既定運用は unsigned ZIP の public preview 配布。一般ユーザー向け配布へ進める場合は、上記 secrets / variable を設定し、signed/notarized release run が成功したことを確認する
+- 現時点の既定運用は unsigned ZIP の public preview 配布。一般ユーザー向け配布へ進める場合は、上記 `release` environment secrets / variable を設定し、signed/notarized release run が成功したことを確認する
 
 ### 4.5 Release 実行手順（zip配布）
 
