@@ -134,10 +134,10 @@ describe('workspace center pane', () => {
   it('prioritizes upload in the empty bucket state', () => {
     render(<WorkspaceCenterPane {...createBaseProps()} />);
 
-    const emptyState = screen.getByRole('region', { name: 'Add assets to this bucket' });
+    const emptyState = screen.getByRole('region', { name: 'Drop files into your gallery' });
     const actions = within(emptyState).getAllByRole('button');
 
-    expect(within(emptyState).getByText('Upload files or drop them here.')).not.toBeNull();
+    expect(within(emptyState).getByText('Drag images, videos, PDFs, or CSV files here.')).not.toBeNull();
     expect(actions.map((action) => action.textContent)).toEqual(['Upload assets', 'Refresh bucket']);
   });
 
@@ -180,6 +180,6 @@ describe('workspace center pane', () => {
     );
 
     expect(screen.getByText('Name')).not.toBeNull();
-    expect(screen.queryByRole('region', { name: 'Add assets to this bucket' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Drop files into your gallery' })).toBeNull();
   });
 });

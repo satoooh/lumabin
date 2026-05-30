@@ -77,21 +77,21 @@ export const seedE2EFixtureAssets = (options?: { assetCount?: number }): void =>
   e2eFixtureAssets.clear();
   const seeded = [
     createE2EFixtureAsset({
-      key: 'photos/2026/05/editorial-workspace.svg',
-      contentType: 'image/svg+xml',
-      size: 126_000,
+      key: 'photos/2026/05/editorial-workspace.jpg',
+      contentType: 'image/jpeg',
+      size: 235_048,
       offsetMinutes: 4,
     }),
     createE2EFixtureAsset({
-      key: 'photos/2026/05/mountain-glass.svg',
-      contentType: 'image/svg+xml',
-      size: 98_400,
+      key: 'photos/2026/05/mountain-lake.jpg',
+      contentType: 'image/jpeg',
+      size: 338_459,
       offsetMinutes: 35,
     }),
     createE2EFixtureAsset({
-      key: 'photos/2026/05/studio-archive.svg',
-      contentType: 'image/svg+xml',
-      size: 138_700,
+      key: 'photos/2026/05/studio-archive.jpg',
+      contentType: 'image/jpeg',
+      size: 248_877,
       offsetMinutes: 68,
     }),
   ];

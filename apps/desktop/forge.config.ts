@@ -43,7 +43,10 @@ const config: ForgeConfig = {
     appBundleId: buildBundleId,
     icon: path.resolve(__dirname, 'build/icon'),
     ignore: vitePackageRuntimeAllowlist,
-    extraResource: [path.resolve(__dirname, 'build/lumabin-logo.png')],
+    extraResource: [
+      path.resolve(__dirname, 'build/lumabin-logo.png'),
+      path.resolve(__dirname, 'src/main/adapters/e2e-fixture/lumabin-e2e-assets'),
+    ],
     osxSign: enableMacSign
       ? {
           identity: appleSignIdentity,

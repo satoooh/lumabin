@@ -48,7 +48,7 @@ describe('e2e fixture storage adapter', () => {
 
     expect(result.items).toHaveLength(12);
     expect(
-      result.items.some((item) => item.key === 'photos/2026/05/editorial-workspace.svg'),
+      result.items.some((item) => item.key === 'photos/2026/05/editorial-workspace.jpg'),
     ).toBe(true);
     expect(
       result.items.some((item) =>
@@ -115,7 +115,7 @@ describe('e2e fixture storage adapter', () => {
         conflictPolicy: 'rename',
         sources: [
           {
-            path: '/tmp/editorial-workspace.svg',
+            path: '/tmp/editorial-workspace.jpg',
             size: 12_345,
           },
         ],
@@ -123,7 +123,7 @@ describe('e2e fixture storage adapter', () => {
       {
         createEtagSuffix: () => 'test',
         getDefaultConflictPolicy: () => 'rename',
-        inferContentTypeFromKey: () => 'image/svg+xml',
+        inferContentTypeFromKey: () => 'image/jpeg',
         normalizeDestinationPrefix,
         nowIso: () => '2026-05-05T00:00:01.000Z',
         sourceRelativePathOrFileName,
@@ -134,8 +134,8 @@ describe('e2e fixture storage adapter', () => {
       },
     );
 
-    expect(hasE2EFixtureAsset('photos/2026/05/editorial-workspace.svg')).toBe(true);
-    expect(hasE2EFixtureAsset('photos/2026/05/editorial-workspace-1.svg')).toBe(true);
+    expect(hasE2EFixtureAsset('photos/2026/05/editorial-workspace.jpg')).toBe(true);
+    expect(hasE2EFixtureAsset('photos/2026/05/editorial-workspace-1.jpg')).toBe(true);
     expect(job.status).toBe('done');
     expect(job.completedItems).toBe(1);
   });

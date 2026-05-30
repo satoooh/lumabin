@@ -63,6 +63,7 @@ describe('gallery pane', () => {
     expect(within(card).getByText('sunset-hero.png')).not.toBeNull();
     expect(within(card).getByText('IMG')).not.toBeNull();
     expect(within(card).getByText('2048 bytes')).not.toBeNull();
+    expect(screen.getByText('1 items')).not.toBeNull();
   });
 
   it('keeps rendered thumbnails eager because the gallery already virtualizes visible cards', () => {

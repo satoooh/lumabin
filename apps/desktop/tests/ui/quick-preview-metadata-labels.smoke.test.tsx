@@ -55,4 +55,21 @@ describe('buildQuickPreviewMetadataLabels', () => {
       shootSettingsLabel: '-',
     });
   });
+
+  it('formats ISO capture metadata with the app date formatter', () => {
+    const metadata: AssetMetadata = {
+      ...selectedAsset,
+      metadata: {
+        captured_at: '2026-05-03T11:59:00.000Z',
+      },
+    };
+
+    expect(
+      buildQuickPreviewMetadataLabels({
+        formatDate: (value) => `formatted:${value}`,
+        selectedAsset,
+        selectedAssetMetadata: metadata,
+      }).capturedAtLabel,
+    ).toBe('formatted:2026-05-03T11:59:00.000Z');
+  });
 });
