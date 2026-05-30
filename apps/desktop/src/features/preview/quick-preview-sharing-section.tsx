@@ -66,13 +66,13 @@ export const QuickPreviewSharingSection = ({
     <section className="quick-preview-section">
       <div className="quick-preview-section-heading">
         <h3>Share & access</h3>
-        <p>Start with a share link; keep stable and write URLs secondary.</p>
+        <p>Copy a temporary read link first. Public URLs stay stable when configured.</p>
       </div>
       <div className="quick-preview-action-stack quick-preview-action-stack--access">
         <QuickPreviewActionButton
           ariaLabel={isShareUrlCopied ? 'Copied!' : 'Share'}
-          title="Share link"
-          description="Generate and copy temporary read URL"
+          title="Copy share link"
+          description="Temporary read access, copied instantly"
           emphasis="primary"
           badge={isShareUrlCopied ? 'Copied!' : undefined}
           disabled={isSharingBusy || !selectedProfileId}
@@ -89,7 +89,7 @@ export const QuickPreviewSharingSection = ({
         <div className="quick-preview-action-grid">
           <QuickPreviewActionButton
             title="Download original"
-            description="Save the source file locally"
+            description="Save the source file"
             disabled={isSharingBusy || !selectedProfileId}
             isBusy={isSharingBusy}
             onClick={onDownloadSelectedAsset}
@@ -104,7 +104,7 @@ export const QuickPreviewSharingSection = ({
           <QuickPreviewActionButton
             ariaLabel={isPublicUrlCopied ? 'Copied!' : 'Copy public URL'}
             title="Public URL"
-            description={publicUrlForSelectedAsset ? 'Stable workspace URL' : 'Needs Public URL base'}
+            description={publicUrlForSelectedAsset ? 'Stable configured URL' : 'Set Public URL base first'}
             badge={publicUrlBadge}
             disabled={!publicUrlForSelectedAsset}
             onClick={onCopyPublicUrl}
@@ -131,7 +131,7 @@ export const QuickPreviewSharingSection = ({
           <div className="quick-preview-collapsible-body">
             <QuickPreviewActionButton
               title="Upload URL"
-              description="Generate temporary write URL"
+              description="Temporary write access"
               badge={presignedPutUrl ? 'Ready' : undefined}
               disabled={isSharingBusy || !selectedProfileId}
               isBusy={isSharingBusy}

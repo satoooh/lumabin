@@ -33,6 +33,17 @@ const findMetadataValue = (
   return '';
 };
 
+const formatCapturedAtLabel = (
+  value: string,
+  formatDate: (isoDate: string) => string,
+): string => {
+  const trimmed = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) {
+    return formatDate(trimmed);
+  }
+  return trimmed;
+};
+
 export const buildQuickPreviewMetadataLabels = ({
   formatDate,
   selectedAsset,
@@ -82,7 +93,9 @@ export const buildQuickPreviewMetadataLabels = ({
 
   return {
     capturedAtLabel:
-      capturedAtFromMetadata || (selectedAsset ? formatDate(selectedAsset.lastModified) : '-'),
+      (capturedAtFromMetadata
+        ? formatCapturedAtLabel(capturedAtFromMetadata, formatDate)
+        : '') || (selectedAsset ? formatDate(selectedAsset.lastModified) : '-'),
     cameraLabel,
     lensLabel,
     shootSettingsLabel: shootSettings.join(' • ') || '-',

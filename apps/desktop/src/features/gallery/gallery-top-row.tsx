@@ -58,6 +58,7 @@ export const GalleryTopRow = ({
     <div className="gallery-top-row">
       {viewMode === 'gallery' ? (
         <div className="gallery-top-leading">
+          <span className="gallery-top-label">Library</span>
           <UnifiedFilterBar
             className="gallery-filter-rail"
             options={unifiedFilterOptions}

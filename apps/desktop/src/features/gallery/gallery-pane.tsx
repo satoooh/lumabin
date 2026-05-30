@@ -92,6 +92,7 @@ export const GalleryPane = ({
               {section.isContinuation ? null : (
                 <div className="gallery-day-header">
                   <h3>{section.label}</h3>
+                  <span>{section.items.length} items</span>
                 </div>
               )}
 
@@ -198,16 +199,16 @@ export const GalleryPane = ({
                         <span className="asset-kind-badge gallery-card-kind" aria-hidden="true">
                           {kindLabel}
                         </span>
-                        <span className="gallery-card-overlay" aria-hidden="true">
-                          <span className="gallery-card-title" title={item.key}>
-                            {basename}
-                          </span>
-                          <span className="gallery-card-meta">
-                            <span>{sizeLabel}</span>
-                            <span>{modifiedLabel}</span>
-                          </span>
-                        </span>
                       </div>
+                      <span className="gallery-card-body" aria-hidden="true">
+                        <span className="gallery-card-title" title={item.key}>
+                          {basename}
+                        </span>
+                        <span className="gallery-card-meta">
+                          <span>{sizeLabel}</span>
+                          <span>{modifiedLabel}</span>
+                        </span>
+                      </span>
                     </button>
                   );
                 })}

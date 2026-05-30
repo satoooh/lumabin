@@ -152,12 +152,12 @@ export const QuickPreviewInfoPanel = ({
       <section className="quick-preview-section">
         <div className="quick-preview-section-heading">
           <h3>Manage asset</h3>
-          <p>Rename, move, or delete.</p>
+          <p>Change the object key or remove it from the bucket.</p>
         </div>
         <div className="quick-preview-action-grid quick-preview-action-grid--manage">
           <QuickPreviewActionButton
             title="Rename asset"
-            description="Keep the current location"
+            description="Edit the filename only"
             disabled={isAssetActionBusy || !selectedProfileId}
             titleAttr="Rename asset..."
             onClick={onOpenAssetRename}
@@ -184,7 +184,7 @@ export const QuickPreviewInfoPanel = ({
           />
           <QuickPreviewActionButton
             title="Delete asset"
-            description="Confirm before removal"
+            description="Undo is available after confirm"
             emphasis="danger"
             disabled={isAssetActionBusy || !selectedProfileId}
             titleAttr="Delete asset..."

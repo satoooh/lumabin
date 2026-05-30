@@ -22,7 +22,7 @@ export const EmptyBrowserState = ({
   onResetFilters,
 }: EmptyBrowserStateProps) => {
   const isNoMatchesMode = mode === 'no-matches';
-  const title = isNoMatchesMode ? 'No matches found' : 'Add assets to this bucket';
+  const title = isNoMatchesMode ? 'No matches found' : 'Drop files into your gallery';
   const uploadButton = (label: string, className?: string) => (
     <button
       type="button"
@@ -61,11 +61,18 @@ export const EmptyBrowserState = ({
 
   return (
     <div className="empty-state" role="region" aria-label={title}>
+      <div className="empty-state__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 5v10" />
+          <path d="m8 9 4-4 4 4" />
+          <path d="M5 16v2.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V16" />
+        </svg>
+      </div>
       <h2>{title}</h2>
       <p className="minor">
         {isNoMatchesMode
-          ? 'Try clearing search or filters.'
-          : 'Upload files or drop them here.'}
+          ? 'Clear the current query or start a new upload.'
+          : 'Drag images, videos, PDFs, or CSV files here.'}
       </p>
       <div className="row-actions center-actions">
         {isNoMatchesMode ? (

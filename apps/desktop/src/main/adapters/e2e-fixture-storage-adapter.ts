@@ -3,6 +3,8 @@ import {
   recordStorageFailure,
   recordStorageMetric,
 } from '../dev-metrics';
+import fs from 'node:fs';
+import path from 'node:path';
 import type {
   AssetPreview,
   ListAssetsInput,
@@ -32,92 +34,41 @@ export const E2E_FIXTURE_PUBLIC_BASE_URL = 'https://cdn.lumabin-e2e.local/assets
 
 const E2E_FIXTURE_IMAGE_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9l4gAAAABJRU5ErkJggg==';
-const E2E_FIXTURE_SVG_PREVIEWS: Record<string, string> = {
-  'photos/2026/05/editorial-workspace.svg': `
-    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820">
-      <defs>
-        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stop-color="#f5efe6"/>
-          <stop offset="0.52" stop-color="#d9eef1"/>
-          <stop offset="1" stop-color="#294358"/>
-        </linearGradient>
-        <linearGradient id="desk" x1="0" x2="1">
-          <stop offset="0" stop-color="#c6905f"/>
-          <stop offset="1" stop-color="#7c5138"/>
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="820" fill="url(#bg)"/>
-      <rect x="0" y="560" width="1200" height="260" fill="url(#desk)"/>
-      <rect x="150" y="154" width="380" height="268" rx="30" fill="#fcfaf4" opacity=".92"/>
-      <rect x="190" y="198" width="300" height="18" rx="9" fill="#273847"/>
-      <rect x="190" y="246" width="230" height="14" rx="7" fill="#91a7b2"/>
-      <rect x="190" y="286" width="270" height="14" rx="7" fill="#c1ced5"/>
-      <rect x="650" y="130" width="330" height="430" rx="34" fill="#f9fbfc" opacity=".95"/>
-      <circle cx="815" cy="320" r="96" fill="#56a3a6"/>
-      <path d="M738 342c64-78 113-78 178 0v82H738z" fill="#1d6670"/>
-      <circle cx="770" cy="268" r="34" fill="#f6d56c"/>
-      <rect x="448" y="520" width="310" height="80" rx="24" fill="#101820" opacity=".92"/>
-      <rect x="505" y="540" width="196" height="12" rx="6" fill="#eef2f6"/>
-      <rect x="144" y="626" width="238" height="46" rx="23" fill="#253747" opacity=".22"/>
-      <rect x="816" y="616" width="206" height="54" rx="27" fill="#f5f7fa" opacity=".48"/>
-    </svg>
-  `,
-  'photos/2026/05/mountain-glass.svg': `
-    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820">
-      <defs>
-        <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stop-color="#eaf6ff"/>
-          <stop offset="0.52" stop-color="#b7d6dd"/>
-          <stop offset="1" stop-color="#47636b"/>
-        </linearGradient>
-        <linearGradient id="glass" x1="0" x2="1">
-          <stop offset="0" stop-color="#ffffff" stop-opacity=".72"/>
-          <stop offset="1" stop-color="#ffffff" stop-opacity=".18"/>
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="820" fill="url(#sky)"/>
-      <circle cx="936" cy="154" r="80" fill="#f8d578"/>
-      <path d="M0 600 250 330 448 562 620 290 930 600z" fill="#496a6c"/>
-      <path d="M250 330 340 436 203 438zM620 290l122 182-188-52z" fill="#f7f8f6"/>
-      <path d="M0 650c215-90 398-102 622-26 168 57 355 57 578-3v199H0z" fill="#213b42"/>
-      <rect x="310" y="216" width="540" height="330" rx="44" fill="url(#glass)" stroke="#ffffff" stroke-width="8" opacity=".88"/>
-      <rect x="352" y="260" width="188" height="24" rx="12" fill="#24434d" opacity=".68"/>
-      <rect x="352" y="310" width="334" height="16" rx="8" fill="#24434d" opacity=".34"/>
-      <rect x="352" y="350" width="260" height="16" rx="8" fill="#24434d" opacity=".28"/>
-      <rect x="692" y="434" width="108" height="42" rx="21" fill="#ffffff" opacity=".72"/>
-    </svg>
-  `,
-  'photos/2026/05/studio-archive.svg': `
-    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820">
-      <defs>
-        <linearGradient id="wall" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stop-color="#f2f5f7"/>
-          <stop offset="1" stop-color="#d7e1e6"/>
-        </linearGradient>
-        <linearGradient id="card" x1="0" x2="1">
-          <stop offset="0" stop-color="#0f1720"/>
-          <stop offset="1" stop-color="#304a57"/>
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="820" fill="url(#wall)"/>
-      <rect x="0" y="620" width="1200" height="200" fill="#9aa7ad"/>
-      <rect x="132" y="120" width="292" height="360" rx="34" fill="#ffffff"/>
-      <rect x="170" y="162" width="216" height="160" rx="24" fill="#e7b65f"/>
-      <circle cx="238" cy="222" r="46" fill="#13222d"/>
-      <rect x="170" y="360" width="174" height="18" rx="9" fill="#2d4150"/>
-      <rect x="170" y="404" width="132" height="14" rx="7" fill="#b7c3cb"/>
-      <rect x="454" y="170" width="292" height="360" rx="34" fill="url(#card)"/>
-      <rect x="496" y="218" width="208" height="206" rx="28" fill="#edf5f7" opacity=".9"/>
-      <path d="M524 390l66-78 48 54 32-36 34 60z" fill="#4f9da0"/>
-      <rect x="776" y="104" width="292" height="360" rx="34" fill="#ffffff"/>
-      <rect x="818" y="154" width="208" height="210" rx="28" fill="#dde7ec"/>
-      <circle cx="922" cy="258" r="72" fill="#62aaa9"/>
-      <rect x="818" y="400" width="190" height="16" rx="8" fill="#2d4150"/>
-      <rect x="254" y="568" width="690" height="78" rx="39" fill="#f7fafc" opacity=".78"/>
-      <rect x="332" y="596" width="220" height="18" rx="9" fill="#1f3441" opacity=".34"/>
-      <rect x="604" y="596" width="270" height="18" rx="9" fill="#1f3441" opacity=".18"/>
-    </svg>
-  `,
+
+const E2E_FIXTURE_IMAGE_PREVIEWS: Record<string, string> = {
+  'photos/2026/05/editorial-workspace.jpg': 'editorial-workspace.jpg',
+  'photos/2026/05/mountain-lake.jpg': 'mountain-lake.jpg',
+  'photos/2026/05/studio-archive.jpg': 'studio-archive.jpg',
+};
+const e2eFixtureImageCache = new Map<string, Buffer>();
+
+const resolveE2EFixtureImagePath = (fileName: string): string => {
+  if (typeof process.resourcesPath === 'string') {
+    const resourcePath = path.join(process.resourcesPath, 'lumabin-e2e-assets', fileName);
+    if (fs.existsSync(resourcePath)) {
+      return resourcePath;
+    }
+  }
+
+  return path.resolve(
+    process.cwd(),
+    'src/main/adapters/e2e-fixture/lumabin-e2e-assets',
+    fileName,
+  );
+};
+
+const readE2EFixtureImagePreview = (key: string): Buffer | null => {
+  const fileName = E2E_FIXTURE_IMAGE_PREVIEWS[key];
+  if (!fileName) {
+    return null;
+  }
+  const cached = e2eFixtureImageCache.get(fileName);
+  if (cached) {
+    return cached;
+  }
+  const buffer = fs.readFileSync(resolveE2EFixtureImagePath(fileName));
+  e2eFixtureImageCache.set(fileName, buffer);
+  return buffer;
 };
 
 export const isE2EFixtureProfile = (
@@ -162,13 +113,9 @@ export const previewE2EFixtureAsset = (input: PreviewAssetInput): AssetPreview =
   }
   recordStorageMetric('getCalls');
   if (metadata.contentType.startsWith('image/')) {
-    const dataBase64 = metadata.contentType === 'image/svg+xml'
-      ? Buffer.from(
-        E2E_FIXTURE_SVG_PREVIEWS[metadata.key] ?? E2E_FIXTURE_SVG_PREVIEWS['photos/2026/05/editorial-workspace.svg'],
-        'utf8',
-      ).toString('base64')
-      : E2E_FIXTURE_IMAGE_BASE64;
-    const byteLength = Buffer.from(dataBase64, 'base64').byteLength;
+    const previewBuffer = readE2EFixtureImagePreview(metadata.key);
+    const dataBase64 = previewBuffer?.toString('base64') ?? E2E_FIXTURE_IMAGE_BASE64;
+    const byteLength = previewBuffer?.byteLength ?? Buffer.from(dataBase64, 'base64').byteLength;
     addStorageTransferredBytes({
       bytesDownloaded: byteLength,
     });
