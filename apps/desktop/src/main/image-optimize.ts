@@ -43,18 +43,15 @@ export interface MaybeOptimizeImageResult {
   cleanup: () => Promise<void>;
 }
 
-let sharpLoader: Promise<typeof import('sharp') | null> | null = null;
+type SharpFactory = typeof import('sharp')['default'];
 
-const loadSharp = async (): Promise<typeof import('sharp') | null> => {
+let sharpLoader: Promise<SharpFactory | null> | null = null;
+
+const loadSharp = async (): Promise<SharpFactory | null> => {
   if (!sharpLoader) {
     sharpLoader = import('sharp')
-      .then((module): typeof import('sharp') => {
-        if ('default' in module) {
-          return module.default;
-        }
-        return module;
-      })
-      .catch((): typeof import('sharp') | null => null);
+      .then((module): SharpFactory => module.default)
+      .catch((): SharpFactory | null => null);
   }
   return sharpLoader;
 };
