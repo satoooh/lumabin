@@ -16,6 +16,7 @@ import {
   buildGalleryDaySections,
   buildGalleryVirtualSections,
   calculateGalleryColumnCount,
+  calculateGalleryTileHeight,
   calculateGalleryTileWidth,
   calculateGalleryVirtualRange,
   calculateListVirtualRange,
@@ -139,6 +140,7 @@ describe('gallery view model calculations', () => {
 
     const columnCount = calculateGalleryColumnCount(500, 160);
     const tileWidth = calculateGalleryTileWidth(500, 160, columnCount);
+    const tileHeight = calculateGalleryTileHeight(tileWidth);
     const sections = buildGalleryDaySections(
       [
         item('a.png', { lastModified: '2026-05-02T00:00:00.000Z' }),
@@ -151,11 +153,12 @@ describe('gallery view model calculations', () => {
     const virtualSections = buildGalleryVirtualSections(
       sections,
       columnCount,
-      Math.round(tileWidth * 0.75),
+      tileHeight,
     );
     const range = calculateGalleryVirtualRange(virtualSections, 0, 120);
 
-    expect(columnCount).toBe(3);
+    expect(columnCount).toBe(2);
+    expect(tileHeight).toBeCloseTo((tileWidth - 2) * 0.75 + 45);
     expect(sections.map((section) => section.items.map((asset) => asset.key))).toEqual([
       ['a.png', 'b.png'],
       ['c.png'],
@@ -185,5 +188,27 @@ describe('gallery view model calculations', () => {
       `asset-${4 * GALLERY_VIRTUAL_CHUNK_ROWS}.png`,
     );
     expect(virtualSections[1].topOffset).toBe(virtualSections[0].bottomOffset);
+  });
+
+  it('clamps gallery scroll positions past the estimate to the final virtual chunk', () => {
+    const denseItems = Array.from({ length: 80 }, (_, index) =>
+      item(`asset-${index}.png`, { lastModified: '2026-05-02T00:00:00.000Z' }),
+    );
+    const sections = buildGalleryDaySections(
+      denseItems,
+      (isoDate) => isoDate.slice(0, 10),
+      (dayKey) => dayKey,
+    );
+    const virtualSections = buildGalleryVirtualSections(sections, 4, 120);
+
+    const range = calculateGalleryVirtualRange(
+      virtualSections,
+      Number.MAX_SAFE_INTEGER,
+      900,
+    );
+
+    expect(range.startIndex).toBe(virtualSections.length - 1);
+    expect(range.endIndex).toBe(virtualSections.length);
+    expect(range.bottomSpacerHeight).toBe(0);
   });
 });

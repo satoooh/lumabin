@@ -1,6 +1,6 @@
 # LumaBin Runbook
 
-- 最終更新日: 2026-05-26
+- 最終更新日: 2026-08-24
 - ステータス: Public preview
 - 対象: `apps/desktop`
 
@@ -26,6 +26,7 @@ npm run smoke:ui
 npm run e2e:install
 npm run e2e
 npm run e2e:dense
+npm run perf:benchmark
 npm run e2e:headed
 npm run smoke:ci
 npm run verify:darwin-artifact
@@ -422,6 +423,20 @@ npm run e2e:dense
 - Dev Metrics が表示される
 - `Failures = 0`
 - 検索、仮想スクロール、preview open / close がtimeoutしない
+
+gallery virtualizationやscroll処理を変更した場合は、同じ環境で変更前後の計測ベンチも実行します。
+
+```bash
+npm run perf:benchmark
+```
+
+期待結果:
+
+- 2,000 assets / 1,440 x 900 / 120 frame x 5 runs の測定が成功する
+- `test-results/**/performance-benchmark.json` が生成される
+- `renderedCardMax <= 100`
+- `scrollHeightDriftPx <= 1`
+- 時間指標は [PERFORMANCE.md](PERFORMANCE.md#計測ベンチ) に従い、同一hardware条件の中央値で比較する
 
 異常や継続調査が必要な場合は、再現条件と匿名化済み snapshot を GitHub Issue に記録します。実profile計測の注意点は [PERFORMANCE.md](PERFORMANCE.md#実profile計測) に従います。
 

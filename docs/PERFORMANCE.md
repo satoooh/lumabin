@@ -1,6 +1,6 @@
 # LumaBin Performance
 
-- 最終更新日: 2026-05-05
+- 最終更新日: 2026-08-24
 - 目的: public repo で再現できる性能確認手順と判断基準を定義する
 - 関連Issue: [#4 Define public performance benchmark routine](https://github.com/satoooh/lumabin/issues/4)
 
@@ -39,6 +39,36 @@ npm run verify:dev-metrics-snapshot
 ```
 
 `desktop-e2e` workflow では dense fixture E2E の直後に `verify:dev-metrics-snapshot` を実行し、snapshot の欠落、`List calls = 0`、`Failures > 0` を release-ready ではない状態として失敗させます。
+
+## 計測ベンチ
+
+実装変更の before / after は、機能確認用の `e2e:dense` とは分けて次のコマンドで測定します。
+
+```bash
+cd apps/desktop
+npm run perf:benchmark
+```
+
+固定条件:
+
+- packaged macOS arm64 app
+- E2E fixture 2,000 assets
+- viewport 1,440 x 900
+- 120 frame の gallery 往復スクロール
+- warm-up 1回後に5回測定し、代表値は各指標の中央値
+
+結果は `apps/desktop/test-results/**/performance-benchmark.json` に保存されます。
+
+主な指標:
+
+- `frameMedianMs` / `frameP95Ms` / `frameMaxMs`: `requestAnimationFrame` 間隔
+- `overBudgetFrameRate`: 実測frame budgetの1.5倍を超えた割合
+- `layoutCount` / `layoutDurationMs`: Chromium rendererのlayout回数と時間
+- `recalcStyleDurationMs` / `scriptDurationMs` / `taskDurationMs`: style、script、main-thread taskの時間
+- `renderedCardMax`: 仮想化中に同時描画された最大card数
+- `scrollHeightDriftPx`: 同一データのスクロール中に変動したscroll height
+
+ベンチマークは、全件描画への退行を防ぐため `renderedCardMax <= 100`、仮想化geometryの不整合を防ぐため `scrollHeightDriftPx <= 1` を検証します。時間指標はhardware、display refresh rate、電源状態の影響を受けるため、同一Mac・同一display・同一電源条件で比較し、逐次JSONはcommitせずPRまたはIssueへ要約を残します。
 
 ## 手動スポットチェック
 

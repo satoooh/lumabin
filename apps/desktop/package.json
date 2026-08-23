@@ -44,7 +44,8 @@
     "audit:public-readiness": "node ./scripts/audit-public-readiness.mjs",
     "audit:all": "npm audit --cache /tmp/lumabin-npm-cache",
     "audit:runtime": "npm audit --omit=dev --audit-level=high",
-    "audit:runtime:local": "npm audit --omit=dev --audit-level=high --cache /tmp/lumabin-npm-cache"
+    "audit:runtime:local": "npm audit --omit=dev --audit-level=high --cache /tmp/lumabin-npm-cache",
+    "perf:benchmark": "npm run package:darwin && LUMABIN_PERF_BENCHMARK=1 LUMABIN_E2E_DENSE=1 LUMABIN_E2E_FIXTURE_ASSET_COUNT=2000 LUMABIN_E2E_TEST_GREP=\"performance benchmark\" node ./scripts/release-launch-smoke.mjs --app"
   },
   "keywords": [],
   "author": {

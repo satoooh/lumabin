@@ -12,6 +12,12 @@ export const shouldApplyScrollTop = (
   targetScrollTop: number,
 ): boolean => Math.abs(currentScrollTop - targetScrollTop) > 1;
 
+export const calculateContentBoxWidth = (
+  clientWidth: number,
+  paddingLeft: number,
+  paddingRight: number,
+): number => Math.max(0, clientWidth - paddingLeft - paddingRight);
+
 interface UseGalleryScrollEffectsOptions {
   galleryScrollPendingTopRef: MutableRefObject<number>;
   galleryScrollRef: RefObject<HTMLDivElement | null>;
@@ -94,8 +100,15 @@ export const useGalleryScrollEffects = ({
     }
 
     const syncViewportSize = () => {
+      const style = window.getComputedStyle(node);
       setGalleryViewportHeight(node.clientHeight);
-      setGalleryViewportWidth(node.clientWidth);
+      setGalleryViewportWidth(
+        calculateContentBoxWidth(
+          node.clientWidth,
+          Number.parseFloat(style.paddingLeft),
+          Number.parseFloat(style.paddingRight),
+        ),
+      );
     };
     syncViewportSize();
 
@@ -113,7 +126,13 @@ export const useGalleryScrollEffects = ({
     return () => {
       observer.disconnect();
     };
-  }, [galleryScrollRef, setGalleryViewportHeight, setGalleryViewportWidth, viewMode]);
+  }, [
+    galleryScrollRef,
+    setGalleryViewportHeight,
+    setGalleryViewportWidth,
+    viewMode,
+    visibleItemsLength,
+  ]);
 
   useEffect(() => {
     const syncViewport = () => {
