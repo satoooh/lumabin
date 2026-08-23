@@ -1,5 +1,19 @@
-import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
+import type {
+  CSSProperties,
+  MouseEvent as ReactMouseEvent,
+  RefObject,
+} from 'react';
 import type { AssetItem } from '../../shared/ipc';
+import {
+  GALLERY_CARD_BODY_HEIGHT_PX,
+  GALLERY_CARD_BORDER_WIDTH_PX,
+  GALLERY_CARD_CONTENT_GAP_PX,
+  GALLERY_DAY_GROUP_GAP_PX,
+  GALLERY_DAY_HEADER_ELEMENT_HEIGHT_PX,
+  GALLERY_DAY_HEADER_GAP_PX,
+  GALLERY_GRID_GAP_PX,
+  GALLERY_GRID_TOP_PADDING_PX,
+} from './gallery-view-model-calculations';
 
 type AssetKind = 'image' | 'video' | 'pdf' | 'csv' | 'other';
 
@@ -48,6 +62,29 @@ interface GalleryPaneProps {
   onThumbnailDecodeError: (cacheKey: string) => void;
 }
 
+type GalleryLayoutStyle = CSSProperties & {
+  '--gallery-card-body-height': string;
+  '--gallery-card-border-width': string;
+  '--gallery-card-content-gap': string;
+  '--gallery-day-group-gap': string;
+  '--gallery-day-header-element-height': string;
+  '--gallery-day-header-gap': string;
+  '--gallery-grid-gap': string;
+  '--gallery-grid-top-padding': string;
+};
+
+const GALLERY_LAYOUT_STYLE: GalleryLayoutStyle = {
+  '--gallery-card-body-height': `${GALLERY_CARD_BODY_HEIGHT_PX}px`,
+  '--gallery-card-border-width': `${GALLERY_CARD_BORDER_WIDTH_PX}px`,
+  '--gallery-card-content-gap': `${GALLERY_CARD_CONTENT_GAP_PX}px`,
+  '--gallery-day-group-gap': `${GALLERY_DAY_GROUP_GAP_PX}px`,
+  '--gallery-day-header-element-height':
+    `${GALLERY_DAY_HEADER_ELEMENT_HEIGHT_PX}px`,
+  '--gallery-day-header-gap': `${GALLERY_DAY_HEADER_GAP_PX}px`,
+  '--gallery-grid-gap': `${GALLERY_GRID_GAP_PX}px`,
+  '--gallery-grid-top-padding': `${GALLERY_GRID_TOP_PADDING_PX}px`,
+};
+
 export const GalleryPane = ({
   galleryScrollRef,
   onGalleryScroll,
@@ -85,7 +122,7 @@ export const GalleryPane = ({
           onGalleryScroll(event.currentTarget.scrollTop);
         }}
       >
-        <div className="gallery-grid">
+        <div className="gallery-grid" style={GALLERY_LAYOUT_STYLE}>
           <div style={{ height: galleryVirtualRange.topSpacerHeight }} />
           {visibleGallerySections.map((section) => (
             <section key={section.key} className="gallery-day-group">

@@ -2659,13 +2659,14 @@ kbd {
   overflow: visible;
   display: grid;
   align-content: start;
-  gap: 12px;
-  padding-right: 0;
+  gap: 0;
+  padding: var(--gallery-grid-top-padding) 0 0;
 }
 
 .gallery-day-group {
   display: grid;
-  gap: 8px;
+  gap: var(--gallery-day-header-gap);
+  padding-bottom: var(--gallery-day-group-gap);
 }
 
 .gallery-day-header {
@@ -2673,6 +2674,7 @@ kbd {
   align-items: baseline;
   justify-content: flex-start;
   gap: 7px;
+  height: var(--gallery-day-header-element-height);
   padding: 4px 0 0;
   position: static;
   top: auto;
@@ -2697,15 +2699,15 @@ kbd {
 .gallery-grid-inner {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--gallery-tile-min-width, 176px), 1fr));
-  gap: 14px;
+  gap: var(--gallery-grid-gap);
   align-content: start;
 }
 
 .gallery-card {
   display: grid;
-  gap: 7px;
+  gap: var(--gallery-card-content-gap);
   text-align: left;
-  border: 1px solid transparent;
+  border: var(--gallery-card-border-width) solid transparent;
   border-radius: 8px;
   padding: 0;
   background: transparent;
@@ -2960,17 +2962,27 @@ kbd {
 
 .gallery-card-body {
   min-width: 0;
+  height: var(--gallery-card-body-height);
   display: grid;
   gap: 3px;
+  overflow: hidden;
   padding: 0 2px 2px;
 }
 
 .gallery-card-meta {
+  min-width: 0;
   display: flex;
   justify-content: space-between;
   gap: 8px;
   font-size: 0.74rem;
   color: var(--fg-tertiary);
+}
+
+.gallery-card-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .asset-kind-badge {

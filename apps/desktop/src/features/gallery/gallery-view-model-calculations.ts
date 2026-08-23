@@ -51,11 +51,18 @@ const LARGE_FILE_THRESHOLD_BYTES = 10 * 1024 * 1024;
 
 export const LIST_ROW_HEIGHT_PX = 44;
 export const VIRTUAL_OVERSCAN_ROWS = 4;
-export const GALLERY_GRID_GAP_PX = 8;
-export const GALLERY_DAY_GROUP_GAP_PX = 8;
-export const GALLERY_DAY_HEADER_HEIGHT_PX = 34;
+export const GALLERY_GRID_GAP_PX = 14;
+export const GALLERY_DAY_GROUP_GAP_PX = 14;
+export const GALLERY_GRID_TOP_PADDING_PX = 12;
+export const GALLERY_DAY_HEADER_ELEMENT_HEIGHT_PX = 24;
+export const GALLERY_DAY_HEADER_GAP_PX = 8;
+export const GALLERY_DAY_HEADER_HEIGHT_PX =
+  GALLERY_DAY_HEADER_ELEMENT_HEIGHT_PX + GALLERY_DAY_HEADER_GAP_PX;
 export const GALLERY_CARD_ASPECT_RATIO = 3 / 4;
-export const GALLERY_VIRTUAL_CHUNK_ROWS = 8;
+export const GALLERY_CARD_BORDER_WIDTH_PX = 1;
+export const GALLERY_CARD_CONTENT_GAP_PX = 7;
+export const GALLERY_CARD_BODY_HEIGHT_PX = 36;
+export const GALLERY_VIRTUAL_CHUNK_ROWS = 1;
 export const GALLERY_VIRTUAL_OVERSCAN_PX = 540;
 
 export const isQuickPreviewKind = (kind: Exclude<KindFilter, 'all'>): boolean =>

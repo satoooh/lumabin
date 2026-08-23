@@ -1,6 +1,9 @@
 import type { AssetItem } from '../../shared/ipc';
 import {
   GALLERY_CARD_ASPECT_RATIO,
+  GALLERY_CARD_BODY_HEIGHT_PX,
+  GALLERY_CARD_BORDER_WIDTH_PX,
+  GALLERY_CARD_CONTENT_GAP_PX,
   GALLERY_DAY_GROUP_GAP_PX,
   GALLERY_DAY_HEADER_HEIGHT_PX,
   GALLERY_GRID_GAP_PX,
@@ -64,8 +67,18 @@ export const calculateGalleryTileWidth = (
   );
 };
 
-export const calculateGalleryTileHeight = (galleryTileWidth: number): number =>
-  Math.max(72, Math.round(galleryTileWidth * GALLERY_CARD_ASPECT_RATIO));
+export const calculateGalleryTileHeight = (galleryTileWidth: number): number => {
+  const borderWidth = GALLERY_CARD_BORDER_WIDTH_PX * 2;
+  const mediaWidth = Math.max(0, galleryTileWidth - borderWidth);
+  const mediaHeight = mediaWidth * GALLERY_CARD_ASPECT_RATIO;
+  return Math.max(
+    72,
+    mediaHeight +
+      borderWidth +
+      GALLERY_CARD_CONTENT_GAP_PX +
+      GALLERY_CARD_BODY_HEIGHT_PX,
+  );
+};
 
 export const buildGalleryDaySections = (
   visibleItems: AssetItem[],
@@ -152,7 +165,7 @@ export const calculateGalleryVirtualRange = (
     (section) => section.bottomOffset >= viewportTop,
   );
   if (startIndex < 0) {
-    startIndex = 0;
+    startIndex = galleryVirtualSections.length - 1;
   }
 
   let endIndex = startIndex;
