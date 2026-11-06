@@ -120,7 +120,7 @@ const createWindow = () => {
     backgroundColor: '#eef2f7',
     icon: appIconPath ?? undefined,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
