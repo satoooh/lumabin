@@ -38,8 +38,8 @@ macOS 向けの配布 zip は GitHub Releases で公開しています。
 
 ### 必要環境
 
-- macOS
-- Node.js 22.12+
+- macOS 13 以降
+- Node.js 22.22.2 以降の 22.x、24.15.0 以降の 24.x、または 26 以降
 - npm 10+
 
 ### セットアップ

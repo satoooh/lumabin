@@ -1,4 +1,4 @@
-import { clipboard } from 'electron';
+import { clipboard, nativeImage } from 'electron';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -80,15 +80,21 @@ export const persistClipboardBytes = async (
   return outputPath;
 };
 
-export const readSystemClipboardPng = (): Buffer | null => {
-  const image = clipboard.readImage();
-  if (image.isEmpty()) {
-    return null;
+export const readSystemClipboardPng = async (): Promise<Buffer | null> => {
+  const items = await clipboard.read();
+  for (const mimeType of ['image/png', 'image/jpeg'] as const) {
+    const item = items.find((entry) => entry.types.includes(mimeType));
+    if (!item) {
+      continue;
+    }
+    const blob = await item.getType(mimeType);
+    const image = nativeImage.createFromBuffer(Buffer.from(await blob.arrayBuffer()));
+    if (!image.isEmpty()) {
+      const pngBytes = image.toPNG();
+      if (pngBytes.byteLength > 0) {
+        return pngBytes;
+      }
+    }
   }
-
-  const pngBytes = image.toPNG();
-  if (!pngBytes || pngBytes.byteLength === 0) {
-    return null;
-  }
-  return Buffer.from(pngBytes);
+  return null;
 };

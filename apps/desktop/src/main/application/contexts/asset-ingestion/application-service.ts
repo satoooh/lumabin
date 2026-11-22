@@ -45,7 +45,7 @@ export interface AssetIngestionApplicationServiceDependencies {
   markUploadJobFailed(jobId: string, input: StartUploadInput, error: unknown): void;
   normalizeClipboardFileName(fileName: string | undefined, mimeType: string | undefined): string;
   persistClipboardBytes(fileName: string, bytes: Buffer): Promise<string>;
-  readSystemClipboardPng(): Buffer | null;
+  readSystemClipboardPng(): Promise<Buffer | null>;
   startUploadOverride(input: StartUploadInput): Promise<string | undefined> | string | undefined;
   runUploadJob(jobId: string, input: StartUploadInput): Promise<void>;
   saveUploadJob(job: UploadJobStatus): void;
@@ -70,7 +70,7 @@ export const createAssetIngestionApplicationService = (
   },
 
   persistClipboardImageFromSystem: async () => {
-    const pngBytes = dependencies.readSystemClipboardPng();
+    const pngBytes = await dependencies.readSystemClipboardPng();
     if (!pngBytes || pngBytes.byteLength === 0) {
       return null;
     }
