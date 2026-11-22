@@ -122,7 +122,7 @@ const expandDirectorySource = async (
     isDirectory: () => boolean;
     isFile: () => boolean;
     name: string;
-  }> = [];
+  }>;
   try {
     entries = await readdir(sourcePath, { withFileTypes: true });
   } catch {

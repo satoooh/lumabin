@@ -39,7 +39,6 @@ const readAllDirectoryEntries = async (
   while (hasMoreEntries) {
     // readEntries returns chunked results; we must keep reading until empty.
     // See: https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryReader/readEntries
-    // eslint-disable-next-line no-await-in-loop
     const chunk = await new Promise<FileSystemEntry[]>((resolve, reject) => {
       reader.readEntries(resolve, reject);
     });

@@ -433,11 +433,9 @@ const runStorageClientIntegrationSmoke = async (): Promise<void> => {
 
 void runStorageClientIntegrationSmoke()
   .then(() => {
-    // eslint-disable-next-line no-console
     console.log('storage-client integration smoke passed');
   })
   .catch((error) => {
-    // eslint-disable-next-line no-console
     console.error('storage-client integration smoke failed', error);
     process.exitCode = 1;
   });

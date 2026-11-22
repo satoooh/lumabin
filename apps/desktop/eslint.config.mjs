@@ -1,17 +1,8 @@
-import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
+import typescript from '@typescript-eslint/eslint-plugin';
 import { defineConfig } from 'eslint/config';
+import importX, { createNodeResolver } from 'eslint-plugin-import-x';
 import globals from 'globals';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
 
 export default defineConfig([
   {
@@ -26,21 +17,24 @@ export default defineConfig([
       },
     },
   },
-  ...compat.extends(
-    'eslint:recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:import/recommended',
-    'plugin:import/electron',
-    'plugin:import/typescript',
-  ),
-  ...compat.config({
-    parser: '@typescript-eslint/parser',
-  }),
+  js.configs.recommended,
+  ...typescript.configs['flat/recommended'],
+  importX.flatConfigs.recommended,
+  importX.flatConfigs.electron,
+  importX.flatConfigs.typescript,
+  {
+    settings: {
+      'import-x/resolver-next': [
+        createNodeResolver({
+          extensions: ['.ts', '.tsx', '.cts', '.mts', '.js', '.jsx', '.mjs', '.cjs', '.json', '.node'],
+        }),
+      ],
+    },
+  },
   {
     files: ['vite.*.config.ts', 'vitest.*.config.ts', 'forge.config.ts'],
     rules: {
-      'import/no-unresolved': 'off',
+      'import-x/no-unresolved': 'off',
     },
   },
 ]);
