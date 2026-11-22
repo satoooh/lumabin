@@ -160,7 +160,7 @@ test('dense fixture supports search, virtual scroll, and preview walkthrough', a
   await expect(page.locator('.active-query-summary-text')).toContainText('dense');
   const firstDenseCard = page.locator('.gallery-card').first();
   await expect(firstDenseCard).toBeVisible();
-  await expect(firstDenseCard).toHaveAccessibleName(/lumabin-fixture|CSV|PDF/);
+  await expect(firstDenseCard).toHaveAccessibleName(/^lumabin-fixture-0001\.jpg,/);
 
   const galleryScroll = page.locator('.gallery-scroll');
   await expect
@@ -187,8 +187,11 @@ test('dense fixture supports search, virtual scroll, and preview walkthrough', a
     })
     .toBeGreaterThan(initialScrollTop);
 
-  await expect(page.locator('.gallery-card').first()).toBeVisible();
-  await page.locator('.gallery-card').first().click();
+  await expect(page.getByRole('button', { name: /^lumabin-fixture-0001\.jpg,/ })).toHaveCount(0);
+  // The first DOM card can be an offscreen overscan row at the bottom.
+  const lastDenseCard = page.locator('.gallery-card').last();
+  await expect(lastDenseCard).toBeInViewport({ ratio: 0.5 });
+  await lastDenseCard.click();
   const preview = page.getByRole('dialog', { name: 'Asset Preview' });
   await expect(preview).toBeVisible();
   await expect(preview.getByRole('heading', { name: 'Manage asset' })).toBeVisible();
@@ -196,14 +199,14 @@ test('dense fixture supports search, virtual scroll, and preview walkthrough', a
   await expect(preview).toBeHidden();
 
   const topbarBounds = await page.locator('.topbar').boundingBox();
-  const firstCardBounds = await page.locator('.gallery-card').first().boundingBox();
+  const lastCardBounds = await lastDenseCard.boundingBox();
   expect(topbarBounds).not.toBeNull();
-  expect(firstCardBounds).not.toBeNull();
-  if (!topbarBounds || !firstCardBounds) {
+  expect(lastCardBounds).not.toBeNull();
+  if (!topbarBounds || !lastCardBounds) {
     return;
   }
 
-  expect(firstCardBounds.y).toBeGreaterThan(topbarBounds.y + topbarBounds.height - 1);
+  expect(lastCardBounds.y).toBeGreaterThan(topbarBounds.y + topbarBounds.height - 1);
 
   await page.getByRole('button', { name: 'Open workspace settings' }).click();
   const settingsDialog = page.getByRole('dialog', { name: 'Workspace Settings' });
