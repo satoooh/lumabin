@@ -64,7 +64,7 @@ const createDependencies = (
   markUploadJobFailed: vi.fn(),
   normalizeClipboardFileName: vi.fn((fileName) => fileName ?? 'clipboard.bin'),
   persistClipboardBytes: vi.fn(async () => '/tmp/clipboard.bin'),
-  readSystemClipboardPng: vi.fn(() => null),
+  readSystemClipboardPng: vi.fn(async () => null),
   runUploadJob: vi.fn(async () => undefined),
   saveUploadJob: vi.fn(),
   saveUploadJobStatus: vi.fn(),
