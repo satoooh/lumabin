@@ -103,7 +103,7 @@ const readPreviewCacheEntries = async (): Promise<PreviewCacheEntryMeta[]> => {
   const rootPath = getPreviewCacheRootPath();
   const entries: PreviewCacheEntryMeta[] = [];
 
-  let profileDirectories: string[] = [];
+  let profileDirectories: string[];
   try {
     profileDirectories = await readdir(rootPath);
   } catch {
@@ -113,7 +113,7 @@ const readPreviewCacheEntries = async (): Promise<PreviewCacheEntryMeta[]> => {
   for (const profileDirectory of profileDirectories) {
     const profileDirectoryPath = join(rootPath, profileDirectory);
 
-    let files: string[] = [];
+    let files: string[];
     try {
       files = await readdir(profileDirectoryPath);
     } catch {
