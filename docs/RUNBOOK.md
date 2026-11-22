@@ -192,7 +192,7 @@ Workflow:
 - Jobs:
   - `Playwright E2E (macOS)`
   - 通常E2Eに加えて dense fixture E2E（1,000 assets）を実行
-- 成功/失敗に関係なく `desktop-e2e-metrics-<run_id>` artifact に dense Dev Metrics snapshot を保存
+- dense E2E が Dev Metrics snapshot を生成した場合は、workflow の成否にかかわらず `desktop-e2e-metrics-<run_id>` artifact に保存する。
 - 失敗時 artifacts:
   - `apps/desktop/test-results`
   - `apps/desktop/playwright-report`
